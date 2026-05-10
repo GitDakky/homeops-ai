@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.1.6]
+
+### Fixed
+- Forces Hermes API Server adapter configuration to follow the HomeOps gateway port option, including migrated installs that still carry the old 18790 setting in persistent Hermes config.
+- Prevents the Hermes gateway from restarting endlessly when an old OpenClaw add-on or stale config is still bound to 18790.
+
 ## [0.1.5]
 
 ### Fixed

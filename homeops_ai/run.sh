@@ -1063,6 +1063,19 @@ else
     hermes config set model.default "$LLM_MODEL" >/dev/null 2>&1 || true
   fi
 
+  # Ensure Hermes' API Server adapter follows the HomeOps gateway port option.
+  # Some migrated installs carry an old OpenClaw-era 18790 setting in Hermes'
+  # persistent config; environment variables alone do not override every code path.
+  hermes config set platforms.api_server.enabled true >/dev/null 2>&1 || true
+  hermes config set platforms.api_server.host 127.0.0.1 >/dev/null 2>&1 || true
+  hermes config set platforms.api_server.port "$GATEWAY_INTERNAL_PORT" >/dev/null 2>&1 || true
+  hermes config set gateway.platforms.api_server.enabled true >/dev/null 2>&1 || true
+  hermes config set gateway.platforms.api_server.host 127.0.0.1 >/dev/null 2>&1 || true
+  hermes config set gateway.platforms.api_server.port "$GATEWAY_INTERNAL_PORT" >/dev/null 2>&1 || true
+  hermes config set api_server.enabled true >/dev/null 2>&1 || true
+  hermes config set api_server.host 127.0.0.1 >/dev/null 2>&1 || true
+  hermes config set api_server.port "$GATEWAY_INTERNAL_PORT" >/dev/null 2>&1 || true
+
   # Enable the native Hermes Home Assistant tool path where possible.
   if [ -n "${SUPERVISOR_TOKEN:-}" ]; then
     export HASS_TOKEN="$SUPERVISOR_TOKEN"
