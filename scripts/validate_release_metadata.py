@@ -34,10 +34,10 @@ def main() -> None:
     repository_yaml = read("repository.yaml")
     issue_template_cfg = read(".github/ISSUE_TEMPLATE/config.yml")
 
-    openclaw_version = extract(
-        r"^ARG OPENCLAW_VERSION=([^\s]+)$",
+    hermes_branch = extract(
+        r"^ARG HERMES_BRANCH=([^\s]+)$",
         dockerfile,
-        "Dockerfile OPENCLAW_VERSION",
+        "Dockerfile HERMES_BRANCH",
     )
     addon_version = extract(
         r'^version:\s*"([^"]+)"$',
@@ -80,18 +80,18 @@ def main() -> None:
     if (REPO_ROOT / "homeops_ai/build.yaml").exists():
         errors.append("homeops_ai/build.yaml should be removed after Dockerfile migration")
 
-    if f"Bundled OpenClaw: `{openclaw_version}`" not in readme:
-        errors.append(f"README.md does not advertise bundled OpenClaw version {openclaw_version}")
+    if "Hermes Agent" not in readme:
+        errors.append("README.md does not describe the Hermes Agent runtime")
 
-    if f"Bundled OpenClaw version in this fork:** `{openclaw_version}`" not in docs:
-        errors.append(f"DOCS.md does not advertise bundled OpenClaw version {openclaw_version}")
+    if "Hermes" not in docs:
+        errors.append("DOCS.md does not describe the Hermes runtime")
 
     if errors:
         for error in errors:
             print(f"ERROR: {error}", file=sys.stderr)
         raise SystemExit(1)
 
-    print(f"OK: add-on {addon_version}, bundled OpenClaw {openclaw_version}, repo metadata aligned")
+    print(f"OK: add-on {addon_version}, Hermes branch {hermes_branch}, repo metadata aligned")
 
 
 if __name__ == "__main__":

@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.0-dev]
+
+### Changed
+- Seeded HomeOps AI as a Hermes-first Home Assistant add-on scaffold.
+- Switched add-on metadata and Dockerfile direction toward Hermes Agent.
+
+
 All notable changes to the GitDakky OpenClaw Home Assistant fork will be documented in this file.
 
 ## [0.7.20] - 2026-04-08
