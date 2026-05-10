@@ -20,19 +20,19 @@ from urllib.parse import parse_qs, urlparse
 from urllib.request import Request, urlopen
 
 HOST = "127.0.0.1"
-PORT = int(os.environ.get("HERMES_DASHBOARD_API_PORT", os.environ.get("OPENCLAW_DASHBOARD_API_PORT", "48110")))
-WORKSPACE_DIR = Path(os.environ.get("HERMES_WORKSPACE_DIR", os.environ.get("OPENCLAW_WORKSPACE_DIR", "/config/homeops")))
-SKILLS_DIR = Path(os.environ.get("HERMES_SKILLS_DIR", os.environ.get("OPENCLAW_SKILLS_DIR", "/config/.hermes/skills")))
+PORT = int(os.environ.get("HERMES_DASHBOARD_API_PORT", "48110"))
+WORKSPACE_DIR = Path(os.environ.get("HERMES_WORKSPACE_DIR", "/config/homeops"))
+SKILLS_DIR = Path(os.environ.get("HERMES_SKILLS_DIR", "/config/.hermes/skills"))
 GRAPH_DB_PATH = Path(
-    os.environ.get("HERMES_SYSTEM_GRAPH_PATH", os.environ.get("OPENCLAW_SYSTEM_GRAPH_PATH", "/config/.hermes/gitdakky-system-graph.sqlite3"))
+    os.environ.get("HERMES_SYSTEM_GRAPH_PATH", "/config/.hermes/gitdakky-system-graph.sqlite3")
 )
-OPTIONS_FILE = Path(os.environ.get("HERMES_OPTIONS_FILE", os.environ.get("OPENCLAW_OPTIONS_FILE", "/data/options.json")))
-SECRETS_DIR = Path(os.environ.get("HERMES_SECRETS_DIR", os.environ.get("OPENCLAW_SECRETS_DIR", "/config/secrets")))
+OPTIONS_FILE = Path(os.environ.get("HERMES_OPTIONS_FILE", "/data/options.json"))
+SECRETS_DIR = Path(os.environ.get("HERMES_SECRETS_DIR", "/config/secrets"))
 HA_CONFIG_DIR = Path(os.environ.get("HOME_ASSISTANT_CONFIG_DIR", "/ha-config"))
-MEMORY_DIR = Path(os.environ.get("HERMES_MEMORY_DIR", os.environ.get("OPENCLAW_MEMORY_DIR", "/config/.hermes/home-os-memory")))
+MEMORY_DIR = Path(os.environ.get("HERMES_MEMORY_DIR", "/config/.hermes/home-os-memory"))
 MEMORY_STATE_FILE = MEMORY_DIR / "memory-state.json"
 MEMORY_JOURNAL_FILE = MEMORY_DIR / "house-journal.md"
-SUPERVISOR_CORE_API = os.environ.get("HERMES_SUPERVISOR_CORE_API", os.environ.get("OPENCLAW_SUPERVISOR_CORE_API", "http://supervisor/core/api"))
+SUPERVISOR_CORE_API = os.environ.get("HERMES_SUPERVISOR_CORE_API", "http://supervisor/core/api")
 STALE_SECRET_DAYS = int(os.environ.get("HERMES_STALE_SECRET_DAYS", "180"))
 RECENT_CHANGE_HOURS = int(os.environ.get("HERMES_RECENT_CHANGE_HOURS", "18"))
 LOW_BATTERY_THRESHOLD = float(os.environ.get("HERMES_LOW_BATTERY_THRESHOLD", "25"))
