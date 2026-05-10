@@ -1064,7 +1064,7 @@ else
   fi
 
   # Ensure Hermes' API Server adapter follows the HomeOps gateway port option.
-  # Some migrated installs carry an old OpenClaw-era 18790 setting in Hermes'
+  # Some migrated installs carry an old legacy-agent 18790 setting in Hermes'
   # persistent config; environment variables alone do not override every code path.
   hermes config set platforms.api_server.enabled true >/dev/null 2>&1 || true
   hermes config set platforms.api_server.host 127.0.0.1 >/dev/null 2>&1 || true
