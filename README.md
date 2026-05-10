@@ -16,6 +16,49 @@ HomeOps AI aims to become the most useful AI add-on for Home Assistant:
 - keep user data under add-on-managed persistent storage
 - avoid unsupported HAOS hacks or non-native side-loaded services
 
+## Install from the Home Assistant dashboard
+
+HomeOps AI is intended to be installed through the Home Assistant **Settings → Apps** / add-on dashboard so it is managed by Home Assistant Supervisor and survives HAOS updates/rebuilds. Do **not** SSH into HAOS and install Hermes manually; Home Assistant can reset non-native applications.
+
+> **Development status:** the repository is importable as an add-on repository, but the Hermes runtime port is still in progress. Use this only for development/testing until the first release is marked production-ready.
+
+### One-click repository import
+
+[![Open your Home Assistant instance and add this repository.](https://my.home-assistant.io/badges/supervisor_repository.svg)](https://my.home-assistant.io/redirect/supervisor_repository/?repository_url=https%3A%2F%2Fgithub.com%2FGitDakky%2Fhomeops-ai)
+
+1. Open your Home Assistant dashboard.
+2. Go to **Settings → Apps**.
+   - On older Home Assistant versions this may be **Settings → Add-ons** or **Settings → Add-ons → Add-on Store**.
+3. Use the button above, or choose **Install App** / **Add repository** from the dashboard.
+4. Paste this repository URL when prompted:
+
+   ```text
+   https://github.com/GitDakky/homeops-ai
+   ```
+
+5. Return to the Apps/Add-ons list and select **HomeOps AI**.
+6. Click **Install**.
+7. Open the **Configuration** tab before first start and review options such as:
+   - terminal access
+   - gateway/access mode
+   - Home Assistant write permissions
+   - provider/API environment variables
+8. Click **Start**.
+9. Open the HomeOps AI page from the Home Assistant sidebar/add-on page.
+
+### Why install it this way?
+
+Home Assistant OS and Supervisor own the application lifecycle. Installing through the dashboard means Home Assistant can:
+
+- pull the correct add-on image
+- mount persistent add-on storage under `/config`
+- expose Home Assistant ingress properly
+- inject Supervisor/Home Assistant API access safely
+- restart/update the add-on without wiping state
+- keep HomeOps AI visible and manageable from the dashboard
+
+Manual installs inside HAOS are unsupported for this project.
+
 ## Current status
 
 This repository has just been created from the proven Home Assistant add-on shell in `GitDakky/OpenClawHomeAssistant`. The first milestone is to replace the OpenClaw runtime assumptions with Hermes Agent while preserving the good Home Assistant packaging, ingress, persistence, dashboard, and validation patterns.
