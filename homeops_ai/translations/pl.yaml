@@ -21,11 +21,11 @@ configuration:
 
   enable_builtin_ha_tools:
     name: Włącz wbudowane narzędzia Home Assistant
-    description: "Gdy WŁĄCZONE (zalecane), dodatek rejestruje lokalny serwer MCP Home Assistant, dzięki czemu OpenClaw może czytać na żywo encje, urządzenia, obszary, automatyzacje, usługi i historię bez dodatkowej konfiguracji tokena."
+    description: "Gdy WŁĄCZONE (zalecane), dodatek rejestruje lokalny serwer MCP Home Assistant, dzięki czemu Hermes może czytać na żywo encje, urządzenia, obszary, automatyzacje, usługi i historię bez dodatkowej konfiguracji tokena."
 
   enable_ha_service_calls:
     name: Zezwól na wywołania usług Home Assistant
-    description: "Gdy WŁĄCZONE, wbudowana warstwa narzędzi Home Assistant udostępnia także mutujące narzędzie `ha_service_call`. Pozostaw WYŁĄCZONE, chyba że chcesz, aby OpenClaw wywoływał usługi Home Assistant po wyraźnej zgodzie użytkownika."
+    description: "Gdy WŁĄCZONE, wbudowana warstwa narzędzi Home Assistant udostępnia także mutujące narzędzie `ha_service_call`. Pozostaw WYŁĄCZONE, chyba że chcesz, aby Hermes wywoływał usługi Home Assistant po wyraźnej zgodzie użytkownika."
 
   http_proxy:
     name: Wychodzący proxy HTTP
@@ -65,11 +65,11 @@ configuration:
 
   disable_exec_approvals:
     name: Wyłącz monity akceptacji exec
-    description: "Gdy WŁĄCZONE, wymusza dla hostowych akceptacji exec OpenClaw ustawienia security=full, ask=off, askFallback=full oraz wyrównuje tools.exec.host=gateway, tools.exec.security=full, tools.exec.ask=off i strictInlineEval=false. Ten fork domyślnie zostawia to WŁĄCZONE, aby automatyzacje nie zatrzymywały się na ludzkich akceptacjach. Wyłącz tylko jeśli chcesz przywrócić monity."
+    description: "Gdy WŁĄCZONE, wymusza dla hostowych akceptacji exec Hermes ustawienia security=full, ask=off, askFallback=full oraz wyrównuje tools.exec.host=gateway, tools.exec.security=full, tools.exec.ask=off i strictInlineEval=false. Ten fork domyślnie zostawia to WŁĄCZONE, aby automatyzacje nie zatrzymywały się na ludzkich akceptacjach. Wyłącz tylko jeśli chcesz przywrócić monity."
 
   enable_matrix:
     name: Włącz kanał Matrix
-    description: "Włącza obsługę Matrix z ustawień Home Assistant. Gdy WŁĄCZONE i skonfigurowano homeserver oraz działające dane logowania, dodatek konfiguruje channels.matrix w OpenClaw i spróbuje zapewnić dostępność wtyczki Matrix."
+    description: "Włącza obsługę Matrix z ustawień Home Assistant. Gdy WŁĄCZONE i skonfigurowano homeserver oraz działające dane logowania, dodatek konfiguruje channels.matrix w Hermes i spróbuje zapewnić dostępność wtyczki Matrix."
 
   matrix_homeserver:
     name: Homeserver Matrix
@@ -81,7 +81,7 @@ configuration:
 
   matrix_user_id:
     name: Matrix User ID
-    description: "Pełny identyfikator użytkownika Matrix dla konta bota, na przykład @openclaw:example.org."
+    description: "Pełny identyfikator użytkownika Matrix dla konta bota, na przykład @hermes:example.org."
 
   matrix_access_token:
     name: Matrix access token
@@ -129,7 +129,7 @@ configuration:
 
   gateway_port:
     name: Port Gateway
-    description: Numer portu na którym gateway OpenClaw będzie nasłuchiwał (domyślnie - 18790)
+    description: Numer portu na którym gateway Hermes będzie nasłuchiwał (domyślnie - 18790)
 
   gateway_mode:
     name: Tryb Gateway
@@ -161,7 +161,7 @@ configuration:
 
   enable_openai_api:
     name: Włącz API OpenAI
-    description: Włącz endpoint Chat Completions kompatybilny z OpenAI. Pozwala używać OpenClaw jako agenta konwersacji w HA Assist pipeline przez Extended OpenAI Conversation (HACS) lub dowolnego klienta kompatybilnego z OpenAI.
+    description: Włącz endpoint Chat Completions kompatybilny z OpenAI. Pozwala używać Hermes jako agenta konwersacji w HA Assist pipeline przez Extended OpenAI Conversation (HACS) lub dowolnego klienta kompatybilnego z OpenAI.
   force_ipv4_dns:
     name: Wymuś kolejność DNS IPv4
     description: Wymusza priorytet IPv4 w DNS. Większość VM HAOS nie ma wyjścia IPv6 — powoduje błędy web_fetch i Telegram. Zalecane WŁĄCZONE (domyślnie).
@@ -173,7 +173,7 @@ configuration:
       full: "Pełny (logowanie wszystkich żądań)"
   gateway_env_vars:
     name: Zmienne środowiskowe gateway
-    description: Zmienne środowiskowe przekazywane do procesu gateway OpenClaw podczas uruchamiania (lista wpisow name/value w UI Home Assistant; maks. 50 zmiennych, klucze do 255 znakow, wartosci do 10000 znakow).
+    description: Zmienne środowiskowe przekazywane do procesu gateway Hermes podczas uruchamiania (lista wpisow name/value w UI Home Assistant; maks. 50 zmiennych, klucze do 255 znakow, wartosci do 10000 znakow).
   auto_configure_mcp:
     name: Automatyczna konfiguracja MCP dla Home Assistant
     description: "Starsza ścieżka zewnętrznego MCP. Gdy WŁĄCZONE i token Home Assistant jest ustawiony, rejestruje zewnętrzny endpoint MCP Home Assistant podczas startu. Jest ignorowana, gdy włączona jest wbudowana warstwa narzędzi Home Assistant."

@@ -21,11 +21,11 @@ configuration:
 
   enable_builtin_ha_tools:
     name: Enable Built-In Home Assistant Tools
-    description: "When ON (recommended), the add-on registers a local Home Assistant MCP server so OpenClaw can read live entities, devices, areas, automations, services, and history without extra token setup."
+    description: "When ON (recommended), the add-on registers a local Home Assistant MCP server so Hermes can read live entities, devices, areas, automations, services, and history without extra token setup."
 
   enable_ha_service_calls:
     name: Allow Home Assistant Service Calls
-    description: "When ON, the built-in Home Assistant tool layer also exposes the mutating ha_service_call tool. Keep this OFF unless you explicitly want OpenClaw to call Home Assistant services after user approval."
+    description: "When ON, the built-in Home Assistant tool layer also exposes the mutating ha_service_call tool. Keep this OFF unless you explicitly want Hermes to call Home Assistant services after user approval."
 
   http_proxy:
     name: Outbound HTTP Proxy
@@ -72,11 +72,11 @@ configuration:
 
   disable_exec_approvals:
     name: Disable Exec Approval Prompts
-    description: "When ON, forces OpenClaw host exec approvals to security=full, ask=off, askFallback=full and aligns tools.exec.host=gateway, tools.exec.security=full, tools.exec.ask=off, and strictInlineEval=false. This fork defaults it to ON so automations do not stop for human approval. Turn it OFF only if you want approval prompts restored."
+    description: "When ON, forces Hermes host exec approvals to security=full, ask=off, askFallback=full and aligns tools.exec.host=gateway, tools.exec.security=full, tools.exec.ask=off, and strictInlineEval=false. This fork defaults it to ON so automations do not stop for human approval. Turn it OFF only if you want approval prompts restored."
 
   enable_matrix:
     name: Enable Matrix Channel
-    description: "Enable Matrix channel support from Home Assistant settings. When ON and a homeserver plus usable auth are configured, the add-on configures channels.matrix in OpenClaw and will try to ensure the Matrix plugin is available."
+    description: "Enable Matrix channel support from Home Assistant settings. When ON and a homeserver plus usable auth are configured, the add-on configures channels.matrix in Hermes and will try to ensure the Matrix plugin is available."
 
   matrix_homeserver:
     name: Matrix Homeserver
@@ -88,7 +88,7 @@ configuration:
 
   matrix_user_id:
     name: Matrix User ID
-    description: "Full Matrix user ID for the bot account, for example @openclaw:example.org."
+    description: "Full Matrix user ID for the bot account, for example @hermes:example.org."
 
   matrix_access_token:
     name: Matrix Access Token
@@ -136,7 +136,7 @@ configuration:
 
   gateway_port:
     name: Gateway Port
-    description: Port number for the OpenClaw gateway to listen on (default - 18790)
+    description: Port number for the Hermes gateway to listen on (default - 18790)
 
   access_mode:
     name: Access Mode
@@ -161,7 +161,7 @@ configuration:
 
   enable_openai_api:
     name: Enable OpenAI API
-    description: Enable OpenAI-compatible Chat Completions endpoint. Allows using OpenClaw as a conversation agent in HA Assist pipeline via Extended OpenAI Conversation (HACS) or any OpenAI-compatible client.
+    description: Enable OpenAI-compatible Chat Completions endpoint. Allows using Hermes as a conversation agent in HA Assist pipeline via Extended OpenAI Conversation (HACS) or any OpenAI-compatible client.
   force_ipv4_dns:
     name: Force IPv4 DNS Order
     description: Force IPv4-first DNS ordering for Node network calls. Most HAOS VMs lack IPv6 egress, causing web_fetch and Telegram timeouts. Recommended ON (default).
@@ -173,7 +173,7 @@ configuration:
       full: "Full (log all requests)"
   gateway_env_vars:
     name: Gateway Environment Variables
-    description: Environment variables passed to the OpenClaw gateway process at startup (list entries with name/value in Home Assistant UI; max 50 variables, keys up to 255 characters, values up to 10,000 characters).
+    description: Environment variables passed to the Hermes gateway process at startup (list entries with name/value in Home Assistant UI; max 50 variables, keys up to 255 characters, values up to 10,000 characters).
   auto_configure_mcp:
     name: Auto-Configure MCP for Home Assistant
     description: "Legacy external MCP registration path. When ON and Home Assistant Token is set, it registers Home Assistant's external MCP endpoint on startup. This is ignored when the built-in Home Assistant tool layer is enabled."

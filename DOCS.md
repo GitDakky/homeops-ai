@@ -1,14 +1,14 @@
 # HomeOps AI — Documentation
 
-This GitDakky fork runs [OpenClaw](https://github.com/openclaw/openclaw) inside Home Assistant OS (HAOS). It provides a fully self-contained environment with a web terminal, gateway server, migration support, and the tools OpenClaw needs.
+This GitDakky fork runs [Hermes](https://github.com/hermes/hermes) inside Home Assistant OS (HAOS). It provides a fully self-contained environment with a web terminal, gateway server, migration support, and the tools Hermes needs.
 
 This fork also mounts the live Home Assistant configuration root at `/ha-config` so the assistant can inspect and repair the actual HA system in place. `/config` remains the add-on's own persistent workspace.
 
-**Bundled OpenClaw version in this fork:** `2026.4.2`
+**Bundled Hermes version in this fork:** `2026.4.2`
 
 **Published app image:** `ghcr.io/gitdakky/homeops-ai`
 
-> **Porting status:** HomeOps AI is being ported from the GitDakky OpenClaw Home Assistant add-on shell to a Hermes Agent runtime. The Home Assistant add-on packaging, ingress, persistence, and dashboard patterns are useful and intentional; OpenClaw-specific runtime references below are legacy material until the Hermes port is complete.
+> **Porting status:** HomeOps AI is being ported from the GitDakky Hermes Home Assistant add-on shell to a Hermes Agent runtime. The Home Assistant add-on packaging, ingress, persistence, and dashboard patterns are useful and intentional; Hermes-specific runtime references below are legacy material until the Hermes port is complete.
 
 **Table of Contents**
 
@@ -36,7 +36,7 @@ The add-on container runs three services:
 
 | Service | Port | Purpose |
 |---|---|---|
-| **OpenClaw Gateway** | 18790 (configurable) | The AI agent server — handles skills, chat, automations |
+| **Hermes Gateway** | 18790 (configurable) | The AI agent server — handles skills, chat, automations |
 | **nginx** (Ingress proxy) | 48109 (fixed) | Serves the landing page inside Home Assistant |
 | **ttyd** (Web terminal) | 7682 (configurable) | Provides a browser-based terminal for setup and management |
 
@@ -49,19 +49,19 @@ When you open the add-on page in Home Assistant, nginx serves a landing page wit
 | Path | Persistent? | Contents |
 |---|---|---|
 | `/config/` | Yes | All user data — survives add-on updates and rebuilds |
-| `/config/.openclaw/` | Yes | OpenClaw configuration (`openclaw.json`), skills, agent data |
-| `/config/clawd/` | Yes | Agent workspace (ClawHub-installed skills, files) |
+| `/config/.hermes/` | Yes | Hermes configuration (`hermes.json`), skills, agent data |
+| `/config/homeops/` | Yes | Agent workspace (ClawHub-installed skills, files) |
 | `/config/.node_global/` | Yes | User-installed npm packages (skills installed via dashboard) |
 | `/config/secrets/` | Yes | Tokens (e.g., `homeassistant.token`) |
 | `/config/keys/` | Yes | SSH keys (e.g., router SSH key) |
 | `/config/.linuxbrew/` | Yes | Homebrew install and brew-installed CLI tools |
 | `/config/gogcli/` | Yes | gog OAuth credentials for Google APIs |
 | `/ha-config/` | Yes | The real Home Assistant config root: `configuration.yaml`, `secrets.yaml`, `custom_components/`, `packages/`, `.storage/` |
-| `/usr/lib/node_modules/openclaw/` | No | OpenClaw installation (rebuilt with each image update) |
+| `/usr/lib/node_modules/hermes/` | No | Hermes installation (rebuilt with each image update) |
 
 > **Important**: Everything under `/config/` persists across add-on updates. The container filesystem (`/usr/`, `/opt/`, etc.) is rebuilt each time the image changes.
 >
-> **Important**: `/ha-config` is not another OpenClaw workspace. It is the live Home Assistant config tree. Changes there affect Home Assistant directly.
+> **Important**: `/ha-config` is not another Hermes workspace. It is the live Home Assistant config tree. Changes there affect Home Assistant directly.
 
 ---
 
@@ -90,7 +90,7 @@ If the original `homeops_ai` add-on is installed, this fork will try to:
 1. detect the legacy add-on via the Supervisor API
 2. stop it before claiming host-network ports
 3. import its add-on config from `/addon_configs/<legacy_repo>_homeops_ai`
-4. reuse its saved OpenClaw runtime state on the first boot of this fork
+4. reuse its saved Hermes runtime state on the first boot of this fork
 
 For clean installs, this fork uses its own default host-network ports so it does not collide with the legacy line before migration runs:
 - gateway: `18790`
@@ -107,7 +107,7 @@ If automatic migration fails, stop or uninstall the old add-on before starting t
 
 When the add-on starts for the first time, it automatically:
 1. Creates persistent directories under `/config/`
-2. Generates a minimal `openclaw.json` with a random gateway auth token
+2. Generates a minimal `hermes.json` with a random gateway auth token
 3. Syncs built-in skills to persistent storage
 4. Starts the gateway, terminal, and nginx
 5. Verifies that `/ha-config/configuration.yaml` is reachable and logs a warning if the Home Assistant config mount is missing
@@ -128,32 +128,32 @@ Open the add-on page in Home Assistant. You'll see a landing page with an embedd
 In the terminal, run:
 
 ```sh
-oc-onboard
+homeops-onboard
 ```
 
 This interactive wizard walks you through connecting your AI providers (OpenAI, Google, Anthropic, etc.) and basic configuration.
 
-`oc-onboard` is the add-on's managed onboarding wrapper. It runs the normal `openclaw onboard` flow, then automatically restarts the local OpenClaw runtime if onboarding changed gateway auth or other runtime-critical config. Use it instead of raw `openclaw onboard` inside this add-on.
+`homeops-onboard` is the add-on's managed onboarding wrapper. It runs the normal `hermes onboard` flow, then automatically restarts the local Hermes runtime if onboarding changed gateway auth or other runtime-critical config. Use it instead of raw `hermes onboard` inside this add-on.
 
 > **Note (v0.5.54+)**: If onboarding triggers a gateway runtime restart, the add-on now keeps nginx/terminal alive and auto-recovers the runtime instead of restarting the whole container.
 
 Alternatively, for more granular control:
 
 ```sh
-oc-configure
+homeops-configure
 ```
 
-`oc-configure` is the managed equivalent of `openclaw configure`. It protects the running gateway from stale in-memory auth/config after interactive changes.
+`homeops-configure` is the managed equivalent of `hermes configure`. It protects the running gateway from stale in-memory auth/config after interactive changes.
 
 ### Step 2 — Get your Gateway token
 
 The gateway requires a token for authentication. To retrieve it:
 
 ```sh
-jq -r '.gateway.auth.token' /config/.openclaw/openclaw.json
+jq -r '.gateway.auth.token' /config/.hermes/hermes.json
 ```
 
-> **Note**: Since OpenClaw v2026.2.22+ `openclaw config get` redacts sensitive values (returns `openclaw_redacted`). Read the token directly from the config file with `jq` as shown above.
+> **Note**: Since Hermes v2026.2.22+ `hermes config get` redacts sensitive values (returns `hermes_redacted`). Read the token directly from the config file with `jq` as shown above.
 
 Save this token — you'll need it to access the Gateway Web UI and for API integrations.
 
@@ -161,7 +161,7 @@ Save this token — you'll need it to access the Gateway Web UI and for API inte
 
 1. In the terminal, confirm the gateway is running:
    ```sh
-   openclaw gateway status
+   hermes gateway status
    ```
 2. Click the **Open Gateway Web UI** button on the landing page
 3. If prompted for a token, paste the one from Step 2 or go to the Overview tab, paste the token in the 'Gateway Token' field and press Connect.
@@ -170,9 +170,9 @@ Save this token — you'll need it to access the Gateway Web UI and for API inte
 
 ## 4. Accessing the Gateway Web UI
 
-The Gateway Web UI (Control UI) is OpenClaw's main web interface. It opens in a **separate browser tab** because Home Assistant's Ingress proxy has WebSocket limitations.
+The Gateway Web UI (Control UI) is Hermes's main web interface. It opens in a **separate browser tab** because Home Assistant's Ingress proxy has WebSocket limitations.
 
-> **Important (v2026.2.21+):** OpenClaw now requires a **secure context** (HTTPS or localhost) for the Control UI. Plain HTTP over LAN is no longer accepted. The add-on's `access_mode` option makes this easy — see below.
+> **Important (v2026.2.21+):** Hermes now requires a **secure context** (HTTPS or localhost) for the Control UI. Plain HTTP over LAN is no longer accepted. The add-on's `access_mode` option makes this easy — see below.
 >
 > **v2026.2.22 note:** The gateway now emits a startup security warning when `dangerouslyDisableDeviceAuth` is active (used by `lan_https` mode). This warning is **expected and safe to ignore** — token authentication is still enforced.
 
@@ -206,7 +206,7 @@ This is the simplest way to get secure LAN access, especially for phones and tab
 1. Open the add-on page in HA and click **Download CA Certificate**
 2. Install the certificate on your device:
    - **Android**: Settings → Security → Install certificate → CA certificate → select file
-   - **iOS**: Open the `.crt` file → Install Profile → Settings → General → About → Certificate Trust Settings → enable the OpenClaw CA
+   - **iOS**: Open the `.crt` file → Install Profile → Settings → General → About → Certificate Trust Settings → enable the Hermes CA
 3. After installing the CA, your browser will trust the gateway without warnings
 
 > **Note**: If you skip CA installation, you can still access the gateway — just accept the browser's certificate warning once.
@@ -215,23 +215,23 @@ This is the simplest way to get secure LAN access, especially for phones and tab
 
 Use this when you already run Nginx Proxy Manager (or Caddy/Traefik).
 
-**OpenClaw add-on settings**
+**Hermes add-on settings**
 1. Set `access_mode`: **lan_reverse_proxy**
 2. Set `gateway_trusted_proxies` to your proxy source CIDR/IP.
    - Example for NPM add-on network: `172.30.0.0/16`
    - Or strict single IP: `172.30.x.y/32`
-3. Set `gateway_public_url` to your final HTTPS URL (example: `https://openclaw.example.com`)
-4. Restart OpenClaw add-on
+3. Set `gateway_public_url` to your final HTTPS URL (example: `https://hermes.example.com`)
+4. Restart Hermes add-on
 
 **NPM host config (known-good pattern)**
-1. Create Proxy Host: `openclaw.example.com`
+1. Create Proxy Host: `hermes.example.com`
 2. Forward to: `http://<HA-LAN-IP>:18790`
 3. Enable **Websockets Support**
 4. SSL tab: request/attach certificate, enable **Force SSL**
 5. Add custom header for trusted-proxy auth:
-   - `X-Forwarded-User: openclaw`
+   - `X-Forwarded-User: hermes`
 
-Then open `https://openclaw.example.com`.
+Then open `https://hermes.example.com`.
 
 > **Important**: Nabu Casa remote access only proxies port 8123. It does not expose custom add-on ports directly.
 
@@ -253,16 +253,16 @@ This is the practical flow users report as stable in HAOS.
 
 1. In **Tailscale add-on**:
    - Disable `userspace_networking` (must be `false` so other add-ons can reach tailnet interface)
-2. In **OpenClaw add-on**:
+2. In **Hermes add-on**:
    - Preferred: set `access_mode` to **tailnet_https**
    - Alternative (equivalent): `gateway_bind_mode: tailnet`, token auth
 3. In **NPM**:
    - Forward target to `http://<HA-TAILNET-IP>:18790`
    - Enable websockets
    - Configure TLS cert on the public host
-4. Set `gateway_public_url` to the final HTTPS URL and restart OpenClaw
+4. Set `gateway_public_url` to the final HTTPS URL and restart Hermes
 
-> **Why this flow**: `tailnet_https` in this add-on is a bind/auth preset. It does not automatically run `tailscale serve` inside OpenClaw.
+> **Why this flow**: `tailnet_https` in this add-on is a bind/auth preset. It does not automatically run `tailscale serve` inside Hermes.
 
 ### Setting up the "Open Gateway Web UI" button
 
@@ -275,7 +275,7 @@ In most local installs you can leave `gateway_public_url` empty. The add-on now 
 
 **Examples**:
 - LAN HTTPS (built-in): `https://192.168.1.119:18790`
-- External HTTPS: `https://openclaw.example.com`
+- External HTTPS: `https://hermes.example.com`
 - Tailscale: `https://ha-machine.ts.net:18790`
 
 > **Tip**: In current releases, the add-on first tries the current Home Assistant hostname for the Gateway button. That covers the normal local-IP and local-DNS cases without any manual IP entry.
@@ -297,10 +297,10 @@ This means the browser is connecting over plain HTTP. **Solutions**:
 If the Gateway UI shows **Unauthorized**, re-check your token:
 
 ```sh
-jq -r '.gateway.auth.token' /config/.openclaw/openclaw.json
+jq -r '.gateway.auth.token' /config/.hermes/hermes.json
 ```
 
-> **Note**: Since OpenClaw v2026.2.22+ `openclaw config get` redacts sensitive values — use `jq` to read directly from the config file.
+> **Note**: Since Hermes v2026.2.22+ `hermes config get` redacts sensitive values — use `jq` to read directly from the config file.
 
 ---
 
@@ -329,7 +329,7 @@ All options are set via **Settings → Apps → HomeOps AI → Configuration** i
 | `gateway_trusted_proxies` | string | _(empty)_ | Comma-separated trusted proxy IP/CIDR list used with `gateway_auth_mode: trusted-proxy`. |
 | `gateway_additional_allowed_origins` | string | _(empty)_ | Comma-separated additional origins merged into `gateway.controlUi.allowedOrigins` in `lan_https` mode (example: `https://ha.example.com:8443,capacitor://localhost`). |
 | `controlui_disable_device_auth` | bool | `true` | Controls `gateway.controlUi.dangerouslyDisableDeviceAuth` in `lan_https` mode. **ON (recommended):** skip per-device pairing approval, avoid error 1008 on LAN HTTPS, token auth still required. **OFF:** enforce per-device pairing prompts (stricter, but more friction). |
-| `disable_exec_approvals` | bool | `true` | Disable host exec approval prompts for unattended automations. This fork now enables that by default. When enabled, the add-on forces `/config/.openclaw/exec-approvals.json` defaults to `security=full`, `ask=off`, `askFallback=full` and aligns `/config/.openclaw/openclaw.json` with `tools.exec.host=gateway`, `tools.exec.security=full`, `tools.exec.ask=off`, and `tools.exec.strictInlineEval=false`. Turn it OFF only if you explicitly want human approval prompts restored. |
+| `disable_exec_approvals` | bool | `true` | Disable host exec approval prompts for unattended automations. This fork now enables that by default. When enabled, the add-on forces `/config/.hermes/exec-approvals.json` defaults to `security=full`, `ask=off`, `askFallback=full` and aligns `/config/.hermes/hermes.json` with `tools.exec.host=gateway`, `tools.exec.security=full`, `tools.exec.ask=off`, and `tools.exec.strictInlineEval=false`. Turn it OFF only if you explicitly want human approval prompts restored. |
 | `force_ipv4_dns` | bool | `true` | Force IPv4-first DNS ordering for Node network calls. **Recommended ON** — most HAOS VMs lack IPv6 egress, causing `web_fetch` and Telegram timeouts. Set to `false` only if your network has working IPv6. |
 | `gateway_env_vars` | list of `{name, value}` | `[]` | Environment variables exported to the gateway process at startup. UI format: list entries with `name` and `value` (example: `name=OPENAI_API_KEY`, `value=sk-...`). Limits: max 50 vars, key length 255, value length 10000. Reserved runtime keys are blocked (for example `PATH`, `HOME`, `NODE_OPTIONS`, `NODE_PATH`, `OPENCLAW_*`, proxy vars). Legacy string/object formats are still accepted for backward compatibility. |
 | `nginx_log_level` | `full` / `minimal` | `minimal` | Nginx access log verbosity. `minimal` suppresses repetitive Home Assistant health-check and polling requests (`GET /`, `GET /v1/models`). `full` logs everything. |
@@ -348,9 +348,9 @@ When `gateway_auth_mode: trusted-proxy` is used, the add-on sets `gateway.auth.t
 | Option | Type | Default | Description |
 |---|---|---|---|
 | `homeassistant_token` | string | _(empty)_ | Optional HA long-lived access token (use at own risk, can be very unsecure but very powerful). Saved to `/config/secrets/homeassistant.token` for use by scripts/skills |
-| `enable_builtin_ha_tools` | bool | `true` | Registers the add-on's built-in Home Assistant MCP server so OpenClaw can read live entities, devices, areas, automations, services, templates, and history through first-class tools. Recommended ON. |
-| `enable_ha_service_calls` | bool | `false` | Exposes the mutating `ha_service_call` tool on top of the built-in Home Assistant tool layer. Leave OFF unless you want OpenClaw to call Home Assistant services after explicit user approval. |
-| `http_proxy` | string | _(empty)_ | Optional outbound proxy URL for HTTP/HTTPS requests from OpenClaw and Node tools. Example: `http://192.168.2.1:3128` |
+| `enable_builtin_ha_tools` | bool | `true` | Registers the add-on's built-in Home Assistant MCP server so Hermes can read live entities, devices, areas, automations, services, templates, and history through first-class tools. Recommended ON. |
+| `enable_ha_service_calls` | bool | `false` | Exposes the mutating `ha_service_call` tool on top of the built-in Home Assistant tool layer. Leave OFF unless you want Hermes to call Home Assistant services after explicit user approval. |
+| `http_proxy` | string | _(empty)_ | Optional outbound proxy URL for HTTP/HTTPS requests from Hermes and Node tools. Example: `http://192.168.2.1:3128` |
 | `enable_context7` | bool | `false` | Enables Context7-aware research guidance in the seeded workspace and skill pack. Set `context7_api_key` as well if you want live documentation lookups. |
 | `context7_api_key` | string | _(empty)_ | Optional Context7 API key. Stored in `/config/secrets/context7.api_key`. |
 | `domotz_api_key` | string | _(empty)_ | Optional Domotz API key for network inventory correlation. Stored in `/config/secrets/domotz.api_key`. |
@@ -359,10 +359,10 @@ When `gateway_auth_mode: trusted-proxy` is used, the add-on sets `gateway.auth.t
 | `mqtt_broker_url` | string | _(empty)_ | Optional external MQTT broker URL such as `mqtt://broker.local:1883` or `mqtts://cluster.s2.eu.hivemq.cloud:8883`. Stored in `/config/secrets/mqtt.broker_url`. |
 | `mqtt_username` | string | _(empty)_ | Optional MQTT username. Stored in `/config/secrets/mqtt.username`. |
 | `mqtt_password` | string | _(empty)_ | Optional MQTT password. Stored in `/config/secrets/mqtt.password`. |
-| `enable_matrix` | bool | `false` | Enable Matrix channel support from Home Assistant settings. When ON and a homeserver plus usable auth are configured, the add-on configures `channels.matrix` in OpenClaw and will try to ensure the Matrix plugin is installed. |
+| `enable_matrix` | bool | `false` | Enable Matrix channel support from Home Assistant settings. When ON and a homeserver plus usable auth are configured, the add-on configures `channels.matrix` in Hermes and will try to ensure the Matrix plugin is installed. |
 | `matrix_homeserver` | string | _(empty)_ | Matrix homeserver URL such as `https://matrix.example.org` or `http://matrix-synapse:8008` for a private Synapse deployment. |
 | `matrix_allow_private_network` | bool | `false` | Allows private or internal Matrix homeservers on localhost, LAN, Tailscale, or internal hostnames. Turn ON for self-hosted Synapse/Dendrite installs. |
-| `matrix_user_id` | string | _(empty)_ | Full Matrix user ID for the bot account, for example `@openclaw:example.org`. |
+| `matrix_user_id` | string | _(empty)_ | Full Matrix user ID for the bot account, for example `@hermes:example.org`. |
 | `matrix_access_token` | string | _(empty)_ | Preferred Matrix auth method. If set, the add-on writes `channels.matrix.accessToken` and ignores `matrix_password`. Stored in `/config/secrets/matrix.access_token`. |
 | `matrix_password` | string | _(empty)_ | Fallback Matrix password when you do not want to use an access token. Stored in `/config/secrets/matrix.password`. |
 | `matrix_encryption` | bool | `false` | Enable Matrix end-to-end encryption for the configured account. Leave OFF unless you explicitly want encrypted-room support and have tested the account/device flow. |
@@ -401,7 +401,7 @@ To provide the SSH key: place the private key file in the add-on config director
 
 This is the most common setup — accessing the Gateway Web UI from a browser on your local network (including phones and tablets).
 
-> **Since OpenClaw v2026.2.21**, the Control UI requires a secure context (HTTPS or localhost). Use the `access_mode` option for easy setup.
+> **Since Hermes v2026.2.21**, the Control UI requires a secure context (HTTPS or localhost). Use the `access_mode` option for easy setup.
 
 #### Option 1 — Built-in HTTPS proxy (recommended)
 
@@ -430,7 +430,7 @@ This is the most common setup — accessing the Gateway Web UI from a browser on
 
 ### 6b. Remote Gateway Mode
 
-If you have an OpenClaw gateway running on a different machine (e.g., a more powerful server), you can configure this add-on to connect to it instead of running its own.
+If you have an Hermes gateway running on a different machine (e.g., a more powerful server), you can configure this add-on to connect to it instead of running its own.
 
 1. Set `gateway_mode`: **remote**
 2. Set `gateway_remote_url` in add-on configuration (example: `wss://gateway.example.com:443`)
@@ -445,15 +445,15 @@ When `gateway_mode` is `remote`:
 
 ### 6c. Assist Pipeline Integration (OpenAI API)
 
-OpenClaw's Gateway exposes an **OpenAI-compatible Chat Completions endpoint** (`POST /v1/chat/completions`). This lets you use OpenClaw as a **conversation agent** in Home Assistant's Assist pipeline — enabling voice control, automations, and smart home commands.
+Hermes's Gateway exposes an **OpenAI-compatible Chat Completions endpoint** (`POST /v1/chat/completions`). This lets you use Hermes as a **conversation agent** in Home Assistant's Assist pipeline — enabling voice control, automations, and smart home commands.
 
 There are two ways to connect it to Home Assistant:
 
 ---
 
-#### Option 1 — OpenClaw Integration (recommended)
+#### Option 1 — Hermes Integration (recommended)
 
-The **native OpenClaw integration** provides auto-discovery, a Lovelace chat card, voice mode, tool invocation services, and status sensors — all in one package.
+The **native Hermes integration** provides auto-discovery, a Lovelace chat card, voice mode, tool invocation services, and status sensors — all in one package.
 
 **Step 1 — Enable the endpoint**
 
@@ -461,10 +461,10 @@ In the add-on configuration, set `enable_openai_api`: **true**, then restart.
 
 Or via terminal:
 ```sh
-openclaw config set gateway.http.endpoints.chatCompletions.enabled true
+hermes config set gateway.http.endpoints.chatCompletions.enabled true
 ```
 
-**Step 2 — Install the OpenClaw integration**
+**Step 2 — Install the Hermes integration**
 
 Via HACS:
 1. In HACS, add as a custom repository:
@@ -472,12 +472,12 @@ Via HACS:
    - Category: **Integration**
 2. Install and restart Home Assistant
 
-Or manually: copy `custom_components/openclaw` from the repo into your HA config directory.
+Or manually: copy `custom_components/hermes` from the repo into your HA config directory.
 
 **Step 3 — Add the integration**
 
 1. Go to **Settings → Devices & Services → Add Integration**
-2. Search for **OpenClaw**
+2. Search for **Hermes**
 3. If the addon is running locally, it will be **auto-discovered** — just click Submit
 4. If connecting to a remote instance, fill in host, port, token, and SSL settings manually
 
@@ -492,17 +492,17 @@ Use these connection rules so the integration matches the add-on's real access m
 
 1. Go to **Settings → Voice Assistants**
 2. Edit your assistant (or create a new one)
-3. Under **Conversation agent**, select **OpenClaw**
+3. Under **Conversation agent**, select **Hermes**
 
 **Step 5 — Expose entities**
 
-Go to **Settings → Voice Assistants → Expose** and toggle on the entities you want OpenClaw to control.
+Go to **Settings → Voice Assistants → Expose** and toggle on the entities you want Hermes to control.
 
 #### Assist-first reliability baseline
 
 For the first production-safe voice path, keep the setup boring and explicit:
 
-1. Prefer the **native OpenClaw integration** over generic OpenAI wrappers when this add-on and Home Assistant are on the same host.
+1. Prefer the **native Hermes integration** over generic OpenAI wrappers when this add-on and Home Assistant are on the same host.
 2. Turn on `enable_openai_api`, then restart the add-on before testing the assistant.
 3. Expose only the entities you actually want voice control to touch.
 4. Keep `enable_ha_service_calls` **OFF** unless you explicitly want the built-in Home Assistant tool layer to make service calls after approval.
@@ -520,12 +520,12 @@ For the first production-safe voice path, keep the setup boring and explicit:
 
 The integration auto-registers a Lovelace card. Add it to any dashboard:
 ```yaml
-type: custom:openclaw-chat-card
+type: custom:hermes-chat-card
 ```
 
 The card includes message history, typing indicator, voice input, wake-word support, and TTS responses.
 
-> **Works with standalone OpenClaw too.** The integration doesn't require the HA addon — it connects to any reachable OpenClaw gateway over HTTP/HTTPS. See the [integration README](https://github.com/techartdev/homeops-aiIntegration) for remote connection details.
+> **Works with standalone Hermes too.** The integration doesn't require the HA addon — it connects to any reachable Hermes gateway over HTTP/HTTPS. See the [integration README](https://github.com/techartdev/homeops-aiIntegration) for remote connection details.
 
 ---
 
@@ -542,7 +542,7 @@ In the add-on configuration, set `enable_openai_api`: **true**, then restart.
 
 Or via terminal:
 ```sh
-openclaw config set gateway.http.endpoints.chatCompletions.enabled true
+hermes config set gateway.http.endpoints.chatCompletions.enabled true
 ```
 
 **Step 2 — Install Extended OpenAI Conversation**
@@ -557,7 +557,7 @@ openclaw config set gateway.http.endpoints.chatCompletions.enabled true
 1. Go to **Settings → Devices & Services → Add Integration**
 2. Search for **Extended OpenAI Conversation**
 3. Configure:
-   - **API Key**: your gateway token — run `jq -r '.gateway.auth.token' /config/.openclaw/openclaw.json` in the terminal
+   - **API Key**: your gateway token — run `jq -r '.gateway.auth.token' /config/.hermes/hermes.json` in the terminal
    - **Base URL**: `http://127.0.0.1:18790/v1`
    - **API Version**: leave empty
    - **Organization**: leave empty
@@ -573,17 +573,17 @@ openclaw config set gateway.http.endpoints.chatCompletions.enabled true
 
 **Step 5 — Expose entities**
 
-Go to **Settings → Voice Assistants → Expose** and toggle on the entities you want OpenClaw to control.
+Go to **Settings → Voice Assistants → Expose** and toggle on the entities you want Hermes to control.
 
-You can now use Assist (voice or text) and OpenClaw will handle conversations, control devices, answer questions, and create automations.
+You can now use Assist (voice or text) and Hermes will handle conversations, control devices, answer questions, and create automations.
 
 ### 6d. Browser Automation (Chromium)
 
-The add-on includes **Chromium** for browser-based automation tasks. OpenClaw can use it for web scraping, form filling, website testing, and other browser automation skills.
+The add-on includes **Chromium** for browser-based automation tasks. Hermes can use it for web scraping, form filling, website testing, and other browser automation skills.
 
 ### 6d. Matrix channel
 
-The add-on can provision Matrix directly from Home Assistant settings. This is the intended route if you want operators to invite OpenClaw into rooms without dropping into raw `openclaw config` commands.
+The add-on can provision Matrix directly from Home Assistant settings. This is the intended route if you want operators to invite Hermes into rooms without dropping into raw `hermes config` commands.
 
 **Recommended low-friction setup**
 
@@ -594,7 +594,7 @@ The add-on can provision Matrix directly from Home Assistant settings. This is t
 |---|---|
 | `enable_matrix` | `true` |
 | `matrix_homeserver` | `https://matrix.example.org` |
-| `matrix_user_id` | `@openclaw:example.org` |
+| `matrix_user_id` | `@hermes:example.org` |
 | `matrix_access_token` | your bot token |
 | `matrix_group_policy` | `open` |
 | `matrix_auto_join` | `always` |
@@ -623,7 +623,7 @@ Without that, the add-on will refuse private homeserver targets for safety.
 
 ### 6d-mcp. Built-in Home Assistant tool layer
 
-This add-on now ships with a **built-in Home Assistant MCP server** and enables it by default. That gives OpenClaw first-class access to live Home Assistant objects without requiring a manual MCP registration flow or separate long-lived token setup.
+This add-on now ships with a **built-in Home Assistant MCP server** and enables it by default. That gives Hermes first-class access to live Home Assistant objects without requiring a manual MCP registration flow or separate long-lived token setup.
 
 #### What the built-in tool layer exposes
 
@@ -651,7 +651,7 @@ This add-on now ships with a **built-in Home Assistant MCP server** and enables 
 
 1. Leave **Enable Built-In Home Assistant Tools** (`enable_builtin_ha_tools`) turned **ON**
 2. Restart the add-on after changing the option
-3. Ask OpenClaw questions like:
+3. Ask Hermes questions like:
    - _"What is the outside air temperature?"_
    - _"List all BACnet entities."_
    - _"Which entities are unavailable?"_
@@ -678,7 +678,7 @@ Use `/ha-config` when you need to inspect or repair Home Assistant itself:
 
 Keep the path split straight:
 
-- `/config` is the add-on's persistent OpenClaw workspace and secret store.
+- `/config` is the add-on's persistent Hermes workspace and secret store.
 - `/ha-config` is the live Home Assistant config tree.
 
 Because this fork is intended as a trusted, high-capability Home Assistant operator, `/ha-config` is mounted writable by default. Treat edits there with the same care you would use when editing Home Assistant directly on disk.
@@ -687,7 +687,7 @@ Because this fork is intended as a trusted, high-capability Home Assistant opera
 
 The old `homeassistant_token` + `auto_configure_mcp` path still exists as a compatibility mode for people who want to register Home Assistant's external MCP endpoint manually. It is no longer the recommended path, and it is ignored when `enable_builtin_ha_tools` is ON.
 
-To enable it, add to `/config/.openclaw/openclaw.json`:
+To enable it, add to `/config/.hermes/hermes.json`:
 
 ```json
 {
@@ -727,7 +727,7 @@ The connection details are also saved to `/config/CONNECTION_NOTES.txt` for refe
 
 ### 6f. Google Sheets / Google APIs (gog OAuth)
 
-Some OpenClaw skills use [gog](https://github.com/deftdawg/gog) to interact with Google APIs (Sheets, Drive, etc.). Because the add-on runs inside a container, the standard browser-based OAuth flow won't work — the localhost redirect can't reach your PC. Use the **manual** flow instead.
+Some Hermes skills use [gog](https://github.com/deftdawg/gog) to interact with Google APIs (Sheets, Drive, etc.). Because the add-on runs inside a container, the standard browser-based OAuth flow won't work — the localhost redirect can't reach your PC. Use the **manual** flow instead.
 
 #### Step 1 — Prepare OAuth credentials
 
@@ -786,26 +786,26 @@ You should see your account listed with the `sheets` service.
 
 | Data | Location | Persists? |
 |---|---|---|
-| OpenClaw config | `/config/.openclaw/openclaw.json` | Yes |
-| Built-in skills | `/config/.openclaw/skills/` | Yes |
-| Agent sessions & data | `/config/.openclaw/agents/` | Yes |
-| ClawHub workspace | `/config/clawd/` | Yes |
-| Seeded workspace bootstrap files | `/config/clawd/*.md` | Yes |
+| Hermes config | `/config/.hermes/hermes.json` | Yes |
+| Built-in skills | `/config/.hermes/skills/` | Yes |
+| Agent sessions & data | `/config/.hermes/agents/` | Yes |
+| ClawHub workspace | `/config/homeops/` | Yes |
+| Seeded workspace bootstrap files | `/config/homeops/*.md` | Yes |
 | User-installed npm skills | `/config/.node_global/` | Yes |
 | SSH keys | `/config/keys/` | Yes |
 | Tokens | `/config/secrets/` | Yes |
-| Lightweight system graph | `/config/.openclaw/gitdakky-system-graph.sqlite3` | Yes |
+| Lightweight system graph | `/config/.hermes/gitdakky-system-graph.sqlite3` | Yes |
 | Homebrew & brew-installed tools | `/config/.linuxbrew/` | Yes (synced on startup) |
 | gog OAuth credentials | `/config/gogcli/` | Yes |
 | TLS certificates (lan_https) | `/config/certs/` | Yes (CA persists; server cert regenerated if IP changes) |
 | Live Home Assistant config root | `/ha-config/` | Host-backed (the real HA config tree) |
-| OpenClaw binary | `/usr/lib/node_modules/openclaw/` | **No** — reinstalled from image |
+| Hermes binary | `/usr/lib/node_modules/hermes/` | **No** — reinstalled from image |
 
 ### How built-in skills work
 
-OpenClaw ships with premade skills (e.g., web search, file management). On each startup, the add-on:
+Hermes ships with premade skills (e.g., web search, file management). On each startup, the add-on:
 
-1. Copies built-in skills from the image to `/config/.openclaw/skills/`
+1. Copies built-in skills from the image to `/config/.hermes/skills/`
 2. Creates a symlink from the image path back to persistent storage
 3. On subsequent boots, only newer files are synced (existing files are preserved)
 
@@ -813,7 +813,7 @@ This means built-in skills survive image rebuilds, and any customizations you ma
 
 ### GitDakky seeded workspace and skill pack
 
-On first boot, this fork also seeds persistent operator files under `/config/clawd`:
+On first boot, this fork also seeds persistent operator files under `/config/homeops`:
 
 - `AGENTS.md`
 - `BOOTSTRAP.md`
@@ -824,7 +824,7 @@ On first boot, this fork also seeds persistent operator files under `/config/cla
 - `TOOLS.md`
 - `USER.md`
 
-It also seeds a Home Assistant-focused skill pack into `/config/.openclaw/skills/` with guidance for:
+It also seeds a Home Assistant-focused skill pack into `/config/.hermes/skills/` with guidance for:
 
 - Home Assistant operations
 - automations
@@ -845,16 +845,16 @@ These files are created only if missing, so later restarts do not wipe your manu
 The ingress landing page now includes:
 
 - a file editor for the seeded workspace files and bundled skill files
-- live `openclaw cron` scheduler visibility
+- live `hermes cron` scheduler visibility
 - last-heartbeat visibility
 - read-only operator insight cards for homeowner summary, energy pressure, system drift, predictive maintenance, and security posture
 - integration status cards for Context7, Domotz, GitHub issue reporting, MQTT, BACnet, and MCP
 - a `Memory` tab with a persistent house journal, first-pass doctor score, recent config/runtime changes, incident summaries, and a risk register
-- system-graph metadata backed by SQLite at `/config/.openclaw/gitdakky-system-graph.sqlite3`
+- system-graph metadata backed by SQLite at `/config/.hermes/gitdakky-system-graph.sqlite3`
 
 The insight cards are intentionally advisory and read-only. They use the add-on's trusted Home Assistant API context plus local add-on settings to surface bounded operator actions instead of raw telemetry dumps.
 
-The Home OS Memory store lives at `/config/.openclaw/home-os-memory/`. The add-on keeps a structured `memory-state.json` for the dashboard and a human-readable `house-journal.md` so you can flick through what changed, what broke, and what still looks risky.
+The Home OS Memory store lives at `/config/.hermes/home-os-memory/`. The add-on keeps a structured `memory-state.json` for the dashboard and a human-readable `house-journal.md` so you can flick through what changed, what broke, and what still looks risky.
 
 ### Reporting bugs and feature requests directly from the add-on
 
@@ -874,7 +874,7 @@ or the seeded repo issue reporter skill when you explicitly ask it to file a bug
 
 ### How user-installed skills work
 
-When you install a skill via the OpenClaw dashboard or `npm install -g`, the add-on redirects global npm installs to `/config/.node_global/`. This directory persists across updates.
+When you install a skill via the Hermes dashboard or `npm install -g`, the add-on redirects global npm installs to `/config/.node_global/`. This directory persists across updates.
 
 The add-on also configures `pnpm` global directory to persistent storage at `/config/.node_global/pnpm/`.
 
@@ -925,7 +925,7 @@ $ oc-cleanup
 The tool displays:
 
 - **Disk usage** — total, used, available, and percentage for the overlay filesystem.
-- **Cache sizes** — npm global cache, pnpm content store, OpenClaw data, Homebrew cellar, workspace, Python `__pycache__`, and `/tmp`.
+- **Cache sizes** — npm global cache, pnpm content store, Hermes data, Homebrew cellar, workspace, Python `__pycache__`, and `/tmp`.
 - **Cleanup menu** — choose which caches to purge (npm, pnpm, pycache, tmp, all at once).
 
 > **Note:** The add-on cannot prune Docker images directly. If disk space is
@@ -948,34 +948,34 @@ Home Assistant checks for add-on updates automatically. When an update is availa
 - The container is destroyed and recreated from the new image
 - Everything under `/config/` is preserved (config, skills, workspace, keys)
 - Homebrew and brew-installed packages are preserved (synced to `/config/.linuxbrew/`)
-- The OpenClaw binary is updated to the version in the new image
-- This fork tracks OpenClaw by rebuilding the add-on image; `openclaw update` inside the container is not the supported maintenance path because container-local package changes do not survive image replacement.
+- The Hermes binary is updated to the version in the new image
+- This fork tracks Hermes by rebuilding the add-on image; `hermes update` inside the container is not the supported maintenance path because container-local package changes do not survive image replacement.
 
 ### Checking your version
 
-The add-on version is shown on the add-on page in Home Assistant. To check the OpenClaw version:
+The add-on version is shown on the add-on page in Home Assistant. To check the Hermes version:
 
 ```sh
-openclaw --version
+hermes --version
 ```
 
-The landing page inside the add-on also shows the bundled OpenClaw version from the image metadata.
+The landing page inside the add-on also shows the bundled Hermes version from the image metadata.
 
 ### Maintenance posture
 
-This fork is maintained as an image-pinned Home Assistant add-on, not as an in-container self-updater. Future OpenClaw bumps should update the pinned version in the add-on image, validate wrapper compatibility, and ship a new add-on release. See [MAINTENANCE.md](MAINTENANCE.md) for the exact bump workflow.
+This fork is maintained as an image-pinned Home Assistant add-on, not as an in-container self-updater. Future Hermes bumps should update the pinned version in the add-on image, validate wrapper compatibility, and ship a new add-on release. See [MAINTENANCE.md](MAINTENANCE.md) for the exact bump workflow.
 
 ### Backup
 
-Home Assistant's built-in backup system automatically includes add-on configuration data (`/config/`). This covers all persistent data: OpenClaw config, skills, workspace, keys, and tokens.
+Home Assistant's built-in backup system automatically includes add-on configuration data (`/config/`). This covers all persistent data: Hermes config, skills, workspace, keys, and tokens.
 
 **To create a backup**: Go to **Settings → System → Backups → Create Backup**
 
 **Manual backup** (from the terminal):
 ```sh
 # Key paths to back up:
-# /config/.openclaw/     - OpenClaw config, skills, agent data
-# /config/clawd/         - ClawHub workspace
+# /config/.hermes/     - Hermes config, skills, agent data
+# /config/homeops/         - ClawHub workspace
 # /config/.node_global/  - User-installed npm skills
 # /config/keys/          - SSH keys
 # /config/secrets/       - Tokens
@@ -986,12 +986,12 @@ Home Assistant's built-in backup system automatically includes add-on configurat
 To reset the add-on to a clean state, remove the persistent data:
 
 ```sh
-rm -rf /config/.openclaw /config/clawd /config/.node_global
+rm -rf /config/.hermes /config/homeops /config/.node_global
 ```
 
 Then restart the add-on. It will re-bootstrap a fresh configuration.
 
-> **Warning**: This deletes all your OpenClaw configuration, skills, and workspace data. Back up first if needed.
+> **Warning**: This deletes all your Hermes configuration, skills, and workspace data. Back up first if needed.
 
 ---
 
@@ -1020,16 +1020,16 @@ Go to **Settings → Apps → HomeOps AI → Log** tab. Logs show startup messag
 **Symptom**: Browser shows connection refused when opening the Gateway Web UI.
 
 **Checks**:
-1. Is the gateway running? In the terminal: `openclaw gateway status`
-2. Is the bind mode correct? `openclaw config get gateway.bind` — must be `lan` for direct LAN access, or `loopback` if using `lan_https` mode
-3. Is the port correct? `openclaw config get gateway.port`
+1. Is the gateway running? In the terminal: `hermes gateway status`
+2. Is the bind mode correct? `hermes config get gateway.bind` — must be `lan` for direct LAN access, or `loopback` if using `lan_https` mode
+3. Is the port correct? `hermes config get gateway.port`
 4. Is the firewall blocking the port? Check your HA host firewall rules
 
 ### "disconnected (1008): control ui requires device identity" / "requires HTTPS or localhost"
 
 **Symptom**: Gateway UI shows error 1008 or "requires secure context / device identity".
 
-**Cause**: OpenClaw v2026.2.21+ requires HTTPS or localhost. Plain HTTP over LAN is blocked. (v2026.2.22 further hardens this by defaulting remote onboarding to `wss://` and rejecting insecure non-loopback targets.)
+**Cause**: Hermes v2026.2.21+ requires HTTPS or localhost. Plain HTTP over LAN is blocked. (v2026.2.22 further hardens this by defaulting remote onboarding to `wss://` and rejecting insecure non-loopback targets.)
 
 **Fix** (pick one):
 1. **Easiest**: Set `access_mode` to **lan_https** in add-on Configuration → restart. This adds a built-in HTTPS proxy with zero external setup.
@@ -1040,7 +1040,7 @@ Go to **Settings → Apps → HomeOps AI → Log** tab. Logs show startup messag
 
 **Symptom**: Gateway UI shows `origin not allowed (open the Control UI from the gateway host or allow it in gateway.controlUi.allowedOrigins)`.
 
-**Cause**: OpenClaw v2026.2.21+ checks the browser's `Origin` header against an allow-list. When using the built-in HTTPS proxy (`lan_https`), the origin (`https://<ip>:<port>`) must be registered in `gateway.controlUi.allowedOrigins`.
+**Cause**: Hermes v2026.2.21+ checks the browser's `Origin` header against an allow-list. When using the built-in HTTPS proxy (`lan_https`), the origin (`https://<ip>:<port>`) must be registered in `gateway.controlUi.allowedOrigins`.
 
 **Fix**: In **v0.5.50+** defaults are configured automatically on startup. In **v0.5.54+**, the add-on now merges defaults with existing values and user extras.
 1. Restart the add-on (the startup script detects LAN IP and updates origins).
@@ -1048,7 +1048,7 @@ Go to **Settings → Apps → HomeOps AI → Log** tab. Logs show startup messag
 3. If the IP has changed since you last started, restart again — the cert and defaults are refreshed.
 4. **Manual override** (advanced, from the add-on terminal):
    ```sh
-   openclaw config set gateway.controlUi.allowedOrigins '["https://192.168.1.10:18790"]'
+   hermes config set gateway.controlUi.allowedOrigins '["https://192.168.1.10:18790"]'
    ```
    Then restart the add-on to re-merge defaults + extras.
 
@@ -1056,27 +1056,27 @@ Go to **Settings → Apps → HomeOps AI → Log** tab. Logs show startup messag
 
 **Symptom**: Gateway UI loads over HTTPS but shows `pairing required` and the status is Offline.
 
-**Cause**: OpenClaw v2026.2.21+ requires new devices to complete a pairing handshake before the Control UI WebSocket is accepted. Loopback connections are auto-approved (v2026.2.22 further improves this with loopback scope-upgrade auto-approval), but LAN connections (including those through the HTTPS proxy) require explicit approval.
+**Cause**: Hermes v2026.2.21+ requires new devices to complete a pairing handshake before the Control UI WebSocket is accepted. Loopback connections are auto-approved (v2026.2.22 further improves this with loopback scope-upgrade auto-approval), but LAN connections (including those through the HTTPS proxy) require explicit approval.
 
 **Fix**: In **v0.5.50+** the add-on configures `gateway.controlUi.dangerouslyDisableDeviceAuth` in `lan_https` mode. By default it is enabled (`controlui_disable_device_auth: true`) to bypass per-device pairing while still enforcing token auth. If you prefer stricter behavior, set `controlui_disable_device_auth: false` and approve new devices manually.
 
 ### `unauthorized: gateway token mismatch`
 
-**Symptom**: `openclaw tui`, the Control UI, or `openclaw gateway status` reports `unauthorized: gateway token mismatch`.
+**Symptom**: `hermes tui`, the Control UI, or `hermes gateway status` reports `unauthorized: gateway token mismatch`.
 
-**Cause**: The gateway token stored in `/config/.openclaw/openclaw.json` changed, but the live runtime was still using an older in-memory token. This most commonly happens if onboarding or interactive config rewrites the gateway block while the add-on is already running.
+**Cause**: The gateway token stored in `/config/.hermes/hermes.json` changed, but the live runtime was still using an older in-memory token. This most commonly happens if onboarding or interactive config rewrites the gateway block while the add-on is already running.
 
 **Fix**:
-1. Use `oc-onboard` and `oc-configure` from the add-on terminal instead of raw `openclaw onboard` / `openclaw configure`.
-2. In **v0.7.3+** the add-on also watches `openclaw.json` for gateway changes and recycles the local runtime automatically, so post-onboarding token drift should self-heal.
+1. Use `homeops-onboard` and `homeops-configure` from the add-on terminal instead of raw `hermes onboard` / `hermes configure`.
+2. In **v0.7.3+** the add-on also watches `hermes.json` for gateway changes and recycles the local runtime automatically, so post-onboarding token drift should self-heal.
 3. If you still hit it on an older build, restart the add-on once so the runtime reloads the same token that is now on disk.
 
-> **v2026.2.22 note:** The gateway now logs a security warning on startup when this flag is active. The warning is expected and harmless — run `openclaw security audit` for details.
+> **v2026.2.22 note:** The gateway now logs a security warning on startup when this flag is active. The warning is expected and harmless — run `hermes security audit` for details.
 
 1. **Restart the add-on** — the startup script writes the config before launching the gateway.
 2. If the error persists, set it manually:
    ```sh
-   nano /config/.openclaw/openclaw.json
+   nano /config/.hermes/hermes.json
    ```
    Ensure `gateway.controlUi` contains:
    ```json
@@ -1085,39 +1085,39 @@ Go to **Settings → Apps → HomeOps AI → Log** tab. Logs show startup messag
      "allowedOrigins": ["https://YOUR_IP:18790"]
    }
    ```
-   Then restart the gateway: `openclaw gateway restart`
+   Then restart the gateway: `hermes gateway restart`
 3. Alternatively, approve devices individually without disabling auth:
    ```sh
-   openclaw devices list       # show pending pairing requests
-   openclaw devices approve <requestId>
+   hermes devices list       # show pending pairing requests
+   hermes devices approve <requestId>
    ```
 
 ### New agent says "No API key found for provider ..."
 
 **Symptom**: After hatching or opening a new TUI session, the agent reports `No API key found for provider "anthropic"` (or another provider) and points at `agents/main/agent/auth-profiles.json`.
 
-**Cause**: Current OpenClaw stores model credentials per-agent under `agents/<agentId>/agent/auth-profiles.json`. Older installs often kept auth and sessions in the legacy single-agent layout (`/config/.openclaw/agent/` and `/config/.openclaw/sessions/`).
+**Cause**: Current Hermes stores model credentials per-agent under `agents/<agentId>/agent/auth-profiles.json`. Older installs often kept auth and sessions in the legacy single-agent layout (`/config/.hermes/agent/` and `/config/.hermes/sessions/`).
 
 **Fix**:
 1. Restart the add-on once. This fork now reconciles legacy single-agent state into `agents/main/...` before the gateway starts.
 2. If the warning persists, run:
    ```sh
-   openclaw doctor --non-interactive
+   hermes doctor --non-interactive
    ```
 3. If you still need to compare files manually, check:
-   - legacy auth store: `/config/.openclaw/agent/auth-profiles.json`
-   - current auth store: `/config/.openclaw/agents/main/agent/auth-profiles.json`
+   - legacy auth store: `/config/.hermes/agent/auth-profiles.json`
+   - current auth store: `/config/.hermes/agents/main/agent/auth-profiles.json`
 
 ### Automations keep stopping on exec approvals
 
-**Cause**: OpenClaw host execution still honors exec approval policy even when the automation flow is otherwise configured correctly. For fully unattended automation, you must relax both layers together: `exec-approvals.json` defaults and `tools.exec` in `openclaw.json`.
+**Cause**: Hermes host execution still honors exec approval policy even when the automation flow is otherwise configured correctly. For fully unattended automation, you must relax both layers together: `exec-approvals.json` defaults and `tools.exec` in `hermes.json`.
 
 **Fix**:
 1. In **Settings → Apps → HomeOps AI → Configuration**, leave **Disable Exec Approval Prompts** (`disable_exec_approvals`) **ON**. This fork now defaults it to **ON**.
 2. Restart the add-on
 3. Verify in the embedded terminal:
    ```sh
-   openclaw approvals get
+   hermes approvals get
    ```
 4. The defaults row should show:
    ```text
@@ -1125,8 +1125,8 @@ Go to **Settings → Apps → HomeOps AI → Log** tab. Logs show startup messag
    ```
 
 This add-on writes the policy to:
-- `/config/.openclaw/exec-approvals.json`
-- `/config/.openclaw/openclaw.json` with `tools.exec.host=gateway`, `tools.exec.security=full`, `tools.exec.ask=off`, and `tools.exec.strictInlineEval=false`
+- `/config/.hermes/exec-approvals.json`
+- `/config/.hermes/hermes.json` with `tools.exec.host=gateway`, `tools.exec.security=full`, `tools.exec.ask=off`, and `tools.exec.strictInlineEval=false`
 
 > **Warning**: This disables host exec approval prompts and weakens safety guardrails. Use it only on trusted Home Assistant installs where unattended automation is intentional.
 4. Restart the add-on and hatch the TUI again.
@@ -1140,8 +1140,8 @@ This add-on writes the policy to:
 2. Retry the TUI session.
 3. If you still see it, inspect and approve pending requests manually:
    ```sh
-   openclaw devices list --json
-   openclaw devices approve --latest
+   hermes devices list --json
+   hermes devices approve --latest
    ```
 
 ### Gateway UI shows "Unauthorized"
@@ -1149,10 +1149,10 @@ This add-on writes the policy to:
 **Fix**: Get the correct token and use it:
 
 ```sh
-jq -r '.gateway.auth.token' /config/.openclaw/openclaw.json
+jq -r '.gateway.auth.token' /config/.hermes/hermes.json
 ```
 
-> **Note**: Since OpenClaw v2026.2.22+ `openclaw config get` redacts sensitive values (returns `openclaw_redacted`). Use `jq` to read the token directly from the config file.
+> **Note**: Since Hermes v2026.2.22+ `hermes config get` redacts sensitive values (returns `hermes_redacted`). Use `jq` to read the token directly from the config file.
 
 Paste this token when the UI prompts for authentication, or append it to the URL: `http://<ip>:18790/?token=<your-token>`
 
@@ -1181,7 +1181,7 @@ Paste this token when the UI prompts for authentication, or append it to the URL
 
 ### CLI shows unauthorized with `trusted_proxy_user_missing`
 
-**Symptom**: In add-on terminal, commands that open direct gateway WebSocket (for example some `openclaw status`/gateway probes) fail with unauthorized and logs mention `trusted_proxy_user_missing`.
+**Symptom**: In add-on terminal, commands that open direct gateway WebSocket (for example some `hermes status`/gateway probes) fail with unauthorized and logs mention `trusted_proxy_user_missing`.
 
 **Cause**: `gateway_auth_mode: trusted-proxy` expects identity headers from your reverse proxy. Direct local CLI connections are not proxied, so they may be rejected.
 
@@ -1197,7 +1197,7 @@ Paste this token when the UI prompts for authentication, or append it to the URL
 
 ### `web_fetch failed: fetch failed` / HTTP tool calls time out
 
-**Symptom**: OpenClaw's `web_fetch` tool (or any outbound HTTP call from a skill) fails with `fetch failed`.
+**Symptom**: Hermes's `web_fetch` tool (or any outbound HTTP call from a skill) fails with `fetch failed`.
 
 **Cause**: Node 22 uses `autoSelectFamily` which tries IPv6 first. Most HAOS VMs have IPv6 DNS resolution but no IPv6 egress, so connections time out before falling back to IPv4.
 
@@ -1233,7 +1233,7 @@ When proxy is enabled, add-on startup also applies default bypass ranges via `NO
 Built-in skills are synced to persistent storage on each startup. If skills are missing:
 
 1. Check logs for `INFO: Synced built-in skills to persistent storage` — this confirms the sync ran
-2. If you see `WARN: Built-in skills directory not found`, the OpenClaw installation may be corrupted. Try reinstalling the add-on.
+2. If you see `WARN: Built-in skills directory not found`, the Hermes installation may be corrupted. Try reinstalling the add-on.
 3. User-installed skills (via dashboard) are stored in `/config/.node_global/` and should survive updates
 
 ### Homebrew errors / CPU compatibility
@@ -1242,16 +1242,16 @@ Built-in skills are synced to persistent storage on each startup. If skills are 
 
 **Cause**: Your CPU doesn't support SSSE3 instructions (required by Homebrew). Affects older Intel Atom, Celeron, or pre-2006 processors.
 
-**Impact**: Skills that depend on Homebrew-installed CLI tools (e.g., `gemini`, `aider`) won't work. Core OpenClaw functionality is unaffected.
+**Impact**: Skills that depend on Homebrew-installed CLI tools (e.g., `gemini`, `aider`) won't work. Core Hermes functionality is unaffected.
 
 **Workarounds**:
 - Use a machine with a newer CPU (Intel Core 2 or newer, ~2006+)
 - Install the required CLI tools manually if possible
 - Use alternative skills that don't require Homebrew dependencies
 
-### "openclaw: command not found"
+### "hermes: command not found"
 
-The OpenClaw binary should be installed at `/usr/lib/node_modules/openclaw/`. If this error appears:
+The Hermes binary should be installed at `/usr/lib/node_modules/hermes/`. If this error appears:
 
 1. Check the add-on logs for npm installation errors during build
 2. Try restarting the add-on
@@ -1261,13 +1261,13 @@ The OpenClaw binary should be installed at `/usr/lib/node_modules/openclaw/`. If
 
 **Symptom**: `ERROR: Failed to apply gateway settings` in logs.
 
-**Fix**: The `openclaw.json` config file may be corrupted. To reset it:
+**Fix**: The `hermes.json` config file may be corrupted. To reset it:
 
 ```sh
-rm /config/.openclaw/openclaw.json
+rm /config/.hermes/hermes.json
 ```
 
-Restart the add-on — it will generate a fresh config. You'll need to run `oc-onboard` again.
+Restart the add-on — it will generate a fresh config. You'll need to run `homeops-onboard` again.
 
 ### Disk space running low / "no space left on device"
 
@@ -1311,20 +1311,20 @@ VBoxManage modifymedium disk haos.vdi --resize 64000
 Yes. The add-on supports aarch64 (Raspberry Pi 4/5) and armv7 (Raspberry Pi 3). Note that Homebrew may not work on all ARM devices, but core functionality is unaffected.
 
 **Can I run multiple agents?**
-OpenClaw supports multiple agent profiles. Configure them via `oc-configure` or by editing `/config/.openclaw/openclaw.json`. The gateway serves all configured agents.
+Hermes supports multiple agent profiles. Configure them via `homeops-configure` or by editing `/config/.hermes/hermes.json`. The gateway serves all configured agents.
 
 **Can I use a remote gateway?**
-Yes. Set `gateway_mode` to `remote` and set `gateway_remote_url` in add-on configuration. The add-on syncs it into OpenClaw config automatically. See [Remote Gateway Mode](#6b-remote-gateway-mode).
+Yes. Set `gateway_mode` to `remote` and set `gateway_remote_url` in add-on configuration. The add-on syncs it into Hermes config automatically. See [Remote Gateway Mode](#6b-remote-gateway-mode).
 
 **How do I change the AI model or provider?**
-Run `oc-configure` in the terminal to reconfigure your AI providers, or edit `/config/.openclaw/openclaw.json` directly. You can use OpenAI, Google (Gemini), Anthropic (Claude), local models, and more.
+Run `homeops-configure` in the terminal to reconfigure your AI providers, or edit `/config/.hermes/hermes.json` directly. You can use OpenAI, Google (Gemini), Anthropic (Claude), local models, and more.
 
-**Can other devices on my network use the OpenClaw API?**
-Yes. Set `access_mode` to `lan_https` (recommended) or `lan_reverse_proxy`. Any device on your network can connect to `https://<ha-ip>:18790`. Use the gateway token for authentication. This also enables the [Assist pipeline integration](#6c-assist-pipeline-integration-openai-api) from other HA instances or standalone OpenClaw integrations.
+**Can other devices on my network use the Hermes API?**
+Yes. Set `access_mode` to `lan_https` (recommended) or `lan_reverse_proxy`. Any device on your network can connect to `https://<ha-ip>:18790`. Use the gateway token for authentication. This also enables the [Assist pipeline integration](#6c-assist-pipeline-integration-openai-api) from other HA instances or standalone Hermes integrations.
 
 **Where is my data stored on the host?**
 The add-on's `/config/` directory maps to `/addon_configs/<slug>/` on the Home Assistant host. This is included in HA backups automatically.
 
 The add-on also mounts the live Home Assistant config root at `/ha-config`. That is where `configuration.yaml`, `secrets.yaml`, `custom_components/`, `packages/`, and `.storage/` live inside the container.
 
-The add-on also mounts Home Assistant `/share` and `/media` as writable paths inside the container (`/share`, `/media`) for file access workflows. These are separate from both OpenClaw's persistent workspace under `/config` and the live HA config tree under `/ha-config`.
+The add-on also mounts Home Assistant `/share` and `/media` as writable paths inside the container (`/share`, `/media`) for file access workflows. These are separate from both Hermes's persistent workspace under `/config` and the live HA config tree under `/ha-config`.

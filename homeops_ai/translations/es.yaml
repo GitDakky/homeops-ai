@@ -21,11 +21,11 @@ configuration:
 
   enable_builtin_ha_tools:
     name: Activar herramientas integradas de Home Assistant
-    description: "Cuando está ACTIVADO (recomendado), el add-on registra un servidor MCP local de Home Assistant para que OpenClaw pueda leer entidades, dispositivos, áreas, automatizaciones, servicios e histórico en vivo sin configuración extra de token."
+    description: "Cuando está ACTIVADO (recomendado), el add-on registra un servidor MCP local de Home Assistant para que Hermes pueda leer entidades, dispositivos, áreas, automatizaciones, servicios e histórico en vivo sin configuración extra de token."
 
   enable_ha_service_calls:
     name: Permitir llamadas a servicios de Home Assistant
-    description: "Cuando está ACTIVADO, la capa integrada de herramientas de Home Assistant también expone la herramienta mutadora `ha_service_call`. Déjala APAGADA salvo que quieras que OpenClaw invoque servicios de Home Assistant tras la aprobación explícita del usuario."
+    description: "Cuando está ACTIVADO, la capa integrada de herramientas de Home Assistant también expone la herramienta mutadora `ha_service_call`. Déjala APAGADA salvo que quieras que Hermes invoque servicios de Home Assistant tras la aprobación explícita del usuario."
 
   http_proxy:
     name: Proxy HTTP de salida
@@ -72,11 +72,11 @@ configuration:
 
   disable_exec_approvals:
     name: Desactivar avisos de aprobación exec
-    description: "Cuando está ACTIVADO, fuerza las aprobaciones de ejecución del host de OpenClaw a security=full, ask=off, askFallback=full y alinea tools.exec.host=gateway, tools.exec.security=full, tools.exec.ask=off y strictInlineEval=false. Este fork lo deja ACTIVADO por defecto para que las automatizaciones no se detengan por aprobaciones humanas. Desactívalo solo si quieres recuperar los avisos."
+    description: "Cuando está ACTIVADO, fuerza las aprobaciones de ejecución del host de Hermes a security=full, ask=off, askFallback=full y alinea tools.exec.host=gateway, tools.exec.security=full, tools.exec.ask=off y strictInlineEval=false. Este fork lo deja ACTIVADO por defecto para que las automatizaciones no se detengan por aprobaciones humanas. Desactívalo solo si quieres recuperar los avisos."
 
   enable_matrix:
     name: Activar canal Matrix
-    description: "Activa el soporte de Matrix desde los ajustes de Home Assistant. Cuando está ACTIVADO y hay un homeserver más credenciales válidas configuradas, el add-on configura channels.matrix en OpenClaw e intenta asegurar que el plugin de Matrix esté disponible."
+    description: "Activa el soporte de Matrix desde los ajustes de Home Assistant. Cuando está ACTIVADO y hay un homeserver más credenciales válidas configuradas, el add-on configura channels.matrix en Hermes e intenta asegurar que el plugin de Matrix esté disponible."
 
   matrix_homeserver:
     name: Homeserver de Matrix
@@ -88,7 +88,7 @@ configuration:
 
   matrix_user_id:
     name: ID de usuario Matrix
-    description: "ID completo de usuario Matrix para la cuenta del bot, por ejemplo @openclaw:example.org."
+    description: "ID completo de usuario Matrix para la cuenta del bot, por ejemplo @hermes:example.org."
 
   matrix_access_token:
     name: Token de acceso Matrix
@@ -136,7 +136,7 @@ configuration:
 
   gateway_port:
     name: Puerto del Gateway
-    description: Número de puerto en el que el gateway de OpenClaw escuchará (predeterminado - 18790)
+    description: Número de puerto en el que el gateway de Hermes escuchará (predeterminado - 18790)
 
   access_mode:
     name: Modo de acceso
@@ -161,7 +161,7 @@ configuration:
 
   enable_openai_api:
     name: Activar API OpenAI
-    description: Activar endpoint de Chat Completions compatible con OpenAI. Permite usar OpenClaw como agente de conversación en HA Assist pipeline mediante Extended OpenAI Conversation (HACS) o cualquier cliente compatible con OpenAI.
+    description: Activar endpoint de Chat Completions compatible con OpenAI. Permite usar Hermes como agente de conversación en HA Assist pipeline mediante Extended OpenAI Conversation (HACS) o cualquier cliente compatible con OpenAI.
   force_ipv4_dns:
     name: Forzar orden DNS IPv4
     description: Fuerza prioridad IPv4 en DNS. La mayoría de VMs HAOS no tienen salida IPv6 — causa errores en web_fetch y Telegram. Recomendado ACTIVADO (por defecto).
@@ -173,7 +173,7 @@ configuration:
       full: "Completo (registrar todas las solicitudes)"
   gateway_env_vars:
     name: Variables de entorno del Gateway
-    description: Variables de entorno que se pasan al proceso del gateway OpenClaw al iniciarse (lista de entradas name/value en la UI de Home Assistant; maximo 50 variables, claves de hasta 255 caracteres, valores de hasta 10 000 caracteres).
+    description: Variables de entorno que se pasan al proceso del gateway Hermes al iniciarse (lista de entradas name/value en la UI de Home Assistant; maximo 50 variables, claves de hasta 255 caracteres, valores de hasta 10 000 caracteres).
   auto_configure_mcp:
     name: Configurar MCP automáticamente para Home Assistant
     description: "Ruta heredada de MCP externo. Cuando está ACTIVADO y el token de Home Assistant está configurado, registra el endpoint MCP externo de Home Assistant al iniciar. Se ignora cuando la capa integrada de herramientas de Home Assistant está activada."

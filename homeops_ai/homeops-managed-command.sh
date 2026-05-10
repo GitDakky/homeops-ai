@@ -1,22 +1,22 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-CONFIG_PATH="${OPENCLAW_CONFIG_PATH:-/config/.openclaw/openclaw.json}"
-REQUEST_FILE="/tmp/openclaw-runtime-restart.request"
-ACTIVE_FILE="/tmp/openclaw-managed-command.active"
-DEFAULT_PORT="18790"
+CONFIG_PATH="${HERMES_CONFIG_PATH:-/config/.hermes/config.yaml}"
+REQUEST_FILE="/tmp/hermes-runtime-restart.request"
+ACTIVE_FILE="/tmp/hermes-managed-command.active"
+DEFAULT_PORT="8642"
 
 command_name="$(basename "$0")"
 subcommand=""
 case "$command_name" in
-  oc-onboard)
-    subcommand="onboard"
+  homeops-onboard)
+    subcommand="setup"
     ;;
-  oc-configure)
-    subcommand="configure"
+  homeops-configure)
+    subcommand="config"
     ;;
   *)
-    echo "ERROR: Unsupported managed OpenClaw command wrapper: $command_name" >&2
+    echo "ERROR: Unsupported managed Hermes command wrapper: $command_name" >&2
     exit 1
     ;;
 esac
@@ -78,7 +78,7 @@ signal_runtime_restart() {
   port="${port:-$DEFAULT_PORT}"
 
   if [ "$mode" = "remote" ]; then
-    pid="$(pgrep -f "openclaw.*node.*run" 2>/dev/null | head -1 || true)"
+    pid="$(pgrep -f "hermes.*gateway" 2>/dev/null | head -1 || true)"
   else
     pid="$(
       ss -tlnp 2>/dev/null \
@@ -93,7 +93,7 @@ signal_runtime_restart() {
         || true
     )"
     if [ -z "$pid" ]; then
-      pid="$(pgrep -f "openclaw-gateway" 2>/dev/null | head -1 || true)"
+      pid="$(pgrep -f "hermes gateway" 2>/dev/null | head -1 || true)"
     fi
   fi
 
@@ -111,7 +111,7 @@ printf '%s\n' "$subcommand" > "$ACTIVE_FILE"
 trap 'rm -f "$ACTIVE_FILE"' EXIT INT TERM
 
 set +e
-openclaw "$subcommand" "$@"
+homeops-hermes "$subcommand" "$@"
 status=$?
 set -e
 

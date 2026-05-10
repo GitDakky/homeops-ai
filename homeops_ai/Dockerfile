@@ -140,6 +140,8 @@ alias bat="batcat"
 alias fd="fdfind"
 alias homeops-onboard="/usr/local/bin/homeops-onboard"
 alias homeops-configure="/usr/local/bin/homeops-configure"
+alias homeops-hermes="/usr/local/bin/homeops-hermes"
+alias h="/usr/local/bin/homeops-hermes"
 alias homeops-report-issue="/usr/local/bin/homeops-report-issue"
 
 # Enable colors
@@ -160,6 +162,7 @@ COPY oc_config_helper.py /oc_config_helper.py
 COPY render_nginx.py /render_nginx.py
 COPY dashboard_api.py /dashboard_api.py
 COPY homeops-managed-command.sh /usr/local/bin/homeops-managed-command
+COPY homeops-hermes.sh /usr/local/bin/homeops-hermes
 COPY homeops-report-issue.sh /usr/local/bin/homeops-report-issue
 COPY homeops-cleanup.sh /usr/local/bin/homeops-cleanup
 COPY hermes-proxy-shim.cjs /usr/local/lib/hermes-proxy-shim.cjs
@@ -168,7 +171,7 @@ COPY nginx.conf.tpl /etc/nginx/nginx.conf.tpl
 COPY landing.html.tpl /etc/nginx/landing.html.tpl
 COPY bootstrap-workspace /opt/homeops-ai/bootstrap-workspace
 COPY bundled-skills /opt/homeops-ai/bundled-skills
-RUN chmod +x /run.sh /opt/homeops-ai/run_helpers.sh /hermes_config_helper.py /oc_config_helper.py /render_nginx.py /dashboard_api.py /usr/local/bin/homeops-managed-command /usr/local/bin/homeops-report-issue /usr/local/bin/homeops-cleanup /opt/homeops-ai/ha_mcp_server.cjs \
+RUN chmod +x /run.sh /opt/homeops-ai/run_helpers.sh /hermes_config_helper.py /oc_config_helper.py /render_nginx.py /dashboard_api.py /usr/local/bin/homeops-managed-command /usr/local/bin/homeops-hermes /usr/local/bin/homeops-report-issue /usr/local/bin/homeops-cleanup /opt/homeops-ai/ha_mcp_server.cjs \
     && ln -sf /usr/local/bin/homeops-managed-command /usr/local/bin/homeops-onboard \
     && ln -sf /usr/local/bin/homeops-managed-command /usr/local/bin/homeops-configure \
     && mkdir -p /run/nginx

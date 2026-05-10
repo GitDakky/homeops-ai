@@ -21,11 +21,11 @@ configuration:
 
   enable_builtin_ha_tools:
     name: Eingebaute Home-Assistant-Tools aktivieren
-    description: "Wenn EIN (empfohlen), registriert das Add-on einen lokalen Home-Assistant-MCP-Server, damit OpenClaw live Entities, Geräte, Bereiche, Automationen, Services und Verlauf ohne zusätzliche Token-Einrichtung lesen kann."
+    description: "Wenn EIN (empfohlen), registriert das Add-on einen lokalen Home-Assistant-MCP-Server, damit Hermes live Entities, Geräte, Bereiche, Automationen, Services und Verlauf ohne zusätzliche Token-Einrichtung lesen kann."
 
   enable_ha_service_calls:
     name: Home-Assistant-Serviceaufrufe erlauben
-    description: "Wenn EIN, stellt die eingebaute Home-Assistant-Tool-Ebene zusätzlich das mutierende Tool `ha_service_call` bereit. Lassen Sie dies AUS, außer wenn OpenClaw nach ausdrücklicher Benutzerfreigabe Home-Assistant-Services aufrufen darf."
+    description: "Wenn EIN, stellt die eingebaute Home-Assistant-Tool-Ebene zusätzlich das mutierende Tool `ha_service_call` bereit. Lassen Sie dies AUS, außer wenn Hermes nach ausdrücklicher Benutzerfreigabe Home-Assistant-Services aufrufen darf."
 
   http_proxy:
     name: Ausgehender HTTP-Proxy
@@ -72,11 +72,11 @@ configuration:
 
   disable_exec_approvals:
     name: Exec-Approval-Abfragen deaktivieren
-    description: "Wenn EIN, erzwingt dies für OpenClaw-Host-Exec-Approvals security=full, ask=off, askFallback=full und richtet tools.exec.host=gateway, tools.exec.security=full, tools.exec.ask=off und strictInlineEval=false aus. Dieser Fork setzt das standardmäßig auf EIN, damit Automationen nicht auf menschliche Freigaben warten. Nur AUS schalten, wenn du Approval-Abfragen wiederhaben willst."
+    description: "Wenn EIN, erzwingt dies für Hermes-Host-Exec-Approvals security=full, ask=off, askFallback=full und richtet tools.exec.host=gateway, tools.exec.security=full, tools.exec.ask=off und strictInlineEval=false aus. Dieser Fork setzt das standardmäßig auf EIN, damit Automationen nicht auf menschliche Freigaben warten. Nur AUS schalten, wenn du Approval-Abfragen wiederhaben willst."
 
   enable_matrix:
     name: Matrix-Kanal aktivieren
-    description: "Aktiviert Matrix-Unterstützung aus den Home-Assistant-Einstellungen. Wenn EIN und Homeserver plus nutzbare Anmeldung konfiguriert sind, konfiguriert das Add-on channels.matrix in OpenClaw und versucht, das Matrix-Plugin bereitzustellen."
+    description: "Aktiviert Matrix-Unterstützung aus den Home-Assistant-Einstellungen. Wenn EIN und Homeserver plus nutzbare Anmeldung konfiguriert sind, konfiguriert das Add-on channels.matrix in Hermes und versucht, das Matrix-Plugin bereitzustellen."
 
   matrix_homeserver:
     name: Matrix-Homeserver
@@ -88,7 +88,7 @@ configuration:
 
   matrix_user_id:
     name: Matrix-Benutzer-ID
-    description: "Vollständige Matrix-Benutzer-ID für das Bot-Konto, zum Beispiel @openclaw:example.org."
+    description: "Vollständige Matrix-Benutzer-ID für das Bot-Konto, zum Beispiel @hermes:example.org."
 
   matrix_access_token:
     name: Matrix-Access-Token
@@ -136,7 +136,7 @@ configuration:
 
   gateway_port:
     name: Gateway-Port
-    description: Portnummer, auf der das OpenClaw-Gateway lauscht (Standard - 18790)
+    description: Portnummer, auf der das Hermes-Gateway lauscht (Standard - 18790)
 
   access_mode:
     name: Zugriffsmodus
@@ -161,7 +161,7 @@ configuration:
 
   enable_openai_api:
     name: OpenAI API aktivieren
-    description: OpenAI-kompatiblen Chat Completions Endpunkt aktivieren. Ermöglicht die Verwendung von OpenClaw als Gesprächsagent in der HA Assist Pipeline über Extended OpenAI Conversation (HACS) oder jeden OpenAI-kompatiblen Client.
+    description: OpenAI-kompatiblen Chat Completions Endpunkt aktivieren. Ermöglicht die Verwendung von Hermes als Gesprächsagent in der HA Assist Pipeline über Extended OpenAI Conversation (HACS) oder jeden OpenAI-kompatiblen Client.
   force_ipv4_dns:
     name: IPv4-DNS-Reihenfolge erzwingen
     description: Erzwingt IPv4-vorrangige DNS-Auflösung. Die meisten HAOS-VMs haben keinen IPv6-Ausgang — verursacht web_fetch- und Telegram-Timeouts. Empfohlen EIN (Standard).
@@ -173,7 +173,7 @@ configuration:
       full: "Vollständig (alle Anfragen protokollieren)"
   gateway_env_vars:
     name: Gateway-Umgebungsvariablen
-    description: Umgebungsvariablen, die beim Start an den OpenClaw-Gateway-Prozess übergeben werden (Liste mit name/value-Einträgen in der Home Assistant UI; max. 50 Variablen, Schlüssel bis 255 Zeichen, Werte bis 10.000 Zeichen).
+    description: Umgebungsvariablen, die beim Start an den Hermes-Gateway-Prozess übergeben werden (Liste mit name/value-Einträgen in der Home Assistant UI; max. 50 Variablen, Schlüssel bis 255 Zeichen, Werte bis 10.000 Zeichen).
   auto_configure_mcp:
     name: MCP für Home Assistant automatisch konfigurieren
     description: "Veralteter externer MCP-Pfad. Wenn AN und ein Home-Assistant-Token gesetzt ist, registriert er den externen MCP-Endpunkt von Home Assistant beim Start. Dies wird ignoriert, wenn die eingebaute Home-Assistant-Tool-Ebene aktiviert ist."

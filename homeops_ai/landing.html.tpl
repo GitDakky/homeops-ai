@@ -770,13 +770,13 @@
           <div class="eyebrow">GitDakky Fork Operator Console</div>
           <h1>HomeOps AI</h1>
           <p class="lede">
-            Modernized Home Assistant runtime for OpenClaw with a darker operator-first shell,
+            Modernized Home Assistant runtime for Hermes with a darker operator-first shell,
             cleaner migration handling, and a clearer separation from the legacy add-on line.
           </p>
         </div>
 
         <div class="chip-row">
-          <div class="chip">Bundled OpenClaw <code>__OPENCLAW_BUNDLED_VERSION__</code></div>
+          <div class="chip">Bundled Hermes <code>__OPENCLAW_BUNDLED_VERSION__</code></div>
           <div class="chip">Gateway mode <code>__ACCESS_MODE__</code></div>
           <span class="badge mode" id="modeBadge">__ACCESS_MODE__</span>
           <span class="badge" id="secureBadge"></span>
@@ -833,13 +833,13 @@
 
     <div class="banner-stack">
       <div class="banner warn hidden" id="migrationBanner">
-        <b>Migration note:</b> OpenClaw requires HTTPS or localhost for the Control UI.
+        <b>Migration note:</b> Hermes requires HTTPS or localhost for the Control UI.
         Plain HTTP LAN access will be rejected. Switch <code>access_mode</code> to <b>lan_https</b>
         for the cleanest built-in secure path.
       </div>
       <div class="banner warn hidden" id="diskBanner">
         <b>Low disk space:</b> <span id="diskBannerText"></span><br>
-        Open the terminal and run <code>oc-cleanup</code>. For Docker-level cleanup, use a host root shell and run
+        Open the terminal and run <code>homeops-cleanup</code>. For Docker-level cleanup, use a host root shell and run
         <code>docker image prune -a</code>.
       </div>
       <div class="banner error hidden" id="errorBanner"></div>
@@ -877,9 +877,9 @@
                 <p>
                   If the Gateway UI says <b>Unauthorized</b>, retrieve the token in the embedded terminal:
                 </p>
-                <pre>jq -r '.gateway.auth.token' /config/.openclaw/openclaw.json</pre>
+                <pre>jq -r '.gateway.auth.token' /config/.hermes/hermes.json</pre>
                 <p class="subtle">
-                  Since OpenClaw v2026.2.22+, <code>openclaw config get</code> redacts secrets, so read the file directly.
+                  Since Hermes v2026.2.22+, <code>hermes config get</code> redacts secrets, so read the file directly.
                 </p>
               </div>
             </details>
@@ -887,7 +887,7 @@
             <details>
               <summary>MCP setup (Home Assistant control)</summary>
               <div>
-                <p><b>MCP</b> lets OpenClaw control Home Assistant entities, services, and automations directly.</p>
+                <p><b>MCP</b> lets Hermes control Home Assistant entities, services, and automations directly.</p>
                 <p><b>Automatic:</b> create a long-lived access token in Home Assistant, paste it into <code>homeassistant_token</code>, enable <code>auto_configure_mcp</code>, and restart the app.</p>
                 <p><b>Manual:</b></p>
                 <pre>mcporter config add HA "http://localhost:8123/api/mcp" \
@@ -907,13 +907,13 @@ Forward:  &lt;HA-IP&gt;:18790
 WS:       ON
 SSL tab:  Request a new SSL certificate</pre>
                 <p><b>Caddy</b></p>
-                <pre>openclaw.example.com {
+                <pre>hermes.example.com {
     reverse_proxy &lt;HA-IP&gt;:18790
 }</pre>
                 <p><b>Traefik</b></p>
-                <pre>- "traefik.http.routers.openclaw.rule=Host(`openclaw.example.com`)"
-- "traefik.http.routers.openclaw.tls.certresolver=le"
-- "traefik.http.services.openclaw.loadbalancer.server.port=18790"</pre>
+                <pre>- "traefik.http.routers.hermes.rule=Host(`hermes.example.com`)"
+- "traefik.http.routers.hermes.tls.certresolver=le"
+- "traefik.http.services.hermes.loadbalancer.server.port=18790"</pre>
                 <p><b>Tailscale HTTPS</b></p>
                 <pre># 1. Set access_mode to tailnet_https
 # 2. Enable Tailscale HTTPS certificates
@@ -927,16 +927,16 @@ SSL tab:  Request a new SSL certificate</pre>
               <div>
                 <p>
                   If you migrated from the older add-on line, the fork now reconciles legacy single-agent state into the current per-agent
-                  OpenClaw layout so sessions, auth, and model state continue to work under <code>agents/main</code>.
+                  Hermes layout so sessions, auth, and model state continue to work under <code>agents/main</code>.
                 </p>
                 <p>
                   Same-host CLI and TUI pairing requests are auto-approved on loopback-style installs to reduce local operator friction without opening remote pairing.
                 </p>
                 <p>
-                  For a full recovery pass, run <code>openclaw doctor --non-interactive</code> from the embedded terminal.
+                  For a full recovery pass, run <code>hermes doctor --non-interactive</code> from the embedded terminal.
                 </p>
                 <p>
-                  This fork mounts the live Home Assistant config tree at <code>/ha-config</code>. Keep <code>/config</code> for OpenClaw workspace state and use <code>/ha-config</code> for <code>configuration.yaml</code>, <code>secrets.yaml</code>, <code>custom_components/</code>, <code>packages/</code>, and <code>.storage/</code>.
+                  This fork mounts the live Home Assistant config tree at <code>/ha-config</code>. Keep <code>/config</code> for Hermes workspace state and use <code>/ha-config</code> for <code>configuration.yaml</code>, <code>secrets.yaml</code>, <code>custom_components/</code>, <code>packages/</code>, and <code>.storage/</code>.
                 </p>
               </div>
             </details>
@@ -950,7 +950,7 @@ SSL tab:  Request a new SSL certificate</pre>
           <div class="eyebrow">Workspace and Skills</div>
           <h3>Editable operator bootstrap</h3>
           <p>
-            The add-on seeds a managed OpenClaw workspace and a Home Assistant skill pack on first boot.
+            The add-on seeds a managed Hermes workspace and a Home Assistant skill pack on first boot.
             Edit the key files here if you want to tune the assistant manually without leaving the dashboard.
           </p>
         </div>
@@ -990,7 +990,7 @@ SSL tab:  Request a new SSL certificate</pre>
           <div class="eyebrow">Automation Runtime</div>
           <h3>Cron and heartbeat visibility</h3>
           <p>
-            This section reflects live OpenClaw scheduler state so you can see what jobs exist,
+            This section reflects live Hermes scheduler state so you can see what jobs exist,
             whether the cron scheduler is healthy, and what the latest heartbeat recorded.
           </p>
         </div>
@@ -1117,7 +1117,7 @@ SSL tab:  Request a new SSL certificate</pre>
     const escapeHtml = value => String(value ?? '').replace(/[&<>"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]));
     const tabButtons = Array.from(document.querySelectorAll('[data-tab-target]'));
     const tabPanels = Array.from(document.querySelectorAll('[data-tab-panel]'));
-    const TAB_STORAGE_KEY = 'openclaw.operatorTab';
+    const TAB_STORAGE_KEY = 'hermes.operatorTab';
     function setStatusCard(targetId, level, icon, label, message) {
       const element = $(targetId);
       if (!element) return;
@@ -1270,7 +1270,7 @@ SSL tab:  Request a new SSL certificate</pre>
 
     const ERROR_MAP = {
       'control ui requires device identity': {
-        friendly: 'The Gateway UI requires HTTPS or localhost (secure context). Plain HTTP over LAN is blocked since OpenClaw v2026.2.21.',
+        friendly: 'The Gateway UI requires HTTPS or localhost (secure context). Plain HTTP over LAN is blocked since Hermes v2026.2.21.',
         fix: ACCESS_MODE === 'lan_https'
           ? 'Your app is configured for lan_https. Open the gateway via the HTTPS URL above and install the CA certificate on your device.'
           : 'Switch <code>access_mode</code> to <b>lan_https</b> in app Configuration, then restart. This enables a built-in HTTPS proxy for LAN access.'
@@ -1289,7 +1289,7 @@ SSL tab:  Request a new SSL certificate</pre>
         friendly: 'The Gateway rejected the browser origin. The Control UI URL is not in the allow-list.',
         fix: ACCESS_MODE === 'lan_https'
           ? 'Restart the app so it can refresh HTTPS origins and certificates for the current LAN IP.'
-          : 'Manually add your origin: <code>openclaw config set gateway.controlUi.allowedOrigins \'["https://YOUR_IP:18790"]\'</code>'
+          : 'Manually add your origin: <code>hermes config set gateway.controlUi.allowedOrigins \'["https://YOUR_IP:18790"]\'</code>'
       },
       '1008': {
         friendly: 'The websocket closed with code 1008.',

@@ -2,7 +2,7 @@
 
 **HomeOps AI** is a Home Assistant add-on that brings a Hermes-powered operations agent into HAOS properly — as a native add-on/app, not as a fragile side-load that HA can wipe on update.
 
-The project is seeded from the GitDakky OpenClaw Home Assistant add-on work, but the direction is now Hermes-first: a clean, popular, installable Home Assistant AI operations layer.
+The project is seeded from the GitDakky Hermes Home Assistant add-on work, but the direction is now Hermes-first: a clean, popular, installable Home Assistant AI operations layer.
 
 ## Product promise
 
@@ -59,9 +59,32 @@ Home Assistant OS and Supervisor own the application lifecycle. Installing throu
 
 Manual installs inside HAOS are unsupported for this project.
 
+## Starting Hermes in the integrated terminal
+
+After the add-on starts, open the integrated terminal and run:
+
+```sh
+homeops-hermes
+```
+
+Short alias:
+
+```sh
+h
+```
+
+For setup/configuration:
+
+```sh
+homeops-onboard
+homeops-configure
+```
+
+If `hermes` itself is on PATH you can also run `hermes` directly, but `homeops-hermes` sets the add-on-safe `HERMES_HOME=/config/.hermes` and workspace `/config/homeops` first.
+
 ## Current status
 
-This repository has just been created from the proven Home Assistant add-on shell in `GitDakky/OpenClawHomeAssistant`. The first milestone is to replace the OpenClaw runtime assumptions with Hermes Agent while preserving the good Home Assistant packaging, ingress, persistence, dashboard, and validation patterns.
+This repository has just been created from the proven Home Assistant add-on shell in `GitDakky/HermesHomeAssistant`. The first milestone is to replace the Hermes runtime assumptions with Hermes Agent while preserving the good Home Assistant packaging, ingress, persistence, dashboard, and validation patterns.
 
 Do not treat the current image as production-ready until the Hermes runtime port is complete.
 
@@ -83,16 +106,16 @@ Do not treat the current image as production-ready until the Hermes runtime port
 - `homeops_ai/Dockerfile` — add-on image build
 - `homeops_ai/run.sh` — add-on PID 1 runtime orchestrator
 - `homeops_ai/dashboard_api.py` — local dashboard/status API
-- `homeops_ai/ha_mcp_server.cjs` — Home Assistant MCP/tool bridge inherited from the OpenClaw line; to be evaluated for Hermes
+- `homeops_ai/ha_mcp_server.cjs` — Home Assistant MCP/tool bridge inherited from the Hermes line; to be evaluated for Hermes
 - `scripts/validate_local.sh` — local validation entrypoint
 
 ## Roadmap
 
-1. Rename and clean OpenClaw-specific runtime/state references.
+1. Rename and clean Hermes-specific runtime/state references.
 2. Install Hermes Agent in the add-on image using the official installer or a pinned source build.
 3. Map add-on options to Hermes config/environment safely.
-4. Replace OpenClaw gateway lifecycle with Hermes gateway/API/dashboard lifecycle.
-5. Convert bundled OpenClaw skills/bootstrap files into Hermes-native skills and workspace context.
+4. Replace Hermes gateway lifecycle with Hermes gateway/API/dashboard lifecycle.
+5. Convert bundled Hermes skills/bootstrap files into Hermes-native skills and workspace context.
 6. Rework docs, translations, tests, and CI for a clean HomeOps AI public release.
 
 ## Name
@@ -101,4 +124,4 @@ Do not treat the current image as production-ready until the Hermes runtime port
 
 ## Lineage
 
-This project starts from the Home Assistant add-on work in `GitDakky/OpenClawHomeAssistant`, then ports the agent runtime and user experience to Hermes Agent.
+This project starts from the Home Assistant add-on work in `GitDakky/HermesHomeAssistant`, then ports the agent runtime and user experience to Hermes Agent.

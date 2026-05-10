@@ -21,11 +21,11 @@ configuration:
 
   enable_builtin_ha_tools:
     name: Активирай вградените Home Assistant инструменти
-    description: "Когато е ВКЛ. (препоръчително), добавката регистрира локален Home Assistant MCP сървър, за да може OpenClaw да чете живи entities, devices, areas, automations, services и history без допълнителен token setup."
+    description: "Когато е ВКЛ. (препоръчително), добавката регистрира локален Home Assistant MCP сървър, за да може Hermes да чете живи entities, devices, areas, automations, services и history без допълнителен token setup."
 
   enable_ha_service_calls:
     name: Разреши Home Assistant service calls
-    description: "Когато е ВКЛ., вграденият Home Assistant tool layer добавя и mutating `ha_service_call` tool. Оставете го ИЗКЛ., освен ако изрично не искате OpenClaw да извиква Home Assistant услуги след одобрение от потребителя."
+    description: "Когато е ВКЛ., вграденият Home Assistant tool layer добавя и mutating `ha_service_call` tool. Оставете го ИЗКЛ., освен ако изрично не искате Hermes да извиква Home Assistant услуги след одобрение от потребителя."
 
   http_proxy:
     name: Изходящ HTTP прокси
@@ -72,11 +72,11 @@ configuration:
 
   disable_exec_approvals:
     name: Изключване на exec approval подсказките
-    description: "Когато е ВКЛ., принуждава OpenClaw host exec approvals към security=full, ask=off, askFallback=full и подравнява tools.exec.host=gateway, tools.exec.security=full, tools.exec.ask=off и strictInlineEval=false. Този fork го оставя ВКЛ. по подразбиране, за да не спират автоматизациите за човешко approval. Изключете го само ако искате подсказките да се върнат."
+    description: "Когато е ВКЛ., принуждава Hermes host exec approvals към security=full, ask=off, askFallback=full и подравнява tools.exec.host=gateway, tools.exec.security=full, tools.exec.ask=off и strictInlineEval=false. Този fork го оставя ВКЛ. по подразбиране, за да не спират автоматизациите за човешко approval. Изключете го само ако искате подсказките да се върнат."
 
   enable_matrix:
     name: Включи Matrix канал
-    description: "Включва Matrix канал от настройките на Home Assistant. Когато е ВКЛ. и има конфигурирани homeserver и работещ вход, add-on-ът конфигурира channels.matrix в OpenClaw и ще се опита да осигури Matrix plugin."
+    description: "Включва Matrix канал от настройките на Home Assistant. Когато е ВКЛ. и има конфигурирани homeserver и работещ вход, add-on-ът конфигурира channels.matrix в Hermes и ще се опита да осигури Matrix plugin."
 
   matrix_homeserver:
     name: Matrix homeserver
@@ -88,7 +88,7 @@ configuration:
 
   matrix_user_id:
     name: Matrix User ID
-    description: "Пълният Matrix user ID на бот акаунта, например @openclaw:example.org."
+    description: "Пълният Matrix user ID на бот акаунта, например @hermes:example.org."
 
   matrix_access_token:
     name: Matrix access token
@@ -136,7 +136,7 @@ configuration:
 
   gateway_port:
     name: Порт на Gateway
-    description: Номер на порт, на който OpenClaw gateway да слуша (по подразбиране - 18790)
+    description: Номер на порт, на който Hermes gateway да слуша (по подразбиране - 18790)
 
   access_mode:
     name: Режим на достъп
@@ -161,7 +161,7 @@ configuration:
 
   enable_openai_api:
     name: Активиране на OpenAI API
-    description: Активиране на OpenAI-съвместим Chat Completions ендпойнт. Позволява използването на OpenClaw като разговорен агент в HA Assist pipeline чрез Extended OpenAI Conversation (HACS) или всеки OpenAI-съвместим клиент.
+    description: Активиране на OpenAI-съвместим Chat Completions ендпойнт. Позволява използването на Hermes като разговорен агент в HA Assist pipeline чрез Extended OpenAI Conversation (HACS) или всеки OpenAI-съвместим клиент.
   force_ipv4_dns:
     name: Принудителен IPv4 DNS ред
     description: Принудително задава IPv4-приоритет при DNS резолв. Повечето HAOS VM нямат IPv6 изход — предизвиква web_fetch и Telegram грешки. Препоръчително ВКЛЮЧЕНО (по подразбиране).
@@ -173,7 +173,7 @@ configuration:
       full: "Пълно (логване на всички заявки)"
   gateway_env_vars:
     name: Променливи на средата за Gateway
-    description: Променливи на средата, предавани на OpenClaw gateway процеса при стартиране (списък от записи name/value в Home Assistant UI; макс. 50 променливи, ключове до 255 знака, стойности до 10000 знака).
+    description: Променливи на средата, предавани на Hermes gateway процеса при стартиране (списък от записи name/value в Home Assistant UI; макс. 50 променливи, ключове до 255 знака, стойности до 10000 знака).
   auto_configure_mcp:
     name: Автоматично конфигуриране на MCP за Home Assistant
     description: "Наследен външен MCP режим. Когато е ВКЛ. и Home Assistant Token е зададен, регистрира външния MCP endpoint на Home Assistant при стартиране. Игнорира се, когато вграденият Home Assistant tool layer е активиран."
