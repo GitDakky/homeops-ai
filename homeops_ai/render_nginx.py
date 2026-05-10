@@ -1,0 +1,186 @@
+#!/usr/bin/env python3
+"""
+Render nginx.conf and landing page HTML from templates.
+
+Called by run.sh with the following env vars:
+  GW_PUBLIC_URL, GW_TOKEN, TERMINAL_PORT,
+  ENABLE_HTTPS_PROXY, HTTPS_PROXY_PORT,
+  GATEWAY_INTERNAL_PORT, GATEWAY_PORT, GATEWAY_MODE, GATEWAY_BIND_MODE, ACCESS_MODE,
+  DISK_TOTAL, DISK_USED, DISK_AVAIL, DISK_PCT,
+  OPENCLAW_BUNDLED_VERSION, DASHBOARD_API_PORT
+"""
+
+import os
+import subprocess
+from pathlib import Path
+
+
+def resolve_bundled_openclaw_version() -> str:
+    env_value = os.environ.get('OPENCLAW_BUNDLED_VERSION', '').strip()
+    if env_value and env_value.lower() != 'unknown':
+        return env_value
+
+    version_file = Path('/usr/local/share/openclaw-bundled-version')
+    if version_file.exists():
+        file_value = version_file.read_text(encoding='utf-8').strip()
+        if file_value:
+            return file_value
+
+    try:
+        output = subprocess.check_output(
+            ['openclaw', '--version'],
+            text=True,
+            timeout=4,
+            stderr=subprocess.DEVNULL,
+        )
+    except Exception:
+        return 'unknown'
+
+    for token in output.replace('—', ' ').split():
+        if token[:1].isdigit():
+            return token
+
+    return 'unknown'
+
+
+def resolve_gateway_public_url(public_url: str, enable_https: bool, https_port: str, lan_ip: str) -> str:
+    """Resolve the public gateway URL shown on the landing page."""
+    if public_url:
+        return public_url
+    if enable_https and https_port:
+        return f'https://{lan_ip}:{https_port}'
+    return ''
+
+
+def resolve_gateway_public_url_path(public_url: str) -> str:
+    """Match the landing-page path suffix logic for the gateway URL."""
+    return '' if public_url.endswith('/') else '/'
+
+
+def main():
+    tpl = Path('/etc/nginx/nginx.conf.tpl').read_text()
+    landing_tpl = Path('/etc/nginx/landing.html.tpl').read_text()
+
+    public_url = os.environ.get('GW_PUBLIC_URL', '')
+    terminal_port = os.environ.get('TERMINAL_PORT', '7682')
+    enable_https = os.environ.get('ENABLE_HTTPS_PROXY', 'false') == 'true'
+    https_port = os.environ.get('HTTPS_PROXY_PORT', '')
+    internal_gw_port = os.environ.get('GATEWAY_INTERNAL_PORT', '')
+    gateway_port = os.environ.get('GATEWAY_PORT', '')
+    gateway_mode = os.environ.get('GATEWAY_MODE', 'local')
+    gateway_bind_mode = os.environ.get('GATEWAY_BIND_MODE', 'loopback')
+    access_mode = os.environ.get('ACCESS_MODE', 'custom')
+    dashboard_api_port = os.environ.get('DASHBOARD_API_PORT', '48110')
+
+    # Disk usage info (collected by run.sh)
+    disk_total = os.environ.get('DISK_TOTAL', '')
+    disk_used = os.environ.get('DISK_USED', '')
+    disk_avail = os.environ.get('DISK_AVAIL', '')
+    disk_pct = os.environ.get('DISK_PCT', '')
+    nginx_log_level = os.environ.get('NGINX_LOG_LEVEL', 'minimal')
+    bundled_openclaw_version = resolve_bundled_openclaw_version()
+
+    # Token comes from environment (best-effort CLI query in run.sh)
+    token = os.environ.get('GW_TOKEN', '')
+
+    gw_path = resolve_gateway_public_url_path(public_url)
+
+    # ── nginx.conf ──────────────────────────────────────────────
+    # Build access_log directive (minimal suppresses HA health-check / polling noise)
+    if nginx_log_level == 'minimal':
+        access_log_block = (
+            '# Suppress repetitive HA health-check / polling requests\n'
+            '  map $http_user_agent $loggable {\n'
+            '    ~HomeAssistant 0;\n'
+            '    default 1;\n'
+            '  }\n'
+            '  access_log /dev/stdout combined if=$loggable;'
+        )
+    else:
+        access_log_block = 'access_log /dev/stdout;'
+
+    conf = tpl.replace('__NGINX_ACCESS_LOG__', access_log_block)
+    conf = conf.replace('__TERMINAL_PORT__', terminal_port)
+    conf = conf.replace('__DASHBOARD_API_PORT__', dashboard_api_port)
+
+    # Build HTTPS gateway proxy block (only for lan_https mode)
+    https_block = ''
+    if enable_https and https_port and internal_gw_port:
+        https_block = f"""
+    # --- HTTPS Gateway Proxy (lan_https mode) ---
+    server {{
+        listen {https_port} ssl;
+
+        ssl_certificate     /config/certs/gateway.crt;
+        ssl_certificate_key /config/certs/gateway.key;
+        ssl_protocols       TLSv1.2 TLSv1.3;
+        ssl_ciphers         HIGH:!aNULL:!MD5;
+
+        # Proxy all traffic to the loopback gateway with WebSocket support
+        location / {{
+            proxy_pass http://127.0.0.1:{internal_gw_port};
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection "upgrade";
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto https;
+            proxy_read_timeout 86400s;
+            proxy_send_timeout 86400s;
+            proxy_buffering off;
+        }}
+
+        # Download the local CA certificate (install on phone for trusted access)
+        location = /cert/ca.crt {{
+            alias /etc/nginx/html/openclaw-ca.crt;
+            default_type application/x-x509-ca-cert;
+            add_header Content-Disposition 'attachment; filename="openclaw-ca.crt"';
+        }}
+    }}
+"""
+
+    conf = conf.replace('__HTTPS_GATEWAY_BLOCK__', https_block)
+    Path('/etc/nginx/nginx.conf').write_text(conf)
+
+    # ── landing page ────────────────────────────────────────────
+    # If lan_https and no explicit public URL, auto-construct one
+    if enable_https and not public_url:
+        try:
+            lan_ip = subprocess.check_output(
+                ['hostname', '-I'], text=True, timeout=2
+            ).split()[0]
+        except Exception:
+            lan_ip = '127.0.0.1'
+        public_url = resolve_gateway_public_url(public_url, enable_https, https_port, lan_ip)
+        gw_path = resolve_gateway_public_url_path(public_url)
+
+    landing = landing_tpl.replace('__GATEWAY_TOKEN__', token)
+    landing = landing.replace('__GATEWAY_PUBLIC_URL__', public_url)
+    landing = landing.replace('__GW_PUBLIC_URL_PATH__', gw_path)
+    landing = landing.replace('__ACCESS_MODE__', access_mode)
+    landing = landing.replace('__GATEWAY_MODE__', gateway_mode)
+    landing = landing.replace('__GATEWAY_BIND_MODE__', gateway_bind_mode)
+    landing = landing.replace('__GATEWAY_PORT__', gateway_port)
+    landing = landing.replace('__HTTPS_PORT__', https_port if enable_https else '')
+    landing = landing.replace('__DISK_TOTAL__', disk_total)
+    landing = landing.replace('__DISK_USED__', disk_used)
+    landing = landing.replace('__DISK_AVAIL__', disk_avail)
+    landing = landing.replace('__DISK_PCT__', disk_pct)
+    landing = landing.replace('__OPENCLAW_BUNDLED_VERSION__', bundled_openclaw_version)
+
+    out_dir = Path('/etc/nginx/html')
+    out_dir.mkdir(parents=True, exist_ok=True)
+    out_file = out_dir / 'index.html'
+    out_file.write_text(landing)
+
+    # Ensure nginx can read it even if base image uses restrictive umask/permissions.
+    try:
+        out_dir.chmod(0o755)
+        out_file.chmod(0o644)
+    except Exception:
+        pass
+
+
+if __name__ == '__main__':
+    main()

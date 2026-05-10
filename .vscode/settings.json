@@ -1,0 +1,44 @@
+{
+  "editor.formatOnSave": true,
+  "files.insertFinalNewline": true,
+  "files.trimFinalNewlines": true,
+  "files.eol": "\n",
+
+  "[shellscript]": {
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true
+  },
+  "[yaml]": {
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true
+  },
+  "[python]": {
+    "editor.tabSize": 4,
+    "editor.insertSpaces": true
+  },
+  "[markdown]": {
+    "editor.wordWrap": "on",
+    "editor.quickSuggestions": {
+      "comments": "off",
+      "strings": "off",
+      "other": "off"
+    }
+  },
+
+  "files.associations": {
+    "*.tpl": "nginx"
+  },
+
+  "yaml.validate": true,
+  "yaml.format.enable": true,
+
+  "shellcheck.enable": true,
+  "shellcheck.run": "onType",
+
+  "python.analysis.typeCheckingMode": "basic",
+  "python.analysis.autoImportCompletions": true,
+
+  "search.exclude": {
+    "**/__pycache__": true
+  }
+}

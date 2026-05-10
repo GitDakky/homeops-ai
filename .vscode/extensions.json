@@ -1,0 +1,9 @@
+{
+  "recommendations": [
+    "timonwong.shellcheck",
+    "redhat.vscode-yaml",
+    "ms-python.python",
+    "ms-python.vscode-pylance",
+    "esbenp.prettier-vscode"
+  ]
+}

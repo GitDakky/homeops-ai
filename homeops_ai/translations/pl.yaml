@@ -1,0 +1,206 @@
+configuration:
+  timezone:
+    name: Strefa czasowa
+    description: Strefa czasowa dla dodatku (np. Europe/Warsaw, America/New_York)
+  
+  enable_terminal:
+    name: Włącz terminal webowy
+    description: Włącz przycisk terminala webowego w Home Assistant (Ingress) przez ttyd
+  
+  terminal_port:
+    name: Port terminala
+    description: Numer portu dla terminala webowego (domyślnie - 7682). Zmień jeśli ten port koliduje z inną usługą.
+  
+  gateway_public_url:
+    name: Publiczny URL Gateway
+    description: Opcjonalny adres override dla uruchamiania Web UI Gateway. W większości lokalnych instalacji dodatek wykrywa go automatycznie na podstawie bieżącego hosta Home Assistant. Ustaw tylko wtedy, gdy potrzebujesz innej nazwy reverse proxy, HTTPS lub Tailscale.
+  
+  homeassistant_token:
+    name: Token Home Assistant
+    description: Opcjonalnie - długoterminowy token Home Assistant dla lokalnych skryptów/narzędzi API HA
+
+  enable_builtin_ha_tools:
+    name: Włącz wbudowane narzędzia Home Assistant
+    description: "Gdy WŁĄCZONE (zalecane), dodatek rejestruje lokalny serwer MCP Home Assistant, dzięki czemu OpenClaw może czytać na żywo encje, urządzenia, obszary, automatyzacje, usługi i historię bez dodatkowej konfiguracji tokena."
+
+  enable_ha_service_calls:
+    name: Zezwól na wywołania usług Home Assistant
+    description: "Gdy WŁĄCZONE, wbudowana warstwa narzędzi Home Assistant udostępnia także mutujące narzędzie `ha_service_call`. Pozostaw WYŁĄCZONE, chyba że chcesz, aby OpenClaw wywoływał usługi Home Assistant po wyraźnej zgodzie użytkownika."
+
+  http_proxy:
+    name: Wychodzący proxy HTTP
+    description: Opcjonalnie - URL proxy dla wychodzących żądań HTTP/HTTPS (przykład - http://192.168.2.1:3128)
+  
+  router_ssh_host:
+    name: Host SSH routera
+    description: Opcjonalnie - nazwa hosta SSH routera/firewalla lub adres IP
+  
+  router_ssh_user:
+    name: Użytkownik SSH routera
+    description: Opcjonalnie - nazwa użytkownika SSH routera/firewalla
+  
+  router_ssh_key_path:
+    name: Ścieżka klucza SSH routera
+    description: Ścieżka do klucza prywatnego SSH dla dostępu do routera (domyślnie - /data/keys/router_ssh)
+  
+  clean_session_locks_on_start:
+    name: Wyczyść blokady sesji przy starcie
+    description: Usuń przestarzałe pliki blokad sesji pozostawione po awariach/restartach gdy dodatek się uruchamia
+  
+  clean_session_locks_on_exit:
+    name: Wyczyść blokady sesji przy wyjściu
+    description: Usuń pliki blokad sesji gdy dodatek zatrzymuje się poprawnie
+  
+  gateway_remote_url:
+    name: URL zdalnego Gateway
+    description: Adres WebSocket zdalnego gateway używany gdy Gateway Mode = Remote (przykład - ws://192.168.1.20:18790 lub wss://gateway.example.com:443)
+
+  gateway_additional_allowed_origins:
+    name: Dodatkowe dozwolone origins
+    description: Dodatkowe origins Control UI rozdzielone przecinkami; łączone z gateway.controlUi.allowedOrigins w trybie lan_https (przykład - https://ha.example.com:8443,capacitor://localhost)
+
+  controlui_disable_device_auth:
+    name: Wyłącz parowanie urządzeń Control UI (lan_https)
+    description: "Gdy WŁĄCZONE (zalecane), ustawia gateway.controlUi.dangerouslyDisableDeviceAuth=true, pomija akceptację per-urządzenie i zapobiega błędowi 1008 w trybie LAN HTTPS. Zostaw WŁĄCZONE w domowej/zaufanej sieci. Wyłącz tylko jeśli chcesz ścisłe parowanie dla każdej nowej przeglądarki/urządzenia."
+
+  disable_exec_approvals:
+    name: Wyłącz monity akceptacji exec
+    description: "Gdy WŁĄCZONE, wymusza dla hostowych akceptacji exec OpenClaw ustawienia security=full, ask=off, askFallback=full oraz wyrównuje tools.exec.host=gateway, tools.exec.security=full, tools.exec.ask=off i strictInlineEval=false. Ten fork domyślnie zostawia to WŁĄCZONE, aby automatyzacje nie zatrzymywały się na ludzkich akceptacjach. Wyłącz tylko jeśli chcesz przywrócić monity."
+
+  enable_matrix:
+    name: Włącz kanał Matrix
+    description: "Włącza obsługę Matrix z ustawień Home Assistant. Gdy WŁĄCZONE i skonfigurowano homeserver oraz działające dane logowania, dodatek konfiguruje channels.matrix w OpenClaw i spróbuje zapewnić dostępność wtyczki Matrix."
+
+  matrix_homeserver:
+    name: Homeserver Matrix
+    description: "Adres URL homeservera Matrix, na przykład https://matrix.example.org lub http://matrix-synapse:8008 dla prywatnego Synapse."
+
+  matrix_allow_private_network:
+    name: Zezwól na prywatny homeserver Matrix
+    description: "Gdy WŁĄCZONE, pozwala na homeservery Matrix w localhost, LAN, Tailscale lub pod wewnętrznymi nazwami. Wymagane dla prywatnych instalacji Synapse/Dendrite."
+
+  matrix_user_id:
+    name: Matrix User ID
+    description: "Pełny identyfikator użytkownika Matrix dla konta bota, na przykład @openclaw:example.org."
+
+  matrix_access_token:
+    name: Matrix access token
+    description: "Preferowana metoda uwierzytelniania Matrix. Jeśli ustawiona, dodatek zapisuje channels.matrix.accessToken i ignoruje matrix_password."
+
+  matrix_password:
+    name: Hasło Matrix
+    description: "Zapasowe hasło logowania Matrix, gdy nie podano tokenu. Użyj tokenu albo hasła."
+
+  matrix_encryption:
+    name: Szyfrowanie Matrix
+    description: "Włącza szyfrowanie end-to-end Matrix dla skonfigurowanego konta."
+
+  matrix_dm_policy:
+    name: Polityka DM Matrix
+    description: "Polityka dostępu do wiadomości prywatnych Matrix. pairing jest najbezpieczniejszym domyślnym wyborem, open pozwala na DMy bez parowania, a allowlist ogranicza je do zatwierdzonych użytkowników."
+
+  matrix_dm_allow_from:
+    name: Lista dozwolonych DM Matrix
+    description: "Rozdzielone przecinkami identyfikatory użytkowników Matrix, którzy mogą pisać do bota, gdy polityka DM to allowlist."
+
+  matrix_group_policy:
+    name: Polityka pokoi Matrix
+    description: "Polityka dostępu do pokoi Matrix. open jest najłatwiejsza dla zaproszeń ad hoc, allowlist ogranicza odpowiedzi do pokoi z Matrix Room Allowlist, disabled blokuje ruch pokojowy."
+
+  matrix_group_allow_from:
+    name: Lista dozwolonych użytkowników w pokojach Matrix
+    description: "Opcjonalne identyfikatory użytkowników Matrix rozdzielone przecinkami, którzy mogą wywoływać odpowiedzi w pokojach."
+
+  matrix_room_allowlist:
+    name: Lista dozwolonych pokoi Matrix
+    description: "Rozdzielone przecinkami identyfikatory pokoi lub aliasy używane dla trybu allowlist pokoi i trybu auto-join allowlist."
+
+  matrix_auto_join:
+    name: Matrix auto-join
+    description: "Polityka automatycznego dołączania do zaproszeń. always pozwala zapraszać bota bez wcześniejszego whitelistingu, allowlist dołącza tylko do pokoi z Matrix Room Allowlist, off wyłącza auto-join."
+
+  gateway_bind_mode:
+    name: Tryb bindowania Gateway
+    description: Tryb bindowania sieci - loopback (tylko 127.0.0.1, najbezpieczniejszy), lan (wszystkie interfejsy) lub tailnet (tylko interfejs Tailscale). Nadpisywane przez ustawienia trybu dostępu.
+    options:
+      loopback: "Loopback (tylko 127.0.0.1, najbezpieczniejszy)"
+      lan: "LAN (wszystkie interfejsy)"
+      tailnet: "Tailnet (tylko Tailscale)"
+
+  gateway_port:
+    name: Port Gateway
+    description: Numer portu na którym gateway OpenClaw będzie nasłuchiwał (domyślnie - 18790)
+
+  gateway_mode:
+    name: Tryb Gateway
+    description: Tryb działania gateway - local (uruchom gateway lokalnie, zalecane) lub remote (połącz się ze zdalnym gateway)
+    options:
+      local: "Lokalny (zalecane)"
+      remote: "Zdalny"
+
+  access_mode:
+    name: Tryb dostępu
+    description: "Upraszcza konfigurację bezpiecznego dostępu. Nadpisuje gateway_bind_mode i gateway_auth_mode gdy nie jest ustawiony na Niestandardowy."
+    options:
+      custom: "Niestandardowy (indywidualne ustawienia)"
+      local_only: "Tylko lokalny (loopback + token, tylko Ingress)"
+      lan_https: "LAN HTTPS (wbudowany proxy HTTPS — zalecane dla telefonów)"
+      lan_reverse_proxy: "LAN Reverse Proxy (zewnętrzny proxy z auth trusted-proxy)"
+      tailnet_https: "Tailscale HTTPS (Tailscale + token)"
+
+  gateway_auth_mode:
+    name: Tryb uwierzytelniania Gateway
+    description: Tryb uwierzytelniania - token (domyślnie) lub trusted-proxy (dla reverse proxy HTTPS). Nadpisywane gdy access_mode nie jest Niestandardowy.
+    options:
+      token: "Token (domyślnie)"
+      trusted-proxy: "Zaufany proxy (dla reverse proxy)"
+
+  gateway_trusted_proxies:
+    name: Zaufane proxy Gateway
+    description: Lista zaufanych IP/CIDR proxy rozdzielona przecinkami dla trybu trusted-proxy (przykład - 127.0.0.1,192.168.88.0/24).
+
+  enable_openai_api:
+    name: Włącz API OpenAI
+    description: Włącz endpoint Chat Completions kompatybilny z OpenAI. Pozwala używać OpenClaw jako agenta konwersacji w HA Assist pipeline przez Extended OpenAI Conversation (HACS) lub dowolnego klienta kompatybilnego z OpenAI.
+  force_ipv4_dns:
+    name: Wymuś kolejność DNS IPv4
+    description: Wymusza priorytet IPv4 w DNS. Większość VM HAOS nie ma wyjścia IPv6 — powoduje błędy web_fetch i Telegram. Zalecane WŁĄCZONE (domyślnie).
+  nginx_log_level:
+    name: Poziom logów Nginx
+    description: "Szczegółowość logów dostępu nginx. 'minimal' (domyślnie) pomija powtarzające się żądania health-check i polling HA. 'full' loguje wszystko."
+    options:
+      minimal: "Minimalny (pominięcie szumu polling HA)"
+      full: "Pełny (logowanie wszystkich żądań)"
+  gateway_env_vars:
+    name: Zmienne środowiskowe gateway
+    description: Zmienne środowiskowe przekazywane do procesu gateway OpenClaw podczas uruchamiania (lista wpisow name/value w UI Home Assistant; maks. 50 zmiennych, klucze do 255 znakow, wartosci do 10000 znakow).
+  auto_configure_mcp:
+    name: Automatyczna konfiguracja MCP dla Home Assistant
+    description: "Starsza ścieżka zewnętrznego MCP. Gdy WŁĄCZONE i token Home Assistant jest ustawiony, rejestruje zewnętrzny endpoint MCP Home Assistant podczas startu. Jest ignorowana, gdy włączona jest wbudowana warstwa narzędzi Home Assistant."
+  enable_context7:
+    name: Włącz tryb Context7
+    description: "Gdy WŁĄCZONE, wstępnie załadowany workspace i pakiet skills instruują asystenta, aby używał Context7 do aktualnej dokumentacji, jeśli skonfigurowano klucz API."
+  context7_api_key:
+    name: Klucz API Context7
+    description: Opcjonalne - klucz API dla zapytań dokumentacyjnych Context7
+  domotz_api_key:
+    name: Klucz API Domotz
+    description: Opcjonalne - klucz API dla inwentaryzacji sieci i monitoringu Domotz
+  domotz_site_id:
+    name: Identyfikator witryny Domotz
+    description: Opcjonalne - identyfikator witryny używany z kluczem API Domotz
+  github_issues_token:
+    name: Token GitHub Issues
+    description: Opcjonalne - fine-grained token GitHub z uprawnieniem Issues write do bezpośredniego tworzenia zgłoszeń w GitDakky/homeops-ai
+  mqtt_broker_url:
+    name: URL brokera MQTT
+    description: Opcjonalne - zewnętrzny URL brokera MQTT (przykład - mqtts://cluster.s2.eu.hivemq.cloud:8883)
+  mqtt_username:
+    name: Nazwa użytkownika MQTT
+    description: Opcjonalne - nazwa użytkownika dla skonfigurowanego brokera MQTT
+  mqtt_password:
+    name: Hasło MQTT
+    description: Opcjonalne - hasło dla skonfigurowanego brokera MQTT
+  enable_bacnet_scout:
+    name: Włącz BACnet Scout
+    description: "Gdy WŁĄCZONE, dodaje wskazówki BACnet/IP, status w panelu i podstawy grafu. Nie skanuje sieci po cichu."

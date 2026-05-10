@@ -1,0 +1,206 @@
+configuration:
+  timezone:
+    name: Timezone
+    description: Timezone for the add-on (e.g., Europe/Sofia, America/New_York)
+  
+  enable_terminal:
+    name: Enable Web Terminal
+    description: Enable web terminal Button inside Home Assistant (Ingress) via ttyd
+  
+  terminal_port:
+    name: Terminal Port
+    description: Port number for the web terminal (default - 7682). Change if this port conflicts with another service.
+  
+  gateway_public_url:
+    name: Gateway Public URL
+    description: Optional override for the Gateway Web UI launch URL. Most local installs auto-detect this from the current Home Assistant host. Set it only when you need a different reverse-proxy, HTTPS, or Tailscale hostname.
+  
+  homeassistant_token:
+    name: Home Assistant Token
+    description: Optional - Home Assistant long-lived token for local HA API scripts/tools
+
+  enable_builtin_ha_tools:
+    name: Enable Built-In Home Assistant Tools
+    description: "When ON (recommended), the add-on registers a local Home Assistant MCP server so OpenClaw can read live entities, devices, areas, automations, services, and history without extra token setup."
+
+  enable_ha_service_calls:
+    name: Allow Home Assistant Service Calls
+    description: "When ON, the built-in Home Assistant tool layer also exposes the mutating ha_service_call tool. Keep this OFF unless you explicitly want OpenClaw to call Home Assistant services after user approval."
+
+  http_proxy:
+    name: Outbound HTTP Proxy
+    description: Optional - Proxy URL for outbound HTTP/HTTPS requests (example - http://192.168.2.1:3128)
+  
+  router_ssh_host:
+    name: Router SSH Host
+    description: Optional - Router/firewall SSH hostname or IP address
+  
+  router_ssh_user:
+    name: Router SSH User
+    description: Optional - Router/firewall SSH username
+  
+  router_ssh_key_path:
+    name: Router SSH Key Path
+    description: Path to SSH private key for router access (default - /data/keys/router_ssh)
+  
+  clean_session_locks_on_start:
+    name: Clean Session Locks on Start
+    description: Cleanup stale session lock files left after crashes/restarts when add-on starts
+  
+  clean_session_locks_on_exit:
+    name: Clean Session Locks on Exit
+    description: Cleanup session lock files when add-on stops gracefully
+  
+  gateway_mode:
+    name: Gateway Mode
+    description: Gateway operation mode - local (run gateway locally, recommended) or remote (connect to a remote gateway)
+    options:
+      local: "Local (recommended)"
+      remote: "Remote"
+
+  gateway_remote_url:
+    name: Remote Gateway URL
+    description: Remote gateway WebSocket URL used when Gateway Mode is Remote (example - ws://192.168.1.20:18790 or wss://gateway.example.com:443)
+
+  gateway_additional_allowed_origins:
+    name: Additional Allowed Origins
+    description: Comma-separated extra Control UI origins to merge into gateway.controlUi.allowedOrigins in lan_https mode (example - https://ha.example.com:8443,capacitor://localhost)
+
+  controlui_disable_device_auth:
+    name: Disable Control UI Device Pairing (lan_https)
+    description: "When ON (recommended), sets gateway.controlUi.dangerouslyDisableDeviceAuth=true to skip per-device approval and avoid error 1008 in LAN HTTPS mode. Keep ON for home/trusted LAN. Turn OFF only when you want strict per-device pairing prompts on every new browser/device."
+
+  disable_exec_approvals:
+    name: Disable Exec Approval Prompts
+    description: "When ON, forces OpenClaw host exec approvals to security=full, ask=off, askFallback=full and aligns tools.exec.host=gateway, tools.exec.security=full, tools.exec.ask=off, and strictInlineEval=false. This fork defaults it to ON so automations do not stop for human approval. Turn it OFF only if you want approval prompts restored."
+
+  enable_matrix:
+    name: Enable Matrix Channel
+    description: "Enable Matrix channel support from Home Assistant settings. When ON and a homeserver plus usable auth are configured, the add-on configures channels.matrix in OpenClaw and will try to ensure the Matrix plugin is available."
+
+  matrix_homeserver:
+    name: Matrix Homeserver
+    description: "Matrix homeserver URL, for example https://matrix.example.org or http://matrix-synapse:8008 for a private Synapse deployment."
+
+  matrix_allow_private_network:
+    name: Allow Private Matrix Homeserver
+    description: "When ON, allows Matrix homeservers on localhost, LAN, Tailscale, or internal hostnames. Required for private Synapse/Dendrite installs."
+
+  matrix_user_id:
+    name: Matrix User ID
+    description: "Full Matrix user ID for the bot account, for example @openclaw:example.org."
+
+  matrix_access_token:
+    name: Matrix Access Token
+    description: "Preferred Matrix auth method. If set, the add-on writes channels.matrix.accessToken and ignores matrix_password."
+
+  matrix_password:
+    name: Matrix Password
+    description: "Fallback Matrix login password when no access token is supplied. Use either token or password."
+
+  matrix_encryption:
+    name: Matrix Encryption
+    description: "Enable Matrix end-to-end encryption support for the configured account."
+
+  matrix_dm_policy:
+    name: Matrix DM Policy
+    description: "DM access policy for Matrix. pairing is the safest default, open allows direct messages without pairing, allowlist restricts DMs to approved users."
+
+  matrix_dm_allow_from:
+    name: Matrix DM Allowlist
+    description: "Comma-separated Matrix user IDs allowed to DM the bot when DM policy is allowlist. Example: @alice:example.org,@bob:example.org"
+
+  matrix_group_policy:
+    name: Matrix Room Policy
+    description: "Room access policy for Matrix. open is the easiest mode for ad-hoc invites, allowlist restricts replies to rooms listed in Matrix Room Allowlist, disabled blocks room traffic."
+
+  matrix_group_allow_from:
+    name: Matrix Room User Allowlist
+    description: "Optional comma-separated Matrix user IDs allowed to trigger replies in rooms. Leave empty to accept any allowed room member under the chosen room policy."
+
+  matrix_room_allowlist:
+    name: Matrix Room Allowlist
+    description: "Comma-separated room IDs or aliases used for room allowlist mode and auto-join allowlist mode. Example: !roomid:example.org,#ops:example.org"
+
+  matrix_auto_join:
+    name: Matrix Auto-Join
+    description: "Invite auto-join policy. always lets users invite the bot into rooms without pre-whitelisting, allowlist only joins rooms from Matrix Room Allowlist, off disables invite auto-join."
+
+  gateway_bind_mode:
+    name: Gateway Bind Mode
+    description: Network bind mode - loopback (127.0.0.1 only, most secure), lan (all interfaces), or tailnet (Tailscale interface only). Overridden by access_mode presets.
+    options:
+      loopback: "Loopback (127.0.0.1 only, most secure)"
+      lan: "LAN (all interfaces)"
+      tailnet: "Tailnet (Tailscale only)"
+
+  gateway_port:
+    name: Gateway Port
+    description: Port number for the OpenClaw gateway to listen on (default - 18790)
+
+  access_mode:
+    name: Access Mode
+    description: "Simplifies secure access setup. Overrides gateway_bind_mode and gateway_auth_mode when not set to Custom."
+    options:
+      custom: "Custom (use individual settings)"
+      local_only: "Local Only (loopback + token, Ingress only)"
+      lan_https: "LAN HTTPS (built-in HTTPS proxy — recommended for phones)"
+      lan_reverse_proxy: "LAN Reverse Proxy (external proxy with trusted-proxy auth)"
+      tailnet_https: "Tailscale HTTPS (Tailscale bind + token)"
+
+  gateway_auth_mode:
+    name: Gateway Auth Mode
+    description: Gateway auth mode - token (default) or trusted-proxy (for HTTPS reverse proxies). Overridden when access_mode is not Custom.
+    options:
+      token: "Token (default)"
+      trusted-proxy: "Trusted Proxy (for reverse proxies)"
+
+  gateway_trusted_proxies:
+    name: Gateway Trusted Proxies
+    description: Comma-separated trusted proxy IP/CIDR list for trusted-proxy mode (example - 127.0.0.1,192.168.88.0/24).
+
+  enable_openai_api:
+    name: Enable OpenAI API
+    description: Enable OpenAI-compatible Chat Completions endpoint. Allows using OpenClaw as a conversation agent in HA Assist pipeline via Extended OpenAI Conversation (HACS) or any OpenAI-compatible client.
+  force_ipv4_dns:
+    name: Force IPv4 DNS Order
+    description: Force IPv4-first DNS ordering for Node network calls. Most HAOS VMs lack IPv6 egress, causing web_fetch and Telegram timeouts. Recommended ON (default).
+  nginx_log_level:
+    name: Nginx Log Level
+    description: "Access log verbosity for the built-in nginx proxy. 'minimal' (default) suppresses repetitive HA health-check and polling requests. 'full' logs everything."
+    options:
+      minimal: "Minimal (suppress HA polling noise)"
+      full: "Full (log all requests)"
+  gateway_env_vars:
+    name: Gateway Environment Variables
+    description: Environment variables passed to the OpenClaw gateway process at startup (list entries with name/value in Home Assistant UI; max 50 variables, keys up to 255 characters, values up to 10,000 characters).
+  auto_configure_mcp:
+    name: Auto-Configure MCP for Home Assistant
+    description: "Legacy external MCP registration path. When ON and Home Assistant Token is set, it registers Home Assistant's external MCP endpoint on startup. This is ignored when the built-in Home Assistant tool layer is enabled."
+  enable_context7:
+    name: Enable Context7 Research Mode
+    description: "When ON, the seeded workspace and skill pack instruct the assistant to use Context7 for current documentation when an API key is configured."
+  context7_api_key:
+    name: Context7 API Key
+    description: Optional - API key for Context7 documentation lookups
+  domotz_api_key:
+    name: Domotz API Key
+    description: Optional - API key for Domotz network inventory and monitoring data
+  domotz_site_id:
+    name: Domotz Site ID
+    description: Optional - Site identifier used with the Domotz API key
+  github_issues_token:
+    name: GitHub Issues Token
+    description: Optional - Fine-grained GitHub token with Issues write access for direct issue filing to GitDakky/homeops-ai
+  mqtt_broker_url:
+    name: MQTT Broker URL
+    description: Optional - External MQTT broker URL (example - mqtts://cluster.s2.eu.hivemq.cloud:8883)
+  mqtt_username:
+    name: MQTT Username
+    description: Optional - Username for the configured MQTT broker
+  mqtt_password:
+    name: MQTT Password
+    description: Optional - Password for the configured MQTT broker
+  enable_bacnet_scout:
+    name: Enable BACnet Scout
+    description: "When ON, seeds BACnet discovery guidance, dashboard status, and graph scaffolding for BACnet/IP workflows. It does not silently scan the network."
