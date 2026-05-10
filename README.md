@@ -24,12 +24,12 @@ HomeOps AI is intended to be installed through the Home Assistant **Settings →
 
 ### One-click repository import
 
-[![Open your Home Assistant instance and add this repository.](https://my.home-assistant.io/badges/supervisor_repository.svg)](https://my.home-assistant.io/redirect/supervisor_repository/?repository_url=https%3A%2F%2Fgithub.com%2FGitDakky%2Fhomeops-ai)
+[![Open your Home Assistant instance and add this repository.](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2FGitDakky%2Fhomeops-ai)
 
 1. Open your Home Assistant dashboard.
 2. Go to **Settings → Apps**.
    - On older Home Assistant versions this may be **Settings → Add-ons** or **Settings → Add-ons → Add-on Store**.
-3. Use the button above, or choose **Install App** / **Add repository** from the dashboard.
+3. Use the button above, or choose **Add repository** / **Add app repository** from the dashboard.
 4. Paste this repository URL when prompted:
 
    ```text
