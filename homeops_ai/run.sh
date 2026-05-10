@@ -1011,7 +1011,7 @@ shutdown() {
     wait "${WORKSPACE_PID}" 2>/dev/null || true
   fi
 
-  if [ -n "${CONFIG_WATCHER_PID}" && kill -0 "${CONFIG_WATCHER_PID}" >/dev/null 2>&1; then
+  if [ -n "${CONFIG_WATCHER_PID}" ] && kill -0 "${CONFIG_WATCHER_PID}" >/dev/null 2>&1; then
     kill -TERM "${CONFIG_WATCHER_PID}" >/dev/null 2>&1 || true
     wait "${CONFIG_WATCHER_PID}" 2>/dev/null || true
   fi
