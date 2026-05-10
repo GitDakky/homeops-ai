@@ -88,6 +88,14 @@ This repository has just been created from the proven Home Assistant add-on shel
 
 Do not treat the current image as production-ready until the Hermes runtime port is complete.
 
+## Bundled upstream components
+
+HomeOps AI packages:
+
+- Hermes Agent stable release `v2026.5.7` from `https://github.com/NousResearch/hermes-agent`
+- Hermes Paperclip Adapter from `https://github.com/NousResearch/hermes-paperclip-adapter`
+- Hermes Workspace from `https://hermes-workspace.com/` (`outsourc-e/hermes-workspace`)
+
 ## Intended architecture
 
 - Home Assistant add-on/app packaging

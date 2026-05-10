@@ -11,6 +11,12 @@ configuration:
   openrouter_api_key:
     name: OpenRouter API Key
     description: Optional OpenRouter API key. Stored as a Home Assistant add-on password option and exported as OPENROUTER_API_KEY for Hermes.
+  enable_workspace:
+    name: Enable Hermes Workspace
+    description: Run the bundled Hermes Workspace web UI alongside the Hermes gateway.
+  workspace_port:
+    name: Hermes Workspace Port
+    description: Host port for Hermes Workspace UI (default 3000).
   
   enable_terminal:
     name: Enable Web Terminal

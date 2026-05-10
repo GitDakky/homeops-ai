@@ -1,5 +1,5 @@
 name: HomeOps AI
-version: "0.1.1"
+version: "0.1.2"
 slug: homeops_ai
 description: Hermes-powered AI operations agent for Home Assistant.
 url: https://github.com/GitDakky/homeops-ai
@@ -40,6 +40,8 @@ options:
   llm_provider: openrouter
   llm_model: "openai/gpt-5.5"
   openrouter_api_key: ""
+  enable_workspace: true
+  workspace_port: 3000
 
   # Enable web terminal inside Home Assistant (Ingress) via ttyd
   enable_terminal: true
@@ -223,6 +225,8 @@ schema:
   llm_provider: list(openrouter|anthropic|openai|nous|custom)?
   llm_model: str?
   openrouter_api_key: password?
+  enable_workspace: bool?
+  workspace_port: int(1024,65535)?
   enable_terminal: bool?
   terminal_port: int(1024,65535)?
   gateway_public_url: str?

@@ -177,6 +177,8 @@ TZNAME=$(jq -r '.timezone // "Europe/Sofia"' "$OPTIONS_FILE")
 LLM_PROVIDER=$(jq -r '.llm_provider // "openrouter"' "$OPTIONS_FILE")
 LLM_MODEL=$(jq -r '.llm_model // "openai/gpt-5.5"' "$OPTIONS_FILE")
 OPENROUTER_API_KEY_OPTION=$(jq -r '.openrouter_api_key // empty' "$OPTIONS_FILE")
+ENABLE_WORKSPACE=$(jq -r '.enable_workspace // true' "$OPTIONS_FILE")
+WORKSPACE_PORT=$(jq -r '.workspace_port // 3000' "$OPTIONS_FILE")
 GW_PUBLIC_URL=$(jq -r '.gateway_public_url // empty' "$OPTIONS_FILE")
 HA_TOKEN=$(jq -r '.homeassistant_token // empty' "$OPTIONS_FILE")
 ENABLE_BUILTIN_HA_TOOLS=$(jq -r '.enable_builtin_ha_tools // true' "$OPTIONS_FILE")
@@ -1059,8 +1061,23 @@ else
     fi
   }
 
+  start_workspace_ui() {
+    if [ "$ENABLE_WORKSPACE" != "true" ] && [ "$ENABLE_WORKSPACE" != "1" ]; then
+      echo "INFO: Hermes Workspace UI disabled."
+      return 0
+    fi
+    if [ ! -d /opt/hermes-workspace ]; then
+      echo "WARN: /opt/hermes-workspace missing; Workspace UI unavailable."
+      return 0
+    fi
+    PORT="$WORKSPACE_PORT" HERMES_API_URL="http://127.0.0.1:${GATEWAY_INTERNAL_PORT}" homeops-workspace >>"$RUNTIME_WRAPPER_LOG_DIR/hermes-workspace.log" 2>&1 &
+    WORKSPACE_PID=$!
+    echo "INFO: Hermes Workspace UI started on 0.0.0.0:${WORKSPACE_PORT} (PID ${WORKSPACE_PID})."
+  }
+
   start_hermes_runtime || true
   start_dashboard_api || true
+  start_workspace_ui || true
 fi
 
 # Start web terminal (optional)

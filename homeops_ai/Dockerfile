@@ -1,7 +1,10 @@
 ARG BUILD_ARCH=amd64
 FROM ghcr.io/home-assistant/${BUILD_ARCH}-base-debian:bookworm
 ARG BUILD_ARCH
-ARG HERMES_BRANCH=main
+ARG HERMES_VERSION=v2026.5.7
+ARG HERMES_WORKSPACE_REPO=https://github.com/outsourc-e/hermes-workspace.git
+ARG HERMES_WORKSPACE_REF=main
+ARG HERMES_PAPERCLIP_ADAPTER_VERSION=0.3.0
 
 # Base image is Debian Bookworm (glibc). This avoids musl-related native module issues
 # that occur on Alpine (e.g. clipboard, node-llama-cpp).
@@ -120,9 +123,9 @@ USER root
 # Install Hermes Agent using the official installer in non-interactive mode.
 # The add-on uses an FHS-style root install: code in /usr/local/lib/hermes-agent,
 # command at /usr/local/bin/hermes, data under /config/.hermes at runtime.
-ENV HERMES_BUNDLED_VERSION="${HERMES_BRANCH}"
-RUN curl -fsSL https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.sh -o /tmp/install-hermes.sh \
-    && bash /tmp/install-hermes.sh --branch "${HERMES_BRANCH}" --skip-setup --hermes-home /config/.hermes \
+ENV HERMES_BUNDLED_VERSION="${HERMES_VERSION}"
+RUN curl -fsSL https://raw.githubusercontent.com/NousResearch/hermes-agent/${HERMES_VERSION}/scripts/install.sh -o /tmp/install-hermes.sh \
+    && bash /tmp/install-hermes.sh --branch "${HERMES_VERSION}" --skip-setup --hermes-home /config/.hermes \
     && rm -f /tmp/install-hermes.sh \
     && install -d /usr/local/share \
     && hermes --version | tee /usr/local/share/hermes-bundled-version
@@ -131,6 +134,9 @@ RUN curl -fsSL https://raw.githubusercontent.com/NousResearch/hermes-agent/main/
 # built-in Home Assistant MCP bridge can run without relying on user-installed packages.
 RUN mkdir -p /opt/homeops-ai \
     && npm install --prefix /opt/homeops-ai @modelcontextprotocol/sdk zod
+
+# Ship the official Hermes Paperclip adapter and Hermes Workspace UI.
+RUN npm install -g "hermes-paperclip-adapter@${HERMES_PAPERCLIP_ADAPTER_VERSION}"     && git clone --depth 1 --branch "${HERMES_WORKSPACE_REF}" "${HERMES_WORKSPACE_REPO}" /opt/hermes-workspace     && cd /opt/hermes-workspace     && corepack enable 2>/dev/null || true     && pnpm install --silent     && NODE_OPTIONS="--max-old-space-size=3072" pnpm build
 
 # Shell aliases and color options for interactive use
 RUN tee -a /etc/bash.bashrc <<'EOF'
@@ -141,6 +147,7 @@ alias fd="fdfind"
 alias homeops-onboard="/usr/local/bin/homeops-onboard"
 alias homeops-configure="/usr/local/bin/homeops-configure"
 alias homeops-hermes="/usr/local/bin/homeops-hermes"
+alias homeops-workspace="/usr/local/bin/homeops-workspace"
 alias h="/usr/local/bin/homeops-hermes"
 alias homeops-report-issue="/usr/local/bin/homeops-report-issue"
 
@@ -163,6 +170,7 @@ COPY render_nginx.py /render_nginx.py
 COPY dashboard_api.py /dashboard_api.py
 COPY homeops-managed-command.sh /usr/local/bin/homeops-managed-command
 COPY homeops-hermes.sh /usr/local/bin/homeops-hermes
+COPY homeops-workspace.sh /usr/local/bin/homeops-workspace
 COPY homeops-report-issue.sh /usr/local/bin/homeops-report-issue
 COPY homeops-cleanup.sh /usr/local/bin/homeops-cleanup
 COPY hermes-proxy-shim.cjs /usr/local/lib/hermes-proxy-shim.cjs
@@ -171,7 +179,7 @@ COPY nginx.conf.tpl /etc/nginx/nginx.conf.tpl
 COPY landing.html.tpl /etc/nginx/landing.html.tpl
 COPY bootstrap-workspace /opt/homeops-ai/bootstrap-workspace
 COPY bundled-skills /opt/homeops-ai/bundled-skills
-RUN chmod +x /run.sh /opt/homeops-ai/run_helpers.sh /hermes_config_helper.py /oc_config_helper.py /render_nginx.py /dashboard_api.py /usr/local/bin/homeops-managed-command /usr/local/bin/homeops-hermes /usr/local/bin/homeops-report-issue /usr/local/bin/homeops-cleanup /opt/homeops-ai/ha_mcp_server.cjs \
+RUN chmod +x /run.sh /opt/homeops-ai/run_helpers.sh /hermes_config_helper.py /oc_config_helper.py /render_nginx.py /dashboard_api.py /usr/local/bin/homeops-managed-command /usr/local/bin/homeops-hermes /usr/local/bin/homeops-workspace /usr/local/bin/homeops-report-issue /usr/local/bin/homeops-cleanup /opt/homeops-ai/ha_mcp_server.cjs \
     && ln -sf /usr/local/bin/homeops-managed-command /usr/local/bin/homeops-onboard \
     && ln -sf /usr/local/bin/homeops-managed-command /usr/local/bin/homeops-configure \
     && mkdir -p /run/nginx

@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.1.2]
+
+### Added
+- Package Hermes Agent from the latest stable upstream release `v2026.5.7` instead of tracking `main`.
+- Ship the official `hermes-paperclip-adapter` package in the add-on image.
+- Bundle Hermes Workspace from `https://hermes-workspace.com/` / `outsourc-e/hermes-workspace` and add a managed Workspace launcher.
+- Add Home Assistant options for enabling Workspace and selecting the Workspace port.
+
+### Changed
+- Keep HomeOps AI focused on Hermes-native runtime packaging rather than inherited OpenClaw runtime assumptions.
+
 ## [0.1.1]
 
 ### Added
