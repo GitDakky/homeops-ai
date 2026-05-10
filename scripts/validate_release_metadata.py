@@ -34,10 +34,10 @@ def main() -> None:
     repository_yaml = read("repository.yaml")
     issue_template_cfg = read(".github/ISSUE_TEMPLATE/config.yml")
 
-    hermes_branch = extract(
-        r"^ARG HERMES_BRANCH=([^\s]+)$",
+    hermes_version = extract(
+        r"^ARG HERMES_VERSION=([^\s]+)$",
         dockerfile,
-        "Dockerfile HERMES_BRANCH",
+        "Dockerfile HERMES_VERSION",
     )
     addon_version = extract(
         r'^version:\s*"([^"]+)"$',
@@ -91,7 +91,7 @@ def main() -> None:
             print(f"ERROR: {error}", file=sys.stderr)
         raise SystemExit(1)
 
-    print(f"OK: add-on {addon_version}, Hermes branch {hermes_branch}, repo metadata aligned")
+    print(f"OK: add-on {addon_version}, Hermes version {hermes_version}, repo metadata aligned")
 
 
 if __name__ == "__main__":
