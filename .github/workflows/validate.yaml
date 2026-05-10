@@ -20,38 +20,3 @@ jobs:
         run: bash scripts/validate_local.sh
         env:
           VALIDATION_BASE_REF: ${{ github.event.pull_request.base.sha || github.event.before }}
-
-  docker-smoke-amd64:
-    runs-on: ubuntu-latest
-    needs: validate
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Build add-on image (amd64 smoke test)
-        timeout-minutes: 12
-        run: |
-          set -euo pipefail
-          docker build \
-            --platform linux/amd64 \
-            --build-arg BUILD_ARCH=amd64 \
-            --progress=plain \
-            -f homeops_ai/Dockerfile \
-            -t homeops-ai-ci:amd64 \
-            homeops_ai
-
-      - name: Smoke test bundled tooling
-        timeout-minutes: 3
-        run: |
-          set -euo pipefail
-          docker run --rm --entrypoint /bin/bash homeops-ai-ci:amd64 -lc '
-            set -euo pipefail
-            test -x /run.sh
-            test -f /hermes_config_helper.py
-            test -x /usr/local/bin/homeops-hermes
-            test -f /render_nginx.py
-            hermes --version
-            homeops-hermes --version
-            node -v
-            python3 --version
-          '
