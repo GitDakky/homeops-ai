@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.1.1]
+
+### Added
+- Added Home Assistant add-on options for Hermes LLM provider, model, and OpenRouter API key.
+- Added `homeops-hermes` / `h` terminal launcher workflow for Hermes inside the add-on.
+
+### Changed
+- Reworked the managed runtime path to start `hermes gateway run` instead of the inherited OpenClaw gateway.
+- Mapped add-on model/provider options into Hermes config at startup.
+- Updated the GitHub Docker smoke test to verify `hermes` and `homeops-hermes`.
+
 ## [0.1.0]
 
 ### Changed
