@@ -48,10 +48,12 @@ The add-on container runs three services:
 | **Hermes Gateway** | 18790 (configurable) | The AI agent server — handles skills, chat, automations |
 | **nginx** (Ingress proxy) | 48109 (fixed) | Serves the HomeOps AI landing page inside Home Assistant |
 | **Hermes Workspace** | 3000 (configurable) | Browser workspace UI for Hermes sessions, skills, files, and operations |
+| **Hermes Dashboard** | 9119 (proxied under HA Ingress `/dashboard/`) | Hermes Agent dashboard for config, sessions, skills, and in-browser chat |
 | **ttyd** (Web terminal) | 7682 (configurable) | Browser terminal for `homeops-hermes`, `hermes config`, `hermes model`, and recovery |
 
 When you open the add-on page in Home Assistant, nginx serves a landing page with:
-- An **Open Hermes Workspace** button (opens in a new tab to avoid WebSocket issues with Ingress)
+- An **Open Hermes Workspace** button (opens Workspace in a new tab)
+- An **Open Hermes Dashboard** button (available inside the Home Assistant add-on UI through Ingress)
 - An embedded **terminal** for running commands
 
 ### Key directories

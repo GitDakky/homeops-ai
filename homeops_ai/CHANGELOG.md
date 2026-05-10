@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.1.9]
+
+### Added
+- Starts the Hermes Agent dashboard UI alongside the gateway and proxies it inside Home Assistant Ingress at `/dashboard/`.
+- Adds Home Assistant UI buttons for Hermes Workspace, Hermes Dashboard, Hermes API UI, and terminal access.
+
 ## [0.1.8]
 
 ### Added

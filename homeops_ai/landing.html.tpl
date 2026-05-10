@@ -783,8 +783,10 @@
         </div>
 
         <div class="action-row">
-          <a class="btn primary" id="gwbtn" href="__GATEWAY_PUBLIC_URL____GW_PUBLIC_URL_PATH__?token=__GATEWAY_TOKEN__" target="_blank" rel="noopener noreferrer">Open Hermes Workspace</a>
-          <a class="btn secondary" href="./terminal/" target="_self">Open Terminal (full page)</a>
+          <a class="btn primary" id="workspaceBtn" href="#" target="_blank" rel="noopener noreferrer">Open Hermes Workspace</a>
+          <a class="btn secondary" href="./dashboard/" target="_self">Open Hermes Dashboard</a>
+          <a class="btn ghost" id="gwbtn" href="__GATEWAY_PUBLIC_URL____GW_PUBLIC_URL_PATH__?token=__GATEWAY_TOKEN__" target="_blank" rel="noopener noreferrer">Open Hermes API UI</a>
+          <a class="btn secondary" href="./terminal/" target="_self">Open Terminal</a>
           <a class="btn ghost hidden" id="certBtn" href="" target="_blank" rel="noopener noreferrer">Download CA Certificate</a>
         </div>
 
@@ -1112,6 +1114,8 @@ SSL tab:  Request a new SSL certificate</pre>
     const DISK_USED = '__DISK_USED__';
     const DISK_TOTAL = '__DISK_TOTAL__';
     const DASHBOARD_API_BASE = './super/api';
+    const WORKSPACE_PORT = '__WORKSPACE_PORT__';
+    const HERMES_DASHBOARD_PORT = '__HERMES_DASHBOARD_PORT__';
 
     const $ = id => document.getElementById(id);
     const escapeHtml = value => String(value ?? '').replace(/[&<>"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]));

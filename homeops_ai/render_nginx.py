@@ -7,7 +7,7 @@ Called by run.sh with the following env vars:
   ENABLE_HTTPS_PROXY, HTTPS_PROXY_PORT,
   GATEWAY_INTERNAL_PORT, GATEWAY_PORT, GATEWAY_MODE, GATEWAY_BIND_MODE, ACCESS_MODE,
   DISK_TOTAL, DISK_USED, DISK_AVAIL, DISK_PCT,
-  HERMES_BUNDLED_VERSION, DASHBOARD_API_PORT
+  HERMES_BUNDLED_VERSION, DASHBOARD_API_PORT, HERMES_DASHBOARD_PORT, WORKSPACE_PORT
 """
 
 import os
@@ -71,6 +71,8 @@ def main():
     gateway_bind_mode = os.environ.get('GATEWAY_BIND_MODE', 'loopback')
     access_mode = os.environ.get('ACCESS_MODE', 'custom')
     dashboard_api_port = os.environ.get('DASHBOARD_API_PORT', '48110')
+    hermes_dashboard_port = os.environ.get('HERMES_DASHBOARD_PORT', '9119')
+    workspace_port = os.environ.get('WORKSPACE_PORT', '3000')
 
     # Disk usage info (collected by run.sh)
     disk_total = os.environ.get('DISK_TOTAL', '')
@@ -102,6 +104,7 @@ def main():
     conf = tpl.replace('__NGINX_ACCESS_LOG__', access_log_block)
     conf = conf.replace('__TERMINAL_PORT__', terminal_port)
     conf = conf.replace('__DASHBOARD_API_PORT__', dashboard_api_port)
+    conf = conf.replace('__HERMES_DASHBOARD_PORT__', hermes_dashboard_port)
 
     # Build HTTPS gateway proxy block (only for lan_https mode)
     https_block = ''
@@ -168,6 +171,8 @@ def main():
     landing = landing.replace('__DISK_AVAIL__', disk_avail)
     landing = landing.replace('__DISK_PCT__', disk_pct)
     landing = landing.replace('__HERMES_BUNDLED_VERSION__', bundled_hermes_version)
+    landing = landing.replace('__WORKSPACE_PORT__', workspace_port)
+    landing = landing.replace('__HERMES_DASHBOARD_PORT__', hermes_dashboard_port)
 
     out_dir = Path('/etc/nginx/html')
     out_dir.mkdir(parents=True, exist_ok=True)

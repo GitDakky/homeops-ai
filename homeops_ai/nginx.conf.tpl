@@ -51,6 +51,26 @@ http {
       try_files /index.html =404;
     }
 
+
+    # Hermes Agent dashboard UI (config, sessions, skills, and in-browser chat).
+    location = /dashboard {
+      return 302 /dashboard/;
+    }
+
+    location ^~ /dashboard/ {
+      proxy_pass http://127.0.0.1:__HERMES_DASHBOARD_PORT__/;
+      proxy_http_version 1.1;
+      proxy_set_header Upgrade $http_upgrade;
+      proxy_set_header Connection "upgrade";
+      proxy_set_header Host $host;
+      proxy_set_header X-Real-IP $remote_addr;
+      proxy_set_header X-Forwarded-For $remote_addr;
+      proxy_set_header X-Forwarded-Proto $scheme;
+      proxy_read_timeout 3600s;
+      proxy_send_timeout 3600s;
+      proxy_buffering off;
+    }
+
     # Local dashboard API used by the operator console.
     location ^~ /super/api/ {
       proxy_pass http://127.0.0.1:__DASHBOARD_API_PORT__/api/;

@@ -15,6 +15,7 @@ DEFAULT_TERMINAL_PORT="7682"
 DEFAULT_GATEWAY_PORT="8642"
 DEFAULT_INGRESS_PORT="48109"
 DEFAULT_DASHBOARD_API_PORT="48110"
+DEFAULT_HERMES_DASHBOARD_PORT="9119"
 BOOTSTRAP_SOURCE_DIR="/opt/homeops-ai/bootstrap-workspace"
 BUNDLED_SKILLS_SOURCE_DIR="/opt/homeops-ai/bundled-skills"
 HERMES_CONFIG_PATH="/config/.hermes/config.yaml"
@@ -955,6 +956,7 @@ EOF
 GW_PID=""
 GW_RELAY_PID=""
 WORKSPACE_PID=""
+HERMES_DASHBOARD_PID=""
 NGINX_PID=""
 TTYD_PID=""
 LOCAL_PAIRING_APPROVER_PID=""
@@ -1021,6 +1023,11 @@ shutdown() {
   if [ -n "${WORKSPACE_PID:-}" ] && kill -0 "${WORKSPACE_PID}" >/dev/null 2>&1; then
     kill -TERM "${WORKSPACE_PID}" >/dev/null 2>&1 || true
     wait "${WORKSPACE_PID}" 2>/dev/null || true
+  fi
+
+  if [ -n "${HERMES_DASHBOARD_PID:-}" ] && kill -0 "${HERMES_DASHBOARD_PID}" >/dev/null 2>&1; then
+    kill -TERM "${HERMES_DASHBOARD_PID}" >/dev/null 2>&1 || true
+    wait "${HERMES_DASHBOARD_PID}" 2>/dev/null || true
   fi
 
   if [ -n "${CONFIG_WATCHER_PID}" ] && kill -0 "${CONFIG_WATCHER_PID}" >/dev/null 2>&1; then
@@ -1142,6 +1149,21 @@ else
     fi
   }
 
+
+  start_hermes_dashboard_ui() {
+    local dashboard_port="${HERMES_DASHBOARD_PORT:-$DEFAULT_HERMES_DASHBOARD_PORT}"
+    stop_if_listening "$dashboard_port" "Hermes dashboard"
+    HERMES_DASHBOARD_TUI=1 hermes dashboard --host 127.0.0.1 --port "$dashboard_port" --no-open >>"$RUNTIME_WRAPPER_LOG_DIR/hermes-dashboard.log" 2>&1 &
+    HERMES_DASHBOARD_PID=$!
+    sleep 1
+    if kill -0 "$HERMES_DASHBOARD_PID" >/dev/null 2>&1; then
+      echo "INFO: Hermes dashboard UI started on 127.0.0.1:${dashboard_port}"
+    else
+      echo "WARN: Hermes dashboard UI failed to start; dashboard link may be unavailable"
+      HERMES_DASHBOARD_PID=""
+    fi
+  }
+
   start_workspace_ui() {
     if [ "$ENABLE_WORKSPACE" != "true" ] && [ "$ENABLE_WORKSPACE" != "1" ]; then
       echo "INFO: Hermes Workspace UI disabled."
@@ -1159,6 +1181,7 @@ else
 
   start_hermes_runtime || true
   start_dashboard_api || true
+  start_hermes_dashboard_ui || true
   start_workspace_ui || true
 fi
 
