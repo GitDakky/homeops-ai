@@ -28,8 +28,8 @@ echo "==> SVG parse"
 python3 - <<'PY'
 import xml.etree.ElementTree as ET
 
-ET.parse("assets/openclaw-hero.svg")
-ET.parse("assets/openclaw-architecture.svg")
+ET.parse("assets/hermes-hero.svg")
+ET.parse("assets/hermes-architecture.svg")
 print("svg-ok")
 PY
 

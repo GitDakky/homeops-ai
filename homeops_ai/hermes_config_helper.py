@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-OpenClaw config helper for Home Assistant add-on.
-Safely reads/writes openclaw.json without corrupting it.
+Hermes Agent config helper for Home Assistant add-on.
+Safely reads/writes hermes.json without corrupting it.
 """
 
 import json
@@ -11,9 +11,9 @@ import secrets
 import sys
 from pathlib import Path
 
-CONFIG_PATH = Path(os.environ.get("OPENCLAW_CONFIG_PATH", "/config/.openclaw/openclaw.json"))
+CONFIG_PATH = Path(os.environ.get("HERMES_CONFIG_PATH", "/config/.hermes/config.yaml"))
 EXEC_APPROVALS_PATH = Path(
-    os.environ.get("OPENCLAW_EXEC_APPROVALS_PATH", "/config/.openclaw/exec-approvals.json")
+    os.environ.get("HERMES_EXEC_APPROVALS_PATH", "/config/.hermes/exec-approvals.json")
 )
 FORCED_EXEC_APPROVAL_DEFAULTS = {
     "security": "full",
@@ -30,7 +30,7 @@ FORCED_TOOLS_EXEC = {
 
 
 def read_config():
-    """Read and parse openclaw.json."""
+    """Read and parse hermes.json."""
     if not CONFIG_PATH.exists():
         return None
     try:
@@ -103,7 +103,7 @@ def set_gateway_setting(key, value):
 
 def apply_gateway_settings(mode: str, remote_url: str, bind_mode: str, port: int, enable_openai_api: bool, auth_mode: str, trusted_proxies_csv: str):
     """
-    Apply gateway settings to OpenClaw config.
+    Apply gateway settings to Hermes Agent config.
     
     Args:
         mode: "local" or "remote"
@@ -165,7 +165,7 @@ def apply_gateway_settings(mode: str, remote_url: str, bind_mode: str, port: int
 
     trusted_proxies = [p.strip() for p in trusted_proxies_csv.split(",") if p.strip()]
 
-    # OpenClaw trusted-proxy mode requires nested auth.trustedProxy config.
+    # Hermes Agent trusted-proxy mode requires nested auth.trustedProxy config.
     # Use a sane default user header expected from reverse proxies.
     trusted_proxy_cfg_default = {"userHeader": "x-forwarded-user"}
 
@@ -210,7 +210,7 @@ def apply_gateway_settings(mode: str, remote_url: str, bind_mode: str, port: int
         changes.append(f"trustedProxies: {current_trusted_proxies} -> {trusted_proxies}")
 
     if auth_mode == "trusted-proxy":
-        # OpenClaw 2026.4.x rejects trusted-proxy when a shared token is also configured.
+        # Hermes Agent 2026.4.x rejects trusted-proxy when a shared token is also configured.
         if "token" in auth:
             del auth["token"]
             changes.append("auth.token: removed for trusted-proxy mode")
@@ -322,7 +322,7 @@ def configure_exec_approval_policy(disable_exec_approvals: bool):
     Configure host exec approvals and tools.exec policy together.
 
     When enabled, force:
-      - ~/.openclaw/exec-approvals.json defaults to full/off/full
+      - ~/.hermes/exec-approvals.json defaults to full/off/full
       - tools.exec.host=gateway
       - tools.exec.security=full
       - tools.exec.ask=off
@@ -442,7 +442,7 @@ def configure_matrix_channel(
     group_allow_from_csv: str,
     room_allowlist_csv: str,
 ):
-    """Configure the Matrix channel in openclaw.json."""
+    """Configure the Matrix channel in hermes.json."""
     valid_auto_join = {"always", "allowlist", "off"}
     valid_dm_policies = {"pairing", "allowlist", "open", "disabled"}
     valid_group_policies = {"open", "allowlist", "disabled"}

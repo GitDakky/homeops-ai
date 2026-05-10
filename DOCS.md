@@ -1,21 +1,30 @@
 # HomeOps AI — Documentation
 
-This GitDakky fork runs [Hermes](https://github.com/hermes/hermes) inside Home Assistant OS (HAOS). It provides a fully self-contained environment with a web terminal, gateway server, migration support, and the tools Hermes needs.
+HomeOps AI packages [Hermes Agent](https://github.com/NousResearch/hermes-agent) as a proper Home Assistant add-on/app. It follows Home Assistant Supervisor lifecycle rules and uses Hermes-native concepts from the official documentation: <https://hermes-agent.nousresearch.com/docs/>.
 
-This fork also mounts the live Home Assistant configuration root at `/ha-config` so the assistant can inspect and repair the actual HA system in place. `/config` remains the add-on's own persistent workspace.
+This add-on also ships the [Hermes Paperclip Adapter](https://github.com/NousResearch/hermes-paperclip-adapter) and [Hermes Workspace](https://hermes-workspace.com/) so Home Assistant users get the CLI agent, gateway/API surface, and browser workspace in one managed package.
 
-**Bundled Hermes version in this fork:** `2026.4.2`
+The live Home Assistant configuration root is mounted at `/ha-config` for inspection and recovery. HomeOps/Hermes state persists under `/config/.hermes` and `/config/homeops`.
+
+**Bundled Hermes Agent release:** `v2026.5.7`
 
 **Published app image:** `ghcr.io/gitdakky/homeops-ai`
 
-> **Porting status:** HomeOps AI is being ported from the GitDakky Hermes Home Assistant add-on shell to a Hermes Agent runtime. The Home Assistant add-on packaging, ingress, persistence, and dashboard patterns are useful and intentional; Hermes-specific runtime references below are legacy material until the Hermes port is complete.
+**Primary Hermes docs:**
+
+- Main docs: <https://hermes-agent.nousresearch.com/docs/>
+- Configuration: <https://hermes-agent.nousresearch.com/docs/user-guide/configuration>
+- Providers: <https://hermes-agent.nousresearch.com/docs/integrations/providers>
+- Messaging/gateway platforms: <https://hermes-agent.nousresearch.com/docs/user-guide/messaging/>
+- Tools: <https://hermes-agent.nousresearch.com/docs/reference/tools-reference>
+- Skills: <https://hermes-agent.nousresearch.com/docs/reference/skills-catalog>
 
 **Table of Contents**
 
 1. [Architecture Overview](#1-architecture-overview)
 2. [Installation](#2-installation)
 3. [First-Time Setup](#3-first-time-setup)
-4. [Accessing the Gateway Web UI](#4-accessing-the-gateway-web-ui)
+4. [Accessing Hermes Workspace](#4-accessing-hermes-workspace)
 5. [Configuration Reference](#5-configuration-reference)
 6. [Use Case Guides](#6-use-case-guides)
 7. [Data Persistence & Skills](#7-data-persistence--skills)
@@ -37,11 +46,12 @@ The add-on container runs three services:
 | Service | Port | Purpose |
 |---|---|---|
 | **Hermes Gateway** | 18790 (configurable) | The AI agent server — handles skills, chat, automations |
-| **nginx** (Ingress proxy) | 48109 (fixed) | Serves the landing page inside Home Assistant |
-| **ttyd** (Web terminal) | 7682 (configurable) | Provides a browser-based terminal for setup and management |
+| **nginx** (Ingress proxy) | 48109 (fixed) | Serves the HomeOps AI landing page inside Home Assistant |
+| **Hermes Workspace** | 3000 (configurable) | Browser workspace UI for Hermes sessions, skills, files, and operations |
+| **ttyd** (Web terminal) | 7682 (configurable) | Browser terminal for `homeops-hermes`, `hermes config`, `hermes model`, and recovery |
 
 When you open the add-on page in Home Assistant, nginx serves a landing page with:
-- An **Open Gateway Web UI** button (opens in a new tab to avoid WebSocket issues with Ingress)
+- An **Open Hermes Workspace** button (opens in a new tab to avoid WebSocket issues with Ingress)
 - An embedded **terminal** for running commands
 
 ### Key directories
@@ -50,14 +60,14 @@ When you open the add-on page in Home Assistant, nginx serves a landing page wit
 |---|---|---|
 | `/config/` | Yes | All user data — survives add-on updates and rebuilds |
 | `/config/.hermes/` | Yes | Hermes configuration (`hermes.json`), skills, agent data |
-| `/config/homeops/` | Yes | Agent workspace (ClawHub-installed skills, files) |
+| `/config/homeops/` | Yes | Agent workspace (Hermes Skills-installed skills, files) |
 | `/config/.node_global/` | Yes | User-installed npm packages (skills installed via dashboard) |
 | `/config/secrets/` | Yes | Tokens (e.g., `homeassistant.token`) |
 | `/config/keys/` | Yes | SSH keys (e.g., router SSH key) |
 | `/config/.linuxbrew/` | Yes | Homebrew install and brew-installed CLI tools |
 | `/config/gogcli/` | Yes | gog OAuth credentials for Google APIs |
 | `/ha-config/` | Yes | The real Home Assistant config root: `configuration.yaml`, `secrets.yaml`, `custom_components/`, `packages/`, `.storage/` |
-| `/usr/lib/node_modules/hermes/` | No | Hermes installation (rebuilt with each image update) |
+| `/usr/local/lib/hermes-agent/` | No | Hermes installation (rebuilt with each image update) |
 
 > **Important**: Everything under `/config/` persists across add-on updates. The container filesystem (`/usr/`, `/opt/`, etc.) is rebuilt each time the image changes.
 >
@@ -150,12 +160,12 @@ homeops-configure
 The gateway requires a token for authentication. To retrieve it:
 
 ```sh
-jq -r '.gateway.auth.token' /config/.hermes/hermes.json
+jq -r '.gateway.auth.token' /config/.hermes/config.yaml
 ```
 
 > **Note**: Since Hermes v2026.2.22+ `hermes config get` redacts sensitive values (returns `hermes_redacted`). Read the token directly from the config file with `jq` as shown above.
 
-Save this token — you'll need it to access the Gateway Web UI and for API integrations.
+Save this token — you'll need it to access the Hermes Workspace and for API integrations.
 
 ### Step 3 — Verify everything works
 
@@ -163,14 +173,14 @@ Save this token — you'll need it to access the Gateway Web UI and for API inte
    ```sh
    hermes gateway status
    ```
-2. Click the **Open Gateway Web UI** button on the landing page
+2. Click the **Open Hermes Workspace** button on the landing page
 3. If prompted for a token, paste the one from Step 2 or go to the Overview tab, paste the token in the 'Gateway Token' field and press Connect.
 
 ---
 
-## 4. Accessing the Gateway Web UI
+## 4. Accessing the Hermes Workspace
 
-The Gateway Web UI (Control UI) is Hermes's main web interface. It opens in a **separate browser tab** because Home Assistant's Ingress proxy has WebSocket limitations.
+The Hermes Workspace (Control UI) is Hermes's main web interface. It opens in a **separate browser tab** because Home Assistant's Ingress proxy has WebSocket limitations.
 
 > **Important (v2026.2.21+):** Hermes now requires a **secure context** (HTTPS or localhost) for the Control UI. Plain HTTP over LAN is no longer accepted. The add-on's `access_mode` option makes this easy — see below.
 >
@@ -264,7 +274,7 @@ This is the practical flow users report as stable in HAOS.
 
 > **Why this flow**: `tailnet_https` in this add-on is a bind/auth preset. It does not automatically run `tailscale serve` inside Hermes.
 
-### Setting up the "Open Gateway Web UI" button
+### Setting up the "Open Hermes Workspace" button
 
 In most local installs you can leave `gateway_public_url` empty. The add-on now tries to derive the correct Gateway URL automatically from the Home Assistant host and access mode. Set `gateway_public_url` only when the externally reachable hostname differs from the host you are already using in Home Assistant.
 
@@ -297,7 +307,7 @@ This means the browser is connecting over plain HTTP. **Solutions**:
 If the Gateway UI shows **Unauthorized**, re-check your token:
 
 ```sh
-jq -r '.gateway.auth.token' /config/.hermes/hermes.json
+jq -r '.gateway.auth.token' /config/.hermes/config.yaml
 ```
 
 > **Note**: Since Hermes v2026.2.22+ `hermes config get` redacts sensitive values — use `jq` to read directly from the config file.
@@ -322,16 +332,16 @@ All options are set via **Settings → Apps → HomeOps AI → Configuration** i
 | `gateway_remote_url` | string | _(empty)_ | Remote gateway WebSocket URL used when `gateway_mode: remote` (example: `ws://192.168.1.20:18790` or `wss://gateway.example.com:443`) |
 | `gateway_bind_mode` | `loopback` / `lan` / `tailnet` | `loopback` | **loopback**: 127.0.0.1 only (secure). **lan**: all interfaces (LAN-accessible). **tailnet**: Tailscale interface only. Only applies when `gateway_mode` is `local` |
 | `gateway_port` | int | `18790` | Port for the gateway. Only applies when `gateway_mode` is `local` |
-| `access_mode` | `custom` / `local_only` / `lan_https` / `lan_reverse_proxy` / `tailnet_https` | `custom` | **Simplifies secure access setup.** `custom`: use individual settings (backward-compatible). `lan_https`: built-in HTTPS proxy for LAN (recommended for phones). `lan_reverse_proxy`: external reverse proxy. `tailnet_https`: Tailscale. `local_only`: Ingress only. See [Accessing the Gateway Web UI](#4-accessing-the-gateway-web-ui) |
-| `gateway_public_url` | string | _(empty)_ | Optional override for the "Open Gateway Web UI" button. In common local installs the add-on derives the URL automatically from the current Home Assistant host and access mode, so you can usually leave this empty. Set it when you need a different reverse-proxy, HTTPS, or Tailscale hostname. |
+| `access_mode` | `custom` / `local_only` / `lan_https` / `lan_reverse_proxy` / `tailnet_https` | `custom` | **Simplifies secure access setup.** `custom`: use individual settings (backward-compatible). `lan_https`: built-in HTTPS proxy for LAN (recommended for phones). `lan_reverse_proxy`: external reverse proxy. `tailnet_https`: Tailscale. `local_only`: Ingress only. See [Accessing the Hermes Workspace](#4-accessing-the-gateway-web-ui) |
+| `gateway_public_url` | string | _(empty)_ | Optional override for the "Open Hermes Workspace" button. In common local installs the add-on derives the URL automatically from the current Home Assistant host and access mode, so you can usually leave this empty. Set it when you need a different reverse-proxy, HTTPS, or Tailscale hostname. |
 | `enable_openai_api` | bool | `false` | Enable the OpenAI-compatible `/v1/chat/completions` endpoint. Required for [Assist pipeline integration](#6c-assist-pipeline-integration-openai-api) |
 | `gateway_auth_mode` | `token` / `trusted-proxy` | `token` | Gateway auth mode. Use `trusted-proxy` when terminating HTTPS in a reverse proxy and forwarding trusted auth headers. |
 | `gateway_trusted_proxies` | string | _(empty)_ | Comma-separated trusted proxy IP/CIDR list used with `gateway_auth_mode: trusted-proxy`. |
 | `gateway_additional_allowed_origins` | string | _(empty)_ | Comma-separated additional origins merged into `gateway.controlUi.allowedOrigins` in `lan_https` mode (example: `https://ha.example.com:8443,capacitor://localhost`). |
 | `controlui_disable_device_auth` | bool | `true` | Controls `gateway.controlUi.dangerouslyDisableDeviceAuth` in `lan_https` mode. **ON (recommended):** skip per-device pairing approval, avoid error 1008 on LAN HTTPS, token auth still required. **OFF:** enforce per-device pairing prompts (stricter, but more friction). |
-| `disable_exec_approvals` | bool | `true` | Disable host exec approval prompts for unattended automations. This fork now enables that by default. When enabled, the add-on forces `/config/.hermes/exec-approvals.json` defaults to `security=full`, `ask=off`, `askFallback=full` and aligns `/config/.hermes/hermes.json` with `tools.exec.host=gateway`, `tools.exec.security=full`, `tools.exec.ask=off`, and `tools.exec.strictInlineEval=false`. Turn it OFF only if you explicitly want human approval prompts restored. |
+| `disable_exec_approvals` | bool | `true` | Disable host exec approval prompts for unattended automations. This fork now enables that by default. When enabled, the add-on forces `/config/.hermes/exec-approvals.json` defaults to `security=full`, `ask=off`, `askFallback=full` and aligns `/config/.hermes/config.yaml` with `tools.exec.host=gateway`, `tools.exec.security=full`, `tools.exec.ask=off`, and `tools.exec.strictInlineEval=false`. Turn it OFF only if you explicitly want human approval prompts restored. |
 | `force_ipv4_dns` | bool | `true` | Force IPv4-first DNS ordering for Node network calls. **Recommended ON** — most HAOS VMs lack IPv6 egress, causing `web_fetch` and Telegram timeouts. Set to `false` only if your network has working IPv6. |
-| `gateway_env_vars` | list of `{name, value}` | `[]` | Environment variables exported to the gateway process at startup. UI format: list entries with `name` and `value` (example: `name=OPENAI_API_KEY`, `value=sk-...`). Limits: max 50 vars, key length 255, value length 10000. Reserved runtime keys are blocked (for example `PATH`, `HOME`, `NODE_OPTIONS`, `NODE_PATH`, `OPENCLAW_*`, proxy vars). Legacy string/object formats are still accepted for backward compatibility. |
+| `gateway_env_vars` | list of `{name, value}` | `[]` | Environment variables exported to the gateway process at startup. UI format: list entries with `name` and `value` (example: `name=OPENAI_API_KEY`, `value=sk-...`). Limits: max 50 vars, key length 255, value length 10000. Reserved runtime keys are blocked (for example `PATH`, `HOME`, `NODE_OPTIONS`, `NODE_PATH`, `HERMES_*`, proxy vars). Legacy string/object formats are still accepted for backward compatibility. |
 | `nginx_log_level` | `full` / `minimal` | `minimal` | Nginx access log verbosity. `minimal` suppresses repetitive Home Assistant health-check and polling requests (`GET /`, `GET /v1/models`). `full` logs everything. |
 
 When `gateway_auth_mode: trusted-proxy` is used, the add-on sets `gateway.auth.trustedProxy.userHeader` to `x-forwarded-user` by default.
@@ -399,7 +409,7 @@ To provide the SSH key: place the private key file in the add-on config director
 
 ### 6a. LAN Access Setup
 
-This is the most common setup — accessing the Gateway Web UI from a browser on your local network (including phones and tablets).
+This is the most common setup — accessing the Hermes Workspace from a browser on your local network (including phones and tablets).
 
 > **Since Hermes v2026.2.21**, the Control UI requires a secure context (HTTPS or localhost). Use the `access_mode` option for easy setup.
 
@@ -408,7 +418,7 @@ This is the most common setup — accessing the Gateway Web UI from a browser on
 1. Go to **Settings → Apps → HomeOps AI → Configuration**
 2. Set `access_mode`: **lan_https**
 3. Restart the add-on
-4. Click the **Open Gateway Web UI** button — it uses HTTPS automatically
+4. Click the **Open Hermes Workspace** button — it uses HTTPS automatically
 
 **Phone/tablet (one-time):** Click **Download CA Certificate** on the landing page, then install it on your device for trusted access without browser warnings.
 
@@ -557,7 +567,7 @@ hermes config set gateway.http.endpoints.chatCompletions.enabled true
 1. Go to **Settings → Devices & Services → Add Integration**
 2. Search for **Extended OpenAI Conversation**
 3. Configure:
-   - **API Key**: your gateway token — run `jq -r '.gateway.auth.token' /config/.hermes/hermes.json` in the terminal
+   - **API Key**: your gateway token — run `jq -r '.gateway.auth.token' /config/.hermes/config.yaml` in the terminal
    - **Base URL**: `http://127.0.0.1:18790/v1`
    - **API Version**: leave empty
    - **Organization**: leave empty
@@ -687,7 +697,7 @@ Because this fork is intended as a trusted, high-capability Home Assistant opera
 
 The old `homeassistant_token` + `auto_configure_mcp` path still exists as a compatibility mode for people who want to register Home Assistant's external MCP endpoint manually. It is no longer the recommended path, and it is ignored when `enable_builtin_ha_tools` is ON.
 
-To enable it, add to `/config/.hermes/hermes.json`:
+To enable it, add to `/config/.hermes/config.yaml`:
 
 ```json
 {
@@ -786,10 +796,10 @@ You should see your account listed with the `sheets` service.
 
 | Data | Location | Persists? |
 |---|---|---|
-| Hermes config | `/config/.hermes/hermes.json` | Yes |
+| Hermes config | `/config/.hermes/config.yaml` | Yes |
 | Built-in skills | `/config/.hermes/skills/` | Yes |
 | Agent sessions & data | `/config/.hermes/agents/` | Yes |
-| ClawHub workspace | `/config/homeops/` | Yes |
+| Hermes Skills workspace | `/config/homeops/` | Yes |
 | Seeded workspace bootstrap files | `/config/homeops/*.md` | Yes |
 | User-installed npm skills | `/config/.node_global/` | Yes |
 | SSH keys | `/config/keys/` | Yes |
@@ -799,7 +809,7 @@ You should see your account listed with the `sheets` service.
 | gog OAuth credentials | `/config/gogcli/` | Yes |
 | TLS certificates (lan_https) | `/config/certs/` | Yes (CA persists; server cert regenerated if IP changes) |
 | Live Home Assistant config root | `/ha-config/` | Host-backed (the real HA config tree) |
-| Hermes binary | `/usr/lib/node_modules/hermes/` | **No** — reinstalled from image |
+| Hermes binary | `/usr/local/lib/hermes-agent/` | **No** — reinstalled from image |
 
 ### How built-in skills work
 
@@ -867,7 +877,7 @@ If you want the assistant to open GitHub issues directly in this repository:
 After that, the assistant can use:
 
 ```sh
-oc-report-issue --title "Your title here" --labels "bug,home-assistant" --body-file /path/to/body.md
+homeops-report-issue --title "Your title here" --labels "bug,home-assistant" --body-file /path/to/body.md
 ```
 
 or the seeded repo issue reporter skill when you explicitly ask it to file a bug or feature request.
@@ -911,15 +921,15 @@ The add-on image includes these tools, available in the terminal:
 | Homebrew | `brew` | Package manager (optional — may not be available on all CPUs) |
 | Chromium | `chromium` | Headless browser for automation |
 | SSH | `ssh` | Remote access |
-| oc-cleanup | `oc-cleanup` | Interactive disk space monitor & cache cleanup helper |
+| homeops-cleanup | `homeops-cleanup` | Interactive disk space monitor & cache cleanup helper |
 
-### oc-cleanup
+### homeops-cleanup
 
-Run `oc-cleanup` from the add-on terminal to see an overview of disk usage and
+Run `homeops-cleanup` from the add-on terminal to see an overview of disk usage and
 selectively clear caches that accumulate over time:
 
 ```
-$ oc-cleanup
+$ homeops-cleanup
 ```
 
 The tool displays:
@@ -975,7 +985,7 @@ Home Assistant's built-in backup system automatically includes add-on configurat
 ```sh
 # Key paths to back up:
 # /config/.hermes/     - Hermes config, skills, agent data
-# /config/homeops/         - ClawHub workspace
+# /config/homeops/         - Hermes Skills workspace
 # /config/.node_global/  - User-installed npm skills
 # /config/keys/          - SSH keys
 # /config/secrets/       - Tokens
@@ -1017,7 +1027,7 @@ Go to **Settings → Apps → HomeOps AI → Log** tab. Logs show startup messag
 
 ### ERR_CONNECTION_REFUSED
 
-**Symptom**: Browser shows connection refused when opening the Gateway Web UI.
+**Symptom**: Browser shows connection refused when opening the Hermes Workspace.
 
 **Checks**:
 1. Is the gateway running? In the terminal: `hermes gateway status`
@@ -1064,7 +1074,7 @@ Go to **Settings → Apps → HomeOps AI → Log** tab. Logs show startup messag
 
 **Symptom**: `hermes tui`, the Control UI, or `hermes gateway status` reports `unauthorized: gateway token mismatch`.
 
-**Cause**: The gateway token stored in `/config/.hermes/hermes.json` changed, but the live runtime was still using an older in-memory token. This most commonly happens if onboarding or interactive config rewrites the gateway block while the add-on is already running.
+**Cause**: The gateway token stored in `/config/.hermes/config.yaml` changed, but the live runtime was still using an older in-memory token. This most commonly happens if onboarding or interactive config rewrites the gateway block while the add-on is already running.
 
 **Fix**:
 1. Use `homeops-onboard` and `homeops-configure` from the add-on terminal instead of raw `hermes onboard` / `hermes configure`.
@@ -1076,7 +1086,7 @@ Go to **Settings → Apps → HomeOps AI → Log** tab. Logs show startup messag
 1. **Restart the add-on** — the startup script writes the config before launching the gateway.
 2. If the error persists, set it manually:
    ```sh
-   nano /config/.hermes/hermes.json
+   nano /config/.hermes/config.yaml
    ```
    Ensure `gateway.controlUi` contains:
    ```json
@@ -1126,7 +1136,7 @@ Go to **Settings → Apps → HomeOps AI → Log** tab. Logs show startup messag
 
 This add-on writes the policy to:
 - `/config/.hermes/exec-approvals.json`
-- `/config/.hermes/hermes.json` with `tools.exec.host=gateway`, `tools.exec.security=full`, `tools.exec.ask=off`, and `tools.exec.strictInlineEval=false`
+- `/config/.hermes/config.yaml` with `tools.exec.host=gateway`, `tools.exec.security=full`, `tools.exec.ask=off`, and `tools.exec.strictInlineEval=false`
 
 > **Warning**: This disables host exec approval prompts and weakens safety guardrails. Use it only on trusted Home Assistant installs where unattended automation is intentional.
 4. Restart the add-on and hatch the TUI again.
@@ -1149,14 +1159,14 @@ This add-on writes the policy to:
 **Fix**: Get the correct token and use it:
 
 ```sh
-jq -r '.gateway.auth.token' /config/.hermes/hermes.json
+jq -r '.gateway.auth.token' /config/.hermes/config.yaml
 ```
 
 > **Note**: Since Hermes v2026.2.22+ `hermes config get` redacts sensitive values (returns `hermes_redacted`). Use `jq` to read the token directly from the config file.
 
 Paste this token when the UI prompts for authentication, or append it to the URL: `http://<ip>:18790/?token=<your-token>`
 
-### "Open Gateway Web UI" points to the wrong place or stays disabled
+### "Open Hermes Workspace" points to the wrong place or stays disabled
 
 **Symptom**: The button opens the wrong host, opens nothing useful, or changes to **Configure Gateway URL**.
 
@@ -1251,7 +1261,7 @@ Built-in skills are synced to persistent storage on each startup. If skills are 
 
 ### "hermes: command not found"
 
-The Hermes binary should be installed at `/usr/lib/node_modules/hermes/`. If this error appears:
+The Hermes binary should be installed at `/usr/local/lib/hermes-agent/`. If this error appears:
 
 1. Check the add-on logs for npm installation errors during build
 2. Try restarting the add-on
@@ -1264,7 +1274,7 @@ The Hermes binary should be installed at `/usr/lib/node_modules/hermes/`. If thi
 **Fix**: The `hermes.json` config file may be corrupted. To reset it:
 
 ```sh
-rm /config/.hermes/hermes.json
+rm /config/.hermes/config.yaml
 ```
 
 Restart the add-on — it will generate a fresh config. You'll need to run `homeops-onboard` again.
@@ -1276,7 +1286,7 @@ Restart the add-on — it will generate a fresh config. You'll need to run `home
 **Cause**: Old Docker images and container layers accumulate on the host. Each add-on rebuild (~1–2 GB) keeps the previous image until pruned.
 
 **Fix (from inside the add-on)**:
-1. Open the terminal and run `oc-cleanup` to clear npm/pnpm caches, pycache, and temp files.
+1. Open the terminal and run `homeops-cleanup` to clear npm/pnpm caches, pycache, and temp files.
 
 **Fix (from the host)** — you need a **root shell on the HAOS host**, not the `ha` CLI
 (the `ha docker` command does **not** support `prune`):
@@ -1311,13 +1321,13 @@ VBoxManage modifymedium disk haos.vdi --resize 64000
 Yes. The add-on supports aarch64 (Raspberry Pi 4/5) and armv7 (Raspberry Pi 3). Note that Homebrew may not work on all ARM devices, but core functionality is unaffected.
 
 **Can I run multiple agents?**
-Hermes supports multiple agent profiles. Configure them via `homeops-configure` or by editing `/config/.hermes/hermes.json`. The gateway serves all configured agents.
+Hermes supports multiple agent profiles. Configure them via `homeops-configure` or by editing `/config/.hermes/config.yaml`. The gateway serves all configured agents.
 
 **Can I use a remote gateway?**
 Yes. Set `gateway_mode` to `remote` and set `gateway_remote_url` in add-on configuration. The add-on syncs it into Hermes config automatically. See [Remote Gateway Mode](#6b-remote-gateway-mode).
 
 **How do I change the AI model or provider?**
-Run `homeops-configure` in the terminal to reconfigure your AI providers, or edit `/config/.hermes/hermes.json` directly. You can use OpenAI, Google (Gemini), Anthropic (Claude), local models, and more.
+Run `homeops-configure` in the terminal to reconfigure your AI providers, or edit `/config/.hermes/config.yaml` directly. You can use OpenAI, Google (Gemini), Anthropic (Claude), local models, and more.
 
 **Can other devices on my network use the Hermes API?**
 Yes. Set `access_mode` to `lan_https` (recommended) or `lan_reverse_proxy`. Any device on your network can connect to `https://<ha-ip>:18790`. Use the gateway token for authentication. This also enables the [Assist pipeline integration](#6c-assist-pipeline-integration-openai-api) from other HA instances or standalone Hermes integrations.

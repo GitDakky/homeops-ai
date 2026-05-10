@@ -7,4 +7,4 @@ Checklist:
 - check disk pressure and stale session locks
 - separate startup issues from runtime issues
 
-Do not guess. Use the dashboard runtime data, `openclaw` CLI, and local files.
+Do not guess. Use the dashboard runtime data, `hermes` CLI, and local files.

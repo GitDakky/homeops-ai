@@ -100,7 +100,7 @@ class DashboardInsightTests(unittest.TestCase):
         options = {
             "access_mode": "lan_reverse_proxy",
             "gateway_auth_mode": "trusted-proxy",
-            "gateway_public_url": "http://openclaw.example.com",
+            "gateway_public_url": "http://hermes.example.com",
             "gateway_trusted_proxies": "",
             "enable_ha_service_calls": True,
             "disable_exec_approvals": True,
@@ -182,7 +182,7 @@ class DashboardInsightTests(unittest.TestCase):
         self.assertLess(doctor["score"], 100)
         self.assertIn("configuration.yaml visible", doctor["checks"][1]["detail"])
         finding_titles = "\n".join(item["title"] for item in doctor["findings"])
-        self.assertIn("OpenClaw cron visibility degraded", finding_titles)
+        self.assertIn("Hermes Agent cron visibility degraded", finding_titles)
         self.assertIn("Unavailable Home Assistant entities detected", finding_titles)
         self.assertIn("Predictive maintenance pressure visible", finding_titles)
 

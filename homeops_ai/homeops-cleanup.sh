@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ──────────────────────────────────────────────────────────────
-# oc-cleanup — Disk space monitor & cleanup helper for OpenClaw
-# Run from the add-on terminal:  oc-cleanup
+# homeops-cleanup — Disk space monitor & cleanup helper for Hermes Agent
+# Run from the add-on terminal:  homeops-cleanup
 # ──────────────────────────────────────────────────────────────
 set -euo pipefail
 
@@ -13,7 +13,7 @@ CYAN="\033[96m"
 RESET="\033[0m"
 
 echo -e "${BOLD}${CYAN}═══════════════════════════════════════════${RESET}"
-echo -e "${BOLD}${CYAN}  OpenClaw Disk Space Monitor & Cleanup${RESET}"
+echo -e "${BOLD}${CYAN}  Hermes Agent Disk Space Monitor & Cleanup${RESET}"
 echo -e "${BOLD}${CYAN}═══════════════════════════════════════════${RESET}"
 echo ""
 
@@ -61,10 +61,10 @@ show_size() {
 show_size "npm cache" "/config/.npm"
 show_size "npm global packages" "/config/.node_global"
 show_size "pnpm store" "/config/.node_global/pnpm"
-show_size "OpenClaw config + skills" "/config/.openclaw"
+show_size "Hermes Agent config + skills" "/config/.hermes"
 show_size "Homebrew" "/config/.linuxbrew"
-show_size "Agent workspace" "/config/clawd"
-show_size "Python __pycache__" "/config/.openclaw/__pycache__"
+show_size "Agent workspace" "/config/homeops"
+show_size "Python __pycache__" "/config/.hermes/__pycache__"
 show_size "Temp files (/tmp)" "/tmp"
 echo ""
 

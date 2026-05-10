@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.3]
+
+### Changed
+- Reworked HomeOps AI settings, dashboard language, and docs to be Hermes Agent-first.
+- Added heavier references to official Hermes Agent documentation.
+- Replaced remaining user-facing OpenClaw terminology in the add-on interface with Hermes Workspace, Hermes gateway/API, and Hermes config concepts.
+- Updated dashboard API defaults to prefer Hermes environment names while retaining fallback compatibility during the port.
+
 ## [0.1.2]
 
 ### Added

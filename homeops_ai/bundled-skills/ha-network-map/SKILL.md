@@ -1,7 +1,7 @@
 Map the operational topology of the Home Assistant environment.
 
 Data sources:
-- `/config/.openclaw/gitdakky-system-graph.sqlite3`
+- `/config/.hermes/gitdakky-system-graph.sqlite3`
 - local interface/IP data
 - Home Assistant entities and integrations
 - Domotz inventory when configured

@@ -11,7 +11,7 @@ It separates what is already shipped from what is planned next, and it keeps the
 
 ## Shipped foundations
 
-- Current OpenClaw fork packaging with Home Assistant ingress, ttyd, nginx, persistence, and migration support
+- Current Hermes Agent fork packaging with Home Assistant ingress, ttyd, nginx, persistence, and migration support
 - Built-in Home Assistant live tool layer
 - Matrix channel wiring from add-on settings
 - Dashboard/API surface for operator visibility and seeded workspace editing
@@ -25,7 +25,7 @@ It separates what is already shipped from what is planned next, and it keeps the
 
 ### Now
 
-- Keep OpenClaw version bumps ahead of the legacy add-on line
+- Keep Hermes Agent version bumps ahead of the legacy add-on line
 - Close regressions around `remote` mode, Tailscale/HTTPS, gateway URL derivation, and CLI-to-gateway behavior
 - Expand deterministic validation around startup config reconciliation and persistence-sensitive changes
 
@@ -74,7 +74,7 @@ Turn the add-on from a packaging shell into a house operations brain.
 
 ### Goal
 
-Make OpenClaw the operations and escalation interface for the home, not just a text terminal behind Home Assistant.
+Make Hermes Agent the operations and escalation interface for the home, not just a text terminal behind Home Assistant.
 
 ### Next slices
 

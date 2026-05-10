@@ -9,7 +9,7 @@ from homeops_ai import oc_config_helper
 class ApplyGatewaySettingsTests(unittest.TestCase):
     def setUp(self) -> None:
         self.temp_dir = tempfile.TemporaryDirectory()
-        self.config_path = Path(self.temp_dir.name) / "openclaw.json"
+        self.config_path = Path(self.temp_dir.name) / "hermes.json"
         self.original_config_path = oc_config_helper.CONFIG_PATH
         oc_config_helper.CONFIG_PATH = self.config_path
 

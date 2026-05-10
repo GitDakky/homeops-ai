@@ -20,23 +20,23 @@ from urllib.parse import parse_qs, urlparse
 from urllib.request import Request, urlopen
 
 HOST = "127.0.0.1"
-PORT = int(os.environ.get("OPENCLAW_DASHBOARD_API_PORT", "48110"))
-WORKSPACE_DIR = Path(os.environ.get("OPENCLAW_WORKSPACE_DIR", "/config/clawd"))
-SKILLS_DIR = Path(os.environ.get("OPENCLAW_SKILLS_DIR", "/config/.openclaw/skills"))
+PORT = int(os.environ.get("HERMES_DASHBOARD_API_PORT", os.environ.get("OPENCLAW_DASHBOARD_API_PORT", "48110")))
+WORKSPACE_DIR = Path(os.environ.get("HERMES_WORKSPACE_DIR", os.environ.get("OPENCLAW_WORKSPACE_DIR", "/config/homeops")))
+SKILLS_DIR = Path(os.environ.get("HERMES_SKILLS_DIR", os.environ.get("OPENCLAW_SKILLS_DIR", "/config/.hermes/skills")))
 GRAPH_DB_PATH = Path(
-    os.environ.get("OPENCLAW_SYSTEM_GRAPH_PATH", "/config/.openclaw/gitdakky-system-graph.sqlite3")
+    os.environ.get("HERMES_SYSTEM_GRAPH_PATH", os.environ.get("OPENCLAW_SYSTEM_GRAPH_PATH", "/config/.hermes/gitdakky-system-graph.sqlite3"))
 )
-OPTIONS_FILE = Path(os.environ.get("OPENCLAW_OPTIONS_FILE", "/data/options.json"))
-SECRETS_DIR = Path(os.environ.get("OPENCLAW_SECRETS_DIR", "/config/secrets"))
+OPTIONS_FILE = Path(os.environ.get("HERMES_OPTIONS_FILE", os.environ.get("OPENCLAW_OPTIONS_FILE", "/data/options.json")))
+SECRETS_DIR = Path(os.environ.get("HERMES_SECRETS_DIR", os.environ.get("OPENCLAW_SECRETS_DIR", "/config/secrets")))
 HA_CONFIG_DIR = Path(os.environ.get("HOME_ASSISTANT_CONFIG_DIR", "/ha-config"))
-MEMORY_DIR = Path(os.environ.get("OPENCLAW_MEMORY_DIR", "/config/.openclaw/home-os-memory"))
+MEMORY_DIR = Path(os.environ.get("HERMES_MEMORY_DIR", os.environ.get("OPENCLAW_MEMORY_DIR", "/config/.hermes/home-os-memory")))
 MEMORY_STATE_FILE = MEMORY_DIR / "memory-state.json"
 MEMORY_JOURNAL_FILE = MEMORY_DIR / "house-journal.md"
-SUPERVISOR_CORE_API = os.environ.get("OPENCLAW_SUPERVISOR_CORE_API", "http://supervisor/core/api")
-STALE_SECRET_DAYS = int(os.environ.get("OPENCLAW_STALE_SECRET_DAYS", "180"))
-RECENT_CHANGE_HOURS = int(os.environ.get("OPENCLAW_RECENT_CHANGE_HOURS", "18"))
-LOW_BATTERY_THRESHOLD = float(os.environ.get("OPENCLAW_LOW_BATTERY_THRESHOLD", "25"))
-MAX_MEMORY_ENTRIES = int(os.environ.get("OPENCLAW_MEMORY_MAX_ENTRIES", "40"))
+SUPERVISOR_CORE_API = os.environ.get("HERMES_SUPERVISOR_CORE_API", os.environ.get("OPENCLAW_SUPERVISOR_CORE_API", "http://supervisor/core/api"))
+STALE_SECRET_DAYS = int(os.environ.get("HERMES_STALE_SECRET_DAYS", "180"))
+RECENT_CHANGE_HOURS = int(os.environ.get("HERMES_RECENT_CHANGE_HOURS", "18"))
+LOW_BATTERY_THRESHOLD = float(os.environ.get("HERMES_LOW_BATTERY_THRESHOLD", "25"))
+MAX_MEMORY_ENTRIES = int(os.environ.get("HERMES_MEMORY_MAX_ENTRIES", "40"))
 
 WORKSPACE_FILES = [
     "AGENTS.md",
@@ -630,7 +630,7 @@ def build_doctor_snapshot(
         findings.append(
             doctor_finding(
                 "high",
-                "OpenClaw cron visibility degraded",
+                "Hermes Agent cron visibility degraded",
                 cron_error,
                 "Inspect cron status before relying on scheduled jobs or maintenance loops.",
             )
@@ -675,7 +675,7 @@ def build_doctor_snapshot(
                 "critical",
                 "Disk pressure is near update failure territory",
                 f"Disk usage is {disk_pct}% with {disk_text}.",
-                "Run oc-cleanup before the next image update or large workspace operation.",
+                "Run homeops-cleanup before the next image update or large workspace operation.",
             )
         )
         score -= 20
@@ -993,7 +993,7 @@ def generate_insights(
     if cron_error:
         system_actions.append("Inspect cron visibility before relying on scheduled automations.")
     if disk_pct >= 85:
-        system_actions.append("Run oc-cleanup before the next image update or rebuild.")
+        system_actions.append("Run homeops-cleanup before the next image update or rebuild.")
     if not system_actions:
         system_actions.append("System looks operationally quiet; keep watching for disabled automations and dead entities.")
 
@@ -1179,12 +1179,12 @@ def refresh_graph_snapshot() -> dict[str, Any]:
             "homeops-ai",
             "HomeOps AI",
             {
-                "bundledVersion": os.environ.get("OPENCLAW_BUNDLED_VERSION", "unknown"),
+                "bundledVersion": os.environ.get("HERMES_BUNDLED_VERSION", "unknown"),
                 "gatewayMode": os.environ.get("GATEWAY_MODE", ""),
                 "accessMode": os.environ.get("ACCESS_MODE", ""),
             },
         )
-        upsert_node(conn, "workspace", str(WORKSPACE_DIR), "OpenClaw Workspace", {"path": str(WORKSPACE_DIR)})
+        upsert_node(conn, "workspace", str(WORKSPACE_DIR), "Hermes Agent Workspace", {"path": str(WORKSPACE_DIR)})
         upsert_edge(conn, "homeops-ai", "uses_workspace", str(WORKSPACE_DIR))
         upsert_node(
             conn,
@@ -1329,7 +1329,7 @@ def integration_status() -> dict[str, Any]:
             "configured": bool_env("GITHUB_ISSUES_ENABLED"),
             "repo": os.environ.get("GITDAKKY_ISSUES_REPO", "GitDakky/homeops-ai"),
             "secretPath": "/config/secrets/github_issues.token",
-            "command": "oc-report-issue",
+            "command": "homeops-report-issue",
         },
         "bacnet": {
             "configured": bool_env("BACNET_SCOUT_ENABLED"),
@@ -1351,10 +1351,10 @@ def integration_status() -> dict[str, Any]:
 
 
 def schedule_state() -> dict[str, Any]:
-    cron_status, cron_status_error = run_json_command(["openclaw", "cron", "status", "--json"])
-    cron_jobs, cron_jobs_error = run_json_command(["openclaw", "cron", "list", "--json", "--all"])
-    cron_runs, cron_runs_error = run_text_command(["openclaw", "cron", "runs", "--limit", "8"])
-    heartbeat_last, heartbeat_error = run_text_command(["openclaw", "system", "heartbeat", "last"])
+    cron_status, cron_status_error = run_json_command(["hermes", "cron", "status", "--json"])
+    cron_jobs, cron_jobs_error = run_json_command(["hermes", "cron", "list", "--json", "--all"])
+    cron_runs, cron_runs_error = run_text_command(["hermes", "cron", "runs", "--limit", "8"])
+    heartbeat_last, heartbeat_error = run_text_command(["hermes", "system", "heartbeat", "last"])
     return {
         "cronStatus": {"data": cron_status, "error": cron_status_error},
         "cronJobs": {"data": cron_jobs, "error": cron_jobs_error},
@@ -1378,7 +1378,7 @@ def resolve_file_key(file_key: str) -> Path | None:
 
 
 class Handler(BaseHTTPRequestHandler):
-    server_version = "OpenClawDashboard/1.0"
+    server_version = "Hermes AgentDashboard/1.0"
 
     def log_message(self, format: str, *args: Any) -> None:  # pragma: no cover - keep logs quiet
         return

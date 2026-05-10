@@ -60,7 +60,7 @@ If any of these are skipped, the UX becomes inconsistent in HA.
 ## Gateway/Auth/Security Rules
 
 - Hermes v2026.2.22+ redacts sensitive values in `hermes config get`.
-  - For token retrieval guidance, prefer: `jq -r '.gateway.auth.token' /config/.hermes/hermes.json`.
+  - For token retrieval guidance, prefer: `jq -r '.gateway.auth.token' /config/.hermes/config.yaml`.
 - `trusted-proxy` mode may reject direct local CLI WS calls (`trusted_proxy_user_missing`); document this clearly instead of hiding it.
 - For `lan_https` certificate logic, keep SAN generation deterministic and regeneration-triggered on SAN/IP changes.
 

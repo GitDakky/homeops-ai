@@ -776,14 +776,14 @@
         </div>
 
         <div class="chip-row">
-          <div class="chip">Bundled Hermes <code>__OPENCLAW_BUNDLED_VERSION__</code></div>
+          <div class="chip">Bundled Hermes <code>__HERMES_BUNDLED_VERSION__</code></div>
           <div class="chip">Gateway mode <code>__ACCESS_MODE__</code></div>
           <span class="badge mode" id="modeBadge">__ACCESS_MODE__</span>
           <span class="badge" id="secureBadge"></span>
         </div>
 
         <div class="action-row">
-          <a class="btn primary" id="gwbtn" href="__GATEWAY_PUBLIC_URL____GW_PUBLIC_URL_PATH__?token=__GATEWAY_TOKEN__" target="_blank" rel="noopener noreferrer">Open Gateway Web UI</a>
+          <a class="btn primary" id="gwbtn" href="__GATEWAY_PUBLIC_URL____GW_PUBLIC_URL_PATH__?token=__GATEWAY_TOKEN__" target="_blank" rel="noopener noreferrer">Open Hermes Workspace</a>
           <a class="btn secondary" href="./terminal/" target="_self">Open Terminal (full page)</a>
           <a class="btn ghost hidden" id="certBtn" href="" target="_blank" rel="noopener noreferrer">Download CA Certificate</a>
         </div>
@@ -877,7 +877,7 @@
                 <p>
                   If the Gateway UI says <b>Unauthorized</b>, retrieve the token in the embedded terminal:
                 </p>
-                <pre>jq -r '.gateway.auth.token' /config/.hermes/hermes.json</pre>
+                <pre>jq -r '.gateway.auth.token' /config/.hermes/config.yaml</pre>
                 <p class="subtle">
                   Since Hermes v2026.2.22+, <code>hermes config get</code> redacts secrets, so read the file directly.
                 </p>
@@ -1348,7 +1348,7 @@ SSL tab:  Request a new SSL certificate</pre>
         <div class="banner info">Remote gateway mode is active. This add-on stays the operator surface while the real gateway runs elsewhere.</div>
         <ol>
           <li>Keep <code>gateway_remote_url</code> as the backend <code>ws://</code> or <code>wss://</code> endpoint used by the add-on runtime.</li>
-          <li>If you want <b>Open Gateway Web UI</b> to open the remote Control UI, set <code>gateway_public_url</code> to the browser-facing <code>http://</code> or <code>https://</code> URL.</li>
+          <li>If you want <b>Open Hermes Workspace</b> to open the remote Control UI, set <code>gateway_public_url</code> to the browser-facing <code>http://</code> or <code>https://</code> URL.</li>
           <li>Use the remote gateway's auth token when the UI asks for it.</li>
           <li>Do not paste a websocket URL into <code>gateway_public_url</code>.</li>
         </ol>`;
@@ -1357,7 +1357,7 @@ SSL tab:  Request a new SSL certificate</pre>
       wizardContent.innerHTML = `
         <div class="banner success">Built-in HTTPS proxy is active on port <b>${HTTPS_PORT}</b>.</div>
         <ol>
-          <li>Use <b>Open Gateway Web UI</b> above. The link will target HTTPS automatically.</li>
+          <li>Use <b>Open Hermes Workspace</b> above. The link will target HTTPS automatically.</li>
           <li>If the browser warns on first load, proceed once or install the local CA certificate for trust.</li>
           <li>For phones and tablets, use <b>Download CA Certificate</b> once and install it so the gateway opens cleanly after that.</li>
         </ol>`;
@@ -1501,7 +1501,7 @@ SSL tab:  Request a new SSL certificate</pre>
 
       cards.push(buildCard('Context7', !!data?.context7?.configured, `Secret path: <code>${escapeHtml(data?.context7?.secretPath || '')}</code>`));
       cards.push(buildCard('Domotz', !!data?.domotz?.configured, `Site ID: <code>${escapeHtml(data?.domotz?.siteId || 'unset')}</code><br>Secret path: <code>${escapeHtml(data?.domotz?.secretPath || '')}</code>`));
-      cards.push(buildCard('GitHub Issues', !!data?.githubIssues?.configured, `Repo: <code>${escapeHtml(data?.githubIssues?.repo || 'GitDakky/homeops-ai')}</code><br>Command: <code>${escapeHtml(data?.githubIssues?.command || 'oc-report-issue')}</code><br>Secret path: <code>${escapeHtml(data?.githubIssues?.secretPath || '')}</code>`));
+      cards.push(buildCard('GitHub Issues', !!data?.githubIssues?.configured, `Repo: <code>${escapeHtml(data?.githubIssues?.repo || 'GitDakky/homeops-ai')}</code><br>Command: <code>${escapeHtml(data?.githubIssues?.command || 'homeops-report-issue')}</code><br>Secret path: <code>${escapeHtml(data?.githubIssues?.secretPath || '')}</code>`));
       cards.push(buildCard('MQTT / HiveMQ', !!data?.mqtt?.configured, `Broker: <code>${escapeHtml(data?.mqtt?.brokerUrl || 'unset')}</code><br>Username: ${data?.mqtt?.usernameConfigured ? 'configured' : 'unset'}<br>Password: ${data?.mqtt?.passwordConfigured ? 'configured' : 'unset'}`));
       cards.push(buildCard('BACnet Scout', !!data?.bacnet?.configured, escapeHtml(data?.bacnet?.notes || 'Opt-in only.')));
       cards.push(buildCard('Home Assistant MCP', !!data?.homeAssistantMcp?.configured, `Token path: <code>${escapeHtml(data?.homeAssistantMcp?.tokenPath || '')}</code>`));

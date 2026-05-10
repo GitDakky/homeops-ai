@@ -157,7 +157,7 @@ class RunHelpersTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)
             options_path = root / "options.json"
-            config_path = root / "openclaw.json"
+            config_path = root / "hermes.json"
             options_path.write_text(
                 json.dumps(
                     {
@@ -189,7 +189,7 @@ class RunHelpersTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)
             options_path = root / "options.json"
-            config_path = root / "openclaw.json"
+            config_path = root / "hermes.json"
             options_path.write_text(
                 json.dumps(
                     {

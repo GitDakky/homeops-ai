@@ -6,7 +6,7 @@ Use this skill when:
 - reasoning about entity state, add-ons, Supervisor, logs, or runtime drift
 
 Rules:
-- Start with current state: config files, logs, dashboard status, and `openclaw` CLI output.
+- Start with current state: config files, logs, dashboard status, and `hermes` CLI output.
 - Prefer exact file paths and concrete reload/restart advice.
 - Distinguish between Home Assistant core, Supervisor, and add-on-level issues.
 - Keep high-risk changes reversible.

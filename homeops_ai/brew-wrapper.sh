@@ -7,7 +7,7 @@ REAL_BREW="/home/linuxbrew/.linuxbrew/bin/brew"
 # Check if Homebrew is actually installed
 if [ ! -x "$REAL_BREW" ]; then
     echo "ERROR: Homebrew is not installed (likely due to unsupported CPU - requires SSSE3)." >&2
-    echo "Some OpenClaw skills that depend on CLI tools (gemini, aider, etc.) will not work." >&2
+    echo "Some Hermes Agent skills that depend on CLI tools (gemini, aider, etc.) will not work." >&2
     echo "Consider using a newer CPU or installing dependencies manually." >&2
     exit 127
 fi

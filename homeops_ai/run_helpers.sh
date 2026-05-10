@@ -84,7 +84,7 @@ PY
 sync_gateway_settings_from_options() {
   local options_file="${1:?options_file required}"
   local helper_path="${2:?helper_path required}"
-  local openclaw_config_path="${3:?openclaw_config_path required}"
+  local hermes_config_path="${3:?hermes_config_path required}"
   local effective_gw_port="${4:?effective_gw_port required}"
 
   local gateway_mode
@@ -101,7 +101,7 @@ sync_gateway_settings_from_options() {
   gateway_auth_mode="$(jq -r '.gateway_auth_mode // "token"' "$options_file")"
   gateway_trusted_proxies="$(jq -r '.gateway_trusted_proxies // empty' "$options_file")"
 
-  OPENCLAW_CONFIG_PATH="$openclaw_config_path" python3 "$helper_path" apply-gateway-settings \
+  HERMES_CONFIG_PATH="$hermes_config_path" python3 "$helper_path" apply-gateway-settings \
     "$gateway_mode" \
     "$gateway_remote_url" \
     "$gateway_bind_mode" \

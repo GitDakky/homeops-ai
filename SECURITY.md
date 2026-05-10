@@ -26,7 +26,7 @@ The authors and contributors of this add-on are **not responsible** for any dama
 
 ### 1. Autonomous AI Agent
 
-OpenClaw is an **agentic AI assistant** — it can plan, reason, and execute actions autonomously. Unlike a simple chatbot, it can:
+Hermes Agent is an **agentic AI assistant** — it can plan, reason, and execute actions autonomously. Unlike a simple chatbot, it can:
 
 - Execute shell commands on the add-on container
 - Control smart home devices (if integrated with Assist pipeline or HA long-lived access token)
@@ -68,7 +68,7 @@ Enabling `allow_insecure_auth` transmits authentication tokens over **unencrypte
 **Mitigations**:
 - Only enable on trusted networks
 - Never enable when the gateway is exposed to the internet
-- Rotate your gateway token periodically: `openclaw config set gateway.auth.token <new-token>`
+- Rotate your gateway token periodically: `hermes config set gateway.auth.token <new-token>`
 
 ### 4. Home Assistant Token
 
@@ -112,13 +112,13 @@ This is intentional. The point of this fork is to operate on the real Home Assis
 
 ### 5. Third-Party Skills & Supply Chain
 
-OpenClaw supports installing skills from the community (ClawHub) and via npm. These are **third-party code** running inside the add-on container.
+Hermes Agent supports installing skills from the community (Hermes Skills) and via npm. These are **third-party code** running inside the add-on container.
 
 **Risks**:
 - Malicious skills could exfiltrate data, install backdoors, or perform harmful actions
-- Skills have access to the same permissions as the OpenClaw process
+- Skills have access to the same permissions as the Hermes Agent process
 - Compromised npm packages could affect your installation
-- [Security researchers have already found malicious skills](https://thehackernews.com/2026/02/researchers-find-341-malicious-clawhub.html) published to ClawHub
+- [Security researchers have already found malicious skills](https://thehackernews.com/2026/02/researchers-find-341-malicious-clawhub.html) published to Hermes Skills
 
 **Mitigations**:
 - Only install skills from trusted sources

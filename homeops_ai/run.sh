@@ -17,7 +17,7 @@ DEFAULT_INGRESS_PORT="48109"
 DEFAULT_DASHBOARD_API_PORT="48110"
 BOOTSTRAP_SOURCE_DIR="/opt/homeops-ai/bootstrap-workspace"
 BUNDLED_SKILLS_SOURCE_DIR="/opt/homeops-ai/bundled-skills"
-OPENCLAW_CONFIG_PATH="/config/.hermes/hermes.json"
+HERMES_CONFIG_PATH="/config/.hermes/config.yaml"
 HOME_ASSISTANT_CONFIG_DIR="${HOME_ASSISTANT_CONFIG_DIR:-/ha-config}"
 RUNTIME_RESTART_REQUEST_FILE="/tmp/hermes-runtime-restart.request"
 MANAGED_COMMAND_ACTIVE_FILE="/tmp/hermes-managed-command.active"
@@ -349,16 +349,16 @@ export HOME=/config
 
 # Explicitly set Hermes directories to ensure they persist across add-on updates
 # This prevents loss of installed skills, configuration, and workspace state
-export OPENCLAW_CONFIG_DIR=/config/.hermes
-export OPENCLAW_WORKSPACE_DIR=/config/clawd
+export HERMES_CONFIG_DIR=/config/.hermes
+export HERMES_WORKSPACE_DIR=/config/homeops
 export XDG_CONFIG_HOME=/config
-export OPENCLAW_SKILLS_DIR=/config/.hermes/skills
-export OPENCLAW_SYSTEM_GRAPH_PATH=/config/.hermes/gitdakky-system-graph.sqlite3
+export HERMES_SKILLS_DIR=/config/.hermes/skills
+export HERMES_SYSTEM_GRAPH_PATH=/config/.hermes/gitdakky-system-graph.sqlite3
 export HA_REST_BASE_URL="http://supervisor/core/api"
 export HA_WS_URL="ws://supervisor/core/websocket"
 export HA_WRITE_TOOLS_ENABLED="$ENABLE_HA_SERVICE_CALLS"
 
-mkdir -p /config/.hermes /config/.hermes/identity /config/clawd /config/keys /config/secrets
+mkdir -p /config/.hermes /config/.hermes/identity /config/homeops /config/keys /config/secrets
 
 seed_managed_workspace_files() {
   if [ ! -d "$BOOTSTRAP_SOURCE_DIR" ]; then
@@ -366,16 +366,16 @@ seed_managed_workspace_files() {
     return 0
   fi
 
-  mkdir -p "$OPENCLAW_WORKSPACE_DIR"
+  mkdir -p "$HERMES_WORKSPACE_DIR"
   if command -v rsync >/dev/null 2>&1; then
-    rsync -a --ignore-existing "${BOOTSTRAP_SOURCE_DIR}/" "${OPENCLAW_WORKSPACE_DIR}/" 2>/dev/null || true
+    rsync -a --ignore-existing "${BOOTSTRAP_SOURCE_DIR}/" "${HERMES_WORKSPACE_DIR}/" 2>/dev/null || true
   else
     find "$BOOTSTRAP_SOURCE_DIR" -maxdepth 1 -type f -name '*.md' -print0 | while IFS= read -r -d '' source_file; do
-      target_file="${OPENCLAW_WORKSPACE_DIR}/$(basename "$source_file")"
+      target_file="${HERMES_WORKSPACE_DIR}/$(basename "$source_file")"
       [ -f "$target_file" ] || cp "$source_file" "$target_file"
     done
   fi
-  echo "INFO: Seeded managed workspace bootstrap files into ${OPENCLAW_WORKSPACE_DIR}"
+  echo "INFO: Seeded managed workspace bootstrap files into ${HERMES_WORKSPACE_DIR}"
 }
 
 seed_managed_workspace_files
@@ -537,7 +537,7 @@ is_reserved_gateway_env_var() {
       return 0
       ;;
     # Add-on internal control vars.
-    OPENCLAW_*|HA_REST_BASE_URL|HA_WS_URL|HA_WRITE_TOOLS_ENABLED|SUPERVISOR_TOKEN)
+    HERMES_*|HA_REST_BASE_URL|HA_WS_URL|HA_WRITE_TOOLS_ENABLED|SUPERVISOR_TOKEN)
       return 0
       ;;
     *)
@@ -921,7 +921,7 @@ configure_external_integrations
 
 # ------------------------------------------------------------------------------
 # Hermes config is managed by Hermes itself (onboarding / configure).
-# This add-on intentionally does NOT create/patch /config/.hermes/hermes.json.
+# This add-on intentionally does NOT create/patch /config/.hermes/config.yaml.
 # ------------------------------------------------------------------------------
 
 # Convenience info for later (router SSH access path & HA token file)
@@ -1048,7 +1048,7 @@ else
       echo "WARN: dashboard_api.py not found; operator file editor will be unavailable"
       return 0
     fi
-    export OPENCLAW_DASHBOARD_API_PORT="$api_port"
+    export HERMES_DASHBOARD_API_PORT="$api_port"
     export HERMES_DASHBOARD_API_PORT="$api_port"
     python3 /dashboard_api.py &
     DASHBOARD_API_PID=$!
@@ -1151,7 +1151,7 @@ fi
 # Read directly from config file — the CLI redacts secrets since v2026.2.22+.
 GW_TOKEN="$(python3 -c "
 import json, os
-p = os.environ.get('OPENCLAW_CONFIG_PATH', '/config/.hermes/hermes.json')
+p = os.environ.get('HERMES_CONFIG_PATH', '/config/.hermes/config.yaml')
 print(json.load(open(p)).get('gateway',{}).get('auth',{}).get('token',''), end='')
 " 2>/dev/null || true)"
 
@@ -1166,9 +1166,9 @@ if df -h /config >/dev/null 2>&1; then
   # Warn early if disk is getting full
   DISK_PCT_NUM=${DISK_PCT//%/}
   if [ "$DISK_PCT_NUM" -ge 90 ] 2>/dev/null; then
-    echo "WARNING: Disk is ${DISK_PCT} full! Add-on updates may fail. Run 'oc-cleanup' in the terminal."
+    echo "WARNING: Disk is ${DISK_PCT} full! Add-on updates may fail. Run 'homeops-cleanup' in the terminal."
   elif [ "$DISK_PCT_NUM" -ge 75 ] 2>/dev/null; then
-    echo "NOTICE: Disk is ${DISK_PCT} full. Consider running 'oc-cleanup' in the terminal."
+    echo "NOTICE: Disk is ${DISK_PCT} full. Consider running 'homeops-cleanup' in the terminal."
   fi
 fi
 
@@ -1177,8 +1177,8 @@ GW_PUBLIC_URL="$GW_PUBLIC_URL" GW_TOKEN="$GW_TOKEN" TERMINAL_PORT="$TERMINAL_POR
   GATEWAY_INTERNAL_PORT="$GATEWAY_INTERNAL_PORT" GATEWAY_PORT="$GATEWAY_PORT" \
   GATEWAY_MODE="$GATEWAY_MODE" GATEWAY_BIND_MODE="$GATEWAY_BIND_MODE" ACCESS_MODE="$ACCESS_MODE" \
   DISK_TOTAL="$DISK_TOTAL" DISK_USED="$DISK_USED" DISK_AVAIL="$DISK_AVAIL" DISK_PCT="$DISK_PCT" \
-  OPENCLAW_BUNDLED_VERSION="${OPENCLAW_BUNDLED_VERSION:-unknown}" \
-  DASHBOARD_API_PORT="${OPENCLAW_DASHBOARD_API_PORT:-$DEFAULT_DASHBOARD_API_PORT}" \
+  HERMES_BUNDLED_VERSION="${HERMES_BUNDLED_VERSION:-unknown}" \
+  DASHBOARD_API_PORT="${HERMES_DASHBOARD_API_PORT:-$DEFAULT_DASHBOARD_API_PORT}" \
   NGINX_LOG_LEVEL="$NGINX_LOG_LEVEL" \
   python3 /render_nginx.py
 

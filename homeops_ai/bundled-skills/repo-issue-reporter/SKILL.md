@@ -5,19 +5,19 @@ Target repository:
 
 Expected inputs:
 - GitHub issue token in `/config/secrets/github_issues.token`
-- helper command `/usr/local/bin/oc-report-issue`
+- helper command `/usr/local/bin/homeops-report-issue`
 
 Workflow:
 - Distill the report into one issue only; do not open duplicates for the same problem in the same conversation.
 - Classify it as bug, feature, or documentation.
 - Include reproducible context:
   - add-on version
-  - bundled OpenClaw version
+  - bundled Hermes Agent version
   - access mode / gateway mode if relevant
   - exact error text
   - what the operator expected instead
 - Use labels when useful, for example `bug`, `enhancement`, `docs`, `home-assistant`, `gateway`, `ui`.
-- If the token is configured, call `oc-report-issue`.
+- If the token is configured, call `homeops-report-issue`.
 - If the token is not configured, draft the issue body clearly and tell the user how to enable direct filing from add-on settings.
 
 Do not:

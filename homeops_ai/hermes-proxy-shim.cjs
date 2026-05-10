@@ -1,8 +1,8 @@
 "use strict";
 
 /**
- * Enable HTTP(S) proxy support for Node/undici before OpenClaw initializes.
- * We load undici from OpenClaw's own node_modules path to avoid relying on
+ * Enable HTTP(S) proxy support for Node/undici before Hermes Agent initializes.
+ * We load undici from Hermes Agent's own node_modules path to avoid relying on
  * global module resolution from this shim's location.
  */
 (function applyProxyFromEnv() {
@@ -19,8 +19,8 @@
   try {
     const path = require("node:path");
     const globalModulesRoot =
-      process.env.OPENCLAW_GLOBAL_NODE_MODULES || "/usr/lib/node_modules";
-    const undiciPath = path.join(globalModulesRoot, "openclaw", "node_modules", "undici");
+      process.env.HERMES_GLOBAL_NODE_MODULES || "/usr/lib/node_modules";
+    const undiciPath = path.join(globalModulesRoot, "hermes", "node_modules", "undici");
     const { EnvHttpProxyAgent, setGlobalDispatcher } = require(undiciPath);
     setGlobalDispatcher(new EnvHttpProxyAgent());
   } catch (_err) {

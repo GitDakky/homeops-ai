@@ -7,7 +7,7 @@ Called by run.sh with the following env vars:
   ENABLE_HTTPS_PROXY, HTTPS_PROXY_PORT,
   GATEWAY_INTERNAL_PORT, GATEWAY_PORT, GATEWAY_MODE, GATEWAY_BIND_MODE, ACCESS_MODE,
   DISK_TOTAL, DISK_USED, DISK_AVAIL, DISK_PCT,
-  OPENCLAW_BUNDLED_VERSION, DASHBOARD_API_PORT
+  HERMES_BUNDLED_VERSION, DASHBOARD_API_PORT
 """
 
 import os
@@ -15,12 +15,12 @@ import subprocess
 from pathlib import Path
 
 
-def resolve_bundled_openclaw_version() -> str:
-    env_value = os.environ.get('OPENCLAW_BUNDLED_VERSION', '').strip()
+def resolve_bundled_hermes_version() -> str:
+    env_value = os.environ.get('HERMES_BUNDLED_VERSION', '').strip()
     if env_value and env_value.lower() != 'unknown':
         return env_value
 
-    version_file = Path('/usr/local/share/openclaw-bundled-version')
+    version_file = Path('/usr/local/share/hermes-bundled-version')
     if version_file.exists():
         file_value = version_file.read_text(encoding='utf-8').strip()
         if file_value:
@@ -28,7 +28,7 @@ def resolve_bundled_openclaw_version() -> str:
 
     try:
         output = subprocess.check_output(
-            ['openclaw', '--version'],
+            ['hermes', '--version'],
             text=True,
             timeout=4,
             stderr=subprocess.DEVNULL,
@@ -78,7 +78,7 @@ def main():
     disk_avail = os.environ.get('DISK_AVAIL', '')
     disk_pct = os.environ.get('DISK_PCT', '')
     nginx_log_level = os.environ.get('NGINX_LOG_LEVEL', 'minimal')
-    bundled_openclaw_version = resolve_bundled_openclaw_version()
+    bundled_hermes_version = resolve_bundled_hermes_version()
 
     # Token comes from environment (best-effort CLI query in run.sh)
     token = os.environ.get('GW_TOKEN', '')
@@ -133,9 +133,9 @@ def main():
 
         # Download the local CA certificate (install on phone for trusted access)
         location = /cert/ca.crt {{
-            alias /etc/nginx/html/openclaw-ca.crt;
+            alias /etc/nginx/html/hermes-ca.crt;
             default_type application/x-x509-ca-cert;
-            add_header Content-Disposition 'attachment; filename="openclaw-ca.crt"';
+            add_header Content-Disposition 'attachment; filename="hermes-ca.crt"';
         }}
     }}
 """
@@ -167,7 +167,7 @@ def main():
     landing = landing.replace('__DISK_USED__', disk_used)
     landing = landing.replace('__DISK_AVAIL__', disk_avail)
     landing = landing.replace('__DISK_PCT__', disk_pct)
-    landing = landing.replace('__OPENCLAW_BUNDLED_VERSION__', bundled_openclaw_version)
+    landing = landing.replace('__HERMES_BUNDLED_VERSION__', bundled_hermes_version)
 
     out_dir = Path('/etc/nginx/html')
     out_dir.mkdir(parents=True, exist_ok=True)

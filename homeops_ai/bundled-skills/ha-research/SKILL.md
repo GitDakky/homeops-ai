@@ -1,4 +1,4 @@
-Research-first skill for Home Assistant, OpenClaw, and integration drift.
+Research-first skill for Home Assistant, Hermes Agent, and integration drift.
 
 Rules:
 - If the product changes quickly, verify the current docs before making recommendations.

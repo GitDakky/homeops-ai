@@ -13,7 +13,7 @@ labels=""
 usage() {
   cat <<'EOF'
 Usage:
-  oc-report-issue --title "Issue title" [--body "Markdown body" | --body-file /path/to/body.md] [--labels "bug,home-assistant"]
+  homeops-report-issue --title "Issue title" [--body "Markdown body" | --body-file /path/to/body.md] [--labels "bug,home-assistant"]
 
 Notes:
   - Requires a GitHub token in /config/secrets/github_issues.token or GITHUB_ISSUES_TOKEN_FILE.

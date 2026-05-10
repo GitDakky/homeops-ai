@@ -5,7 +5,7 @@ It is a design artifact, not a shipped feature announcement.
 
 ## Why Janus
 
-Janus is the candidate media layer for outbound and inbound voice sessions because it can sit between OpenClaw policy logic and multiple communications adapters without forcing Home Assistant itself to become the telephony switch.
+Janus is the candidate media layer for outbound and inbound voice sessions because it can sit between Hermes Agent policy logic and multiple communications adapters without forcing Home Assistant itself to become the telephony switch.
 
 ## Scope
 
@@ -33,7 +33,7 @@ Those decisions belong in the policy layer defined in [VOICE_ESCALATION_POLICY.m
 - remains the best path for immediate in-home voice
 - should not be forced to become the outbound call orchestrator
 
-### OpenClaw / add-on policy layer
+### Hermes Agent / add-on policy layer
 
 - evaluates events
 - chooses escalation target and channel

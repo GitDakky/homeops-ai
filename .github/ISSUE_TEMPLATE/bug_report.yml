@@ -1,5 +1,5 @@
 name: Bug report
-description: Report a reproducible problem with the OpenClaw Home Assistant add-on.
+description: Report a reproducible problem with the Hermes Agent Home Assistant add-on.
 title: "bug: "
 labels:
   - bug
@@ -58,9 +58,9 @@ body:
       required: true
 
   - type: input
-    id: openclaw_version
+    id: hermes_version
     attributes:
-      label: OpenClaw version (if known)
+      label: Hermes Agent version (if known)
       placeholder: e.g. 2026.2.22-2
 
   - type: dropdown

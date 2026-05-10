@@ -3,8 +3,8 @@ This environment has direct file access to:
 - `/share`
 - `/media`
 - `/addon_configs`
-- `/config/.openclaw`
-- `/config/clawd`
+- `/config/.hermes`
+- `/config/homeops`
 
 Use this skill when:
 - inspecting or editing Home Assistant YAML

@@ -28,7 +28,7 @@ configuration:
   
   gateway_public_url:
     name: Gateway Public URL
-    description: Optional override for the Gateway Web UI launch URL. Most local installs auto-detect this from the current Home Assistant host. Set it only when you need a different reverse-proxy, HTTPS, or Tailscale hostname.
+    description: Optional override for the Hermes Workspace launch URL. Most local installs auto-detect this from the current Home Assistant host. Set it only when you need a different reverse-proxy, HTTPS, or Tailscale hostname.
   
   homeassistant_token:
     name: Home Assistant Token
