@@ -136,7 +136,13 @@ RUN mkdir -p /opt/homeops-ai \
     && npm install --prefix /opt/homeops-ai @modelcontextprotocol/sdk zod
 
 # Ship the official Hermes Paperclip adapter and Hermes Workspace UI.
-RUN npm install -g "hermes-paperclip-adapter@${HERMES_PAPERCLIP_ADAPTER_VERSION}"     && git clone --depth 1 --branch "${HERMES_WORKSPACE_REF}" "${HERMES_WORKSPACE_REPO}" /opt/hermes-workspace     && cd /opt/hermes-workspace     && corepack enable 2>/dev/null || true     && pnpm install --silent     && NODE_OPTIONS="--max-old-space-size=3072" pnpm build
+RUN npm install -g "hermes-paperclip-adapter@${HERMES_PAPERCLIP_ADAPTER_VERSION}" \
+    && git clone --depth 1 --branch "${HERMES_WORKSPACE_REF}" "${HERMES_WORKSPACE_REPO}" /opt/hermes-workspace \
+    && cd /opt/hermes-workspace \
+    && corepack enable 2>/dev/null || true \
+    && npm install -g pnpm@10 \
+    && pnpm install --silent \
+    && NODE_OPTIONS="--max-old-space-size=3072" pnpm build
 
 # Shell aliases and color options for interactive use
 RUN tee -a /etc/bash.bashrc <<'EOF'

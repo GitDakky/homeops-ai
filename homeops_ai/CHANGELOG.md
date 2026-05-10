@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.1.4]
+
+### Fixed
+- Fixed Dockerfile Workspace build shell precedence so `pnpm install` and `pnpm build` run inside `/opt/hermes-workspace` instead of falling back to the add-on build context.
+- Pinned a compatible global pnpm for the bundled Hermes Workspace build.
+
 ## [0.1.3]
 
 ### Changed
