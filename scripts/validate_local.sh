@@ -10,6 +10,9 @@ python3 scripts/validate_release_metadata.py
 echo "==> Option/schema coupling"
 python3 scripts/validate_option_coupling.py
 
+echo "==> Legacy terminology guard"
+python3 scripts/validate_no_openclaw_user_surface.py
+
 echo "==> Bash syntax"
 bash -n homeops_ai/run.sh
 bash -n homeops_ai/run_helpers.sh

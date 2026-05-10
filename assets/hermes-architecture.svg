@@ -31,7 +31,7 @@
     <text x="76" y="84" fill="#24D3B5" font-size="18" font-weight="700" letter-spacing="0.12em">RUNTIME MAP</text>
     <text x="76" y="130" fill="#F7FBFC" font-size="48" font-weight="800">How the GitDakky fork fits together</text>
     <text x="76" y="168" fill="#B7CED3" font-size="23">Ingress gets you in. nginx and ttyd keep the operator experience usable.</text>
-    <text x="76" y="198" fill="#B7CED3" font-size="23">OpenClaw runs the gateway. Migration and persistent data stay under `/config`.</text>
+    <text x="76" y="198" fill="#B7CED3" font-size="23">Hermes Agent runs the gateway. Persistent data stays under `/config`.</text>
 
     <g transform="translate(944 72)">
       <rect x="0" y="0" width="250" height="92" rx="22" fill="#0E1C23" stroke="#224A54"/>
@@ -58,7 +58,7 @@
 
     <g transform="translate(528 0)">
       <rect x="0" y="0" width="248" height="120" rx="24" fill="#0E1C23" stroke="#224C56"/>
-      <text x="24" y="40" fill="#F7FBFC" font-size="20" font-weight="700">OpenClaw Gateway</text>
+      <text x="24" y="40" fill="#F7FBFC" font-size="20" font-weight="700">Hermes Gateway</text>
       <text x="24" y="68" fill="#9CB9BF" font-size="16">Auth, Control UI, MCP,</text>
       <text x="24" y="92" fill="#9CB9BF" font-size="16">OpenAI-compatible API</text>
     </g>
@@ -66,7 +66,7 @@
     <g transform="translate(840 0)">
       <rect x="0" y="0" width="282" height="120" rx="24" fill="#0E1C23" stroke="#224C56"/>
       <text x="24" y="40" fill="#F7FBFC" font-size="20" font-weight="700">Persistent `/config`</text>
-      <text x="24" y="68" fill="#9CB9BF" font-size="16">openclaw.json, skills, workspace,</text>
+      <text x="24" y="68" fill="#9CB9BF" font-size="16">config.yaml, skills, workspace,</text>
       <text x="24" y="92" fill="#9CB9BF" font-size="16">keys, tokens, and operator state</text>
     </g>
   </g>

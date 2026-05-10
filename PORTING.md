@@ -1,6 +1,6 @@
 # HomeOps AI Hermes porting notes
 
-This repo is intentionally in an early porting state. It has been scaffolded from the GitDakky OpenClaw Home Assistant add-on because that project already solved the hard Home Assistant add-on packaging problems.
+This repo was scaffolded from a legacy Home Assistant add-on because that project already solved the hard Home Assistant add-on packaging problems. The active runtime is now Hermes Agent; this file is retained only as migration history.
 
 ## Done
 
@@ -26,4 +26,4 @@ This repo is intentionally in an early porting state. It has been scaffolded fro
 
 ## Release rule
 
-Do not publish this as installable production software until the OpenClaw runtime references in `run.sh`, dashboard telemetry, and tests have been removed or deliberately compatibility-wrapped.
+Current production releases should remain Hermes-native. Any remaining legacy references must either be migration-history only or deliberately compatibility-wrapped.
