@@ -316,6 +316,19 @@ jq -r '.gateway.auth.token' /config/.hermes/config.yaml
 
 ## 5. Configuration Reference
 
+### Model routing architecture
+
+HomeOps AI is designed as a routed agent system rather than one slow all-purpose prompt. This is important on large Home Assistant installs with hundreds or thousands of entities.
+
+| Lane | Best for | Typical model style | Context strategy |
+|---|---|---|---|
+| **Fast lane** | voice commands, state checks, entity classification | very fast tool-capable model such as `google/gemini-3.1-flash-lite`, `x-ai/grok-4.1-fast`, `qwen/qwen3.6-flash`, or tested `openai/gpt-oss-120b` | top matching entities only |
+| **Complex lane** | diagnostics, logs, “why is this happening?” | stronger Hermes model | tool-driven retrieval |
+| **Deep ops lane** | audits, repairs, planning, overnight analysis | strongest available model | asynchronous/background |
+
+Recommended default is `agent_mode: router`. Avoid passing every Home Assistant entity to a model. Use retrieval and keep `max_fast_entities` low, usually 10–20. Groq or local OpenAI-compatible inference can be excellent for the fast lane, but only enable write/control use after tool-calling tests pass.
+
+
 All options are set via **Settings → Apps → HomeOps AI → Configuration** in Home Assistant. They are applied automatically on each app restart.
 
 ### General

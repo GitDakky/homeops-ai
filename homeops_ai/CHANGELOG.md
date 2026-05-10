@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.1.8]
+
+### Added
+- Adds product-level model routing settings for fast, complex, deep, and local/ultra-fast lanes so users can choose models from the Home Assistant settings UI.
+- Documents the routed-agent architecture and guidance for large Home Assistant installations where full entity context makes agents slow.
+
 ## [0.1.7]
 
 ### Changed

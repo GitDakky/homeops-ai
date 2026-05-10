@@ -1,5 +1,5 @@
 name: HomeOps AI
-version: "0.1.7"
+version: "0.1.8"
 slug: homeops_ai
 description: Hermes-powered AI operations agent for Home Assistant.
 url: https://github.com/GitDakky/homeops-ai
@@ -40,6 +40,21 @@ options:
   llm_provider: openrouter
   llm_model: "openai/gpt-5.5"
   openrouter_api_key: ""
+
+  # Model routing architecture. The router keeps fast HA/voice tasks away from
+  # the full agent context, then escalates diagnostics and long-running work.
+  agent_mode: router
+  fast_llm_provider: openrouter
+  fast_llm_model: "google/gemini-3.1-flash-lite"
+  complex_llm_provider: openrouter
+  complex_llm_model: "openai/gpt-5.5"
+  deep_llm_provider: openrouter
+  deep_llm_model: "openai/gpt-5.5"
+  local_llm_provider: custom
+  local_llm_model: "openai/gpt-oss-120b"
+  local_llm_base_url: ""
+  max_fast_entities: 20
+  routing_guidance: true
   enable_workspace: true
   workspace_port: 3000
 
@@ -225,6 +240,18 @@ schema:
   llm_provider: list(openrouter|anthropic|openai|nous|custom)?
   llm_model: str?
   openrouter_api_key: password?
+  agent_mode: list(router|fast|complex|deep)?
+  fast_llm_provider: list(openrouter|groq|openai|anthropic|google|xai|custom)?
+  fast_llm_model: str?
+  complex_llm_provider: list(openrouter|groq|openai|anthropic|google|xai|custom)?
+  complex_llm_model: str?
+  deep_llm_provider: list(openrouter|groq|openai|anthropic|google|xai|custom)?
+  deep_llm_model: str?
+  local_llm_provider: list(custom|groq|openrouter|ollama|vllm)?
+  local_llm_model: str?
+  local_llm_base_url: str?
+  max_fast_entities: int(1,100)?
+  routing_guidance: bool?
   enable_workspace: bool?
   workspace_port: int(1024,65535)?
   enable_terminal: bool?

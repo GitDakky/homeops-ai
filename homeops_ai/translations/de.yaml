@@ -3,6 +3,47 @@ configuration:
     name: Zeitzone
     description: Zeitzone für das Add-on (z.B. Europe/Sofia, America/New_York)
   
+  agent_mode:
+    name: Agent Routing Mode
+    description: Select how HomeOps routes requests. Router is recommended: fast voice/status tasks use the fast lane, diagnostics use the complex lane, and long investigations use the deep lane.
+    options:
+      router: "Router (recommended)"
+      fast: "Fast only"
+      complex: "Complex agent"
+      deep: "Deep operations"
+  fast_llm_provider:
+    name: Fast Lane Provider
+    description: Provider for low-latency voice, status, classification, and entity-routing tasks. OpenRouter, Groq, or a local OpenAI-compatible server are good candidates.
+  fast_llm_model:
+    name: Fast Lane Model
+    description: Model ID for fast HA tasks. Suggested starting points include google/gemini-3.1-flash-lite, x-ai/grok-4.1-fast, qwen/qwen3.6-flash, or openai/gpt-oss-120b.
+  complex_llm_provider:
+    name: Complex Lane Provider
+    description: Provider for normal Hermes HomeOps diagnostics and multi-step reasoning.
+  complex_llm_model:
+    name: Complex Lane Model
+    description: Model ID for diagnostics, log review, and HomeOps reasoning.
+  deep_llm_provider:
+    name: Deep Ops Provider
+    description: Provider for long-running audits, repairs, and planning jobs.
+  deep_llm_model:
+    name: Deep Ops Model
+    description: Model ID for the strongest/slowest lane. Use this for background tasks where quality matters more than latency.
+  local_llm_provider:
+    name: Local / Ultra-Fast Provider
+    description: Optional provider for local, Groq, Ollama, vLLM, or other OpenAI-compatible inference used by the fast lane or experiments.
+  local_llm_model:
+    name: Local / Ultra-Fast Model
+    description: Model ID for the local or ultra-fast lane. openai/gpt-oss-120b is a useful candidate if your provider serves it quickly and tool calling tests pass.
+  local_llm_base_url:
+    name: Local / Ultra-Fast Base URL
+    description: Optional OpenAI-compatible base URL for local/Groq/vLLM/Ollama-style inference.
+  max_fast_entities:
+    name: Fast Lane Entity Limit
+    description: Maximum number of candidate Home Assistant entities to pass to the fast lane. Keep this low to avoid slow prompts on large homes.
+  routing_guidance:
+    name: Show Routing Guidance
+    description: Show guidance notes in the UI/docs explaining the fast, complex, and deep lanes.
   enable_terminal:
     name: Web-Terminal aktivieren
     description: Web-Terminal-Schaltfläche in Home Assistant (Ingress) über ttyd aktivieren

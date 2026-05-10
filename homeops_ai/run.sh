@@ -177,6 +177,18 @@ TZNAME=$(jq -r '.timezone // "Europe/Sofia"' "$OPTIONS_FILE")
 LLM_PROVIDER=$(jq -r '.llm_provider // "openrouter"' "$OPTIONS_FILE")
 LLM_MODEL=$(jq -r '.llm_model // "openai/gpt-5.5"' "$OPTIONS_FILE")
 OPENROUTER_API_KEY_OPTION=$(jq -r '.openrouter_api_key // empty' "$OPTIONS_FILE")
+AGENT_MODE=$(jq -r '.agent_mode // "router"' "$OPTIONS_FILE")
+FAST_LLM_PROVIDER=$(jq -r '.fast_llm_provider // "openrouter"' "$OPTIONS_FILE")
+FAST_LLM_MODEL=$(jq -r '.fast_llm_model // "google/gemini-3.1-flash-lite"' "$OPTIONS_FILE")
+COMPLEX_LLM_PROVIDER=$(jq -r '.complex_llm_provider // "openrouter"' "$OPTIONS_FILE")
+COMPLEX_LLM_MODEL=$(jq -r '.complex_llm_model // "openai/gpt-5.5"' "$OPTIONS_FILE")
+DEEP_LLM_PROVIDER=$(jq -r '.deep_llm_provider // "openrouter"' "$OPTIONS_FILE")
+DEEP_LLM_MODEL=$(jq -r '.deep_llm_model // "openai/gpt-5.5"' "$OPTIONS_FILE")
+LOCAL_LLM_PROVIDER=$(jq -r '.local_llm_provider // "custom"' "$OPTIONS_FILE")
+LOCAL_LLM_MODEL=$(jq -r '.local_llm_model // "openai/gpt-oss-120b"' "$OPTIONS_FILE")
+LOCAL_LLM_BASE_URL=$(jq -r '.local_llm_base_url // empty' "$OPTIONS_FILE")
+MAX_FAST_ENTITIES=$(jq -r '.max_fast_entities // 20' "$OPTIONS_FILE")
+ROUTING_GUIDANCE=$(jq -r '.routing_guidance // true' "$OPTIONS_FILE")
 ENABLE_WORKSPACE=$(jq -r '.enable_workspace // true' "$OPTIONS_FILE")
 WORKSPACE_PORT=$(jq -r '.workspace_port // 3000' "$OPTIONS_FILE")
 GW_PUBLIC_URL=$(jq -r '.gateway_public_url // empty' "$OPTIONS_FILE")
@@ -1061,6 +1073,22 @@ else
   fi
   if [ -n "$LLM_MODEL" ]; then
     hermes config set model.default "$LLM_MODEL" >/dev/null 2>&1 || true
+  fi
+
+  # Persist HomeOps model-routing settings for the API layer and Workspace.
+  hermes config set homeops.agent_mode "$AGENT_MODE" >/dev/null 2>&1 || true
+  hermes config set homeops.routing_guidance "$ROUTING_GUIDANCE" >/dev/null 2>&1 || true
+  hermes config set homeops.max_fast_entities "$MAX_FAST_ENTITIES" >/dev/null 2>&1 || true
+  hermes config set homeops.fast.provider "$FAST_LLM_PROVIDER" >/dev/null 2>&1 || true
+  hermes config set homeops.fast.model "$FAST_LLM_MODEL" >/dev/null 2>&1 || true
+  hermes config set homeops.complex.provider "$COMPLEX_LLM_PROVIDER" >/dev/null 2>&1 || true
+  hermes config set homeops.complex.model "$COMPLEX_LLM_MODEL" >/dev/null 2>&1 || true
+  hermes config set homeops.deep.provider "$DEEP_LLM_PROVIDER" >/dev/null 2>&1 || true
+  hermes config set homeops.deep.model "$DEEP_LLM_MODEL" >/dev/null 2>&1 || true
+  hermes config set homeops.local.provider "$LOCAL_LLM_PROVIDER" >/dev/null 2>&1 || true
+  hermes config set homeops.local.model "$LOCAL_LLM_MODEL" >/dev/null 2>&1 || true
+  if [ -n "$LOCAL_LLM_BASE_URL" ]; then
+    hermes config set homeops.local.base_url "$LOCAL_LLM_BASE_URL" >/dev/null 2>&1 || true
   fi
 
   # Ensure Hermes' API Server adapter follows the HomeOps gateway port option.
