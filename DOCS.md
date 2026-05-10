@@ -67,16 +67,21 @@ When you open the add-on page in Home Assistant, nginx serves a landing page wit
 
 ## 2. Installation
 
-[![Open your Home Assistant instance and add this repository.](https://my.home-assistant.io/badges/supervisor_repository.svg)](https://my.home-assistant.io/redirect/supervisor_repository/?repository_url=https%3A%2F%2Fgithub.com%2FGitDakky%2Fhomeops-ai)
+[![Open your Home Assistant instance and add this repository.](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2FGitDakky%2Fhomeops-ai)
 
-1. In Home Assistant, go to **Settings → Apps**
-2. Click the button above to add the repository directly, or click **Install App** using the blue button in the bottom-right
+1. In Home Assistant, go to **Settings → Apps**.
+   - On some versions this is **Settings → Add-ons** or **Settings → Add-ons → Add-on Store**.
+2. Click the button above to open the repository-import dialog directly, or choose **Add repository** / **Add app repository** from the dashboard.
 3. If you are adding it manually, paste:
    - `https://github.com/GitDakky/homeops-ai`
-4. Exit the dialog, select **HomeOps AI**, and click **Install**
-5. Click **Start**
+4. Return to the Apps/Add-ons list, select **HomeOps AI**, and click **Install**.
+5. Open the **Configuration** tab before first start and review the runtime/access options.
+6. Click **Start**.
+7. Open the HomeOps AI page from the Home Assistant sidebar/add-on page.
 
 **Supported architectures**: amd64, aarch64 (Raspberry Pi 4/5)
+
+> **Important**: install HomeOps AI through the Home Assistant dashboard / Supervisor repository flow. Do not SSH into HAOS and install Hermes manually inside the host OS. Home Assistant can reset unsupported non-native applications, while add-on-managed state under `/config` persists correctly.
 
 ### Migration from the legacy add-on
 
