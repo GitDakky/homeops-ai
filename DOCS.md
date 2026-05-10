@@ -8,6 +8,8 @@ This fork also mounts the live Home Assistant configuration root at `/ha-config`
 
 **Published app image:** `ghcr.io/gitdakky/homeops-ai`
 
+> **Porting status:** HomeOps AI is being ported from the GitDakky OpenClaw Home Assistant add-on shell to a Hermes Agent runtime. The Home Assistant add-on packaging, ingress, persistence, and dashboard patterns are useful and intentional; OpenClaw-specific runtime references below are legacy material until the Hermes port is complete.
+
 **Table of Contents**
 
 1. [Architecture Overview](#1-architecture-overview)
