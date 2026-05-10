@@ -12,7 +12,7 @@ SELF_ADDON_NAME="HomeOps AI"
 MIGRATION_FLAG="/config/.gitdakky-legacy-migration"
 MIGRATED_OPTIONS_FILE="/tmp/homeops-ai-options.json"
 DEFAULT_TERMINAL_PORT="7682"
-DEFAULT_GATEWAY_PORT="18790"
+DEFAULT_GATEWAY_PORT="8642"
 DEFAULT_INGRESS_PORT="48109"
 DEFAULT_DASHBOARD_API_PORT="48110"
 BOOTSTRAP_SOURCE_DIR="/opt/homeops-ai/bootstrap-workspace"
@@ -942,12 +942,45 @@ EOF
 # ------------------------------------------------------------------------------
 GW_PID=""
 GW_RELAY_PID=""
+WORKSPACE_PID=""
 NGINX_PID=""
 TTYD_PID=""
 LOCAL_PAIRING_APPROVER_PID=""
 DASHBOARD_API_PID=""
 CONFIG_WATCHER_PID=""
 SHUTTING_DOWN="false"
+
+stop_gw_relay() {
+  if [ -n "${GW_RELAY_PID:-}" ] && kill -0 "${GW_RELAY_PID}" >/dev/null 2>&1; then
+    kill -TERM "${GW_RELAY_PID}" >/dev/null 2>&1 || true
+    wait "${GW_RELAY_PID}" 2>/dev/null || true
+  fi
+  GW_RELAY_PID=""
+}
+
+start_gw_relay() {
+  # No relay is needed for the Hermes-native loopback API path.
+  return 0
+}
+
+stop_if_listening() {
+  local port="$1"
+  local label="$2"
+  if command -v fuser >/dev/null 2>&1; then
+    fuser -k "${port}/tcp" >/dev/null 2>&1 || true
+    return 0
+  fi
+  if command -v lsof >/dev/null 2>&1; then
+    local pids
+    pids="$(lsof -tiTCP:"${port}" -sTCP:LISTEN 2>/dev/null || true)"
+    if [ -n "$pids" ]; then
+      echo "INFO: Stopping stale ${label} listener(s) on port ${port}: ${pids}"
+      kill $pids >/dev/null 2>&1 || true
+      sleep 1
+      kill -9 $pids >/dev/null 2>&1 || true
+    fi
+  fi
+}
 
 shutdown() {
   SHUTTING_DOWN="true"
@@ -973,7 +1006,12 @@ shutdown() {
     wait "${DASHBOARD_API_PID}" 2>/dev/null || true
   fi
 
-  if [ -n "${CONFIG_WATCHER_PID}" ] && kill -0 "${CONFIG_WATCHER_PID}" >/dev/null 2>&1; then
+  if [ -n "${WORKSPACE_PID:-}" ] && kill -0 "${WORKSPACE_PID}" >/dev/null 2>&1; then
+    kill -TERM "${WORKSPACE_PID}" >/dev/null 2>&1 || true
+    wait "${WORKSPACE_PID}" 2>/dev/null || true
+  fi
+
+  if [ -n "${CONFIG_WATCHER_PID}" && kill -0 "${CONFIG_WATCHER_PID}" >/dev/null 2>&1; then
     kill -TERM "${CONFIG_WATCHER_PID}" >/dev/null 2>&1 || true
     wait "${CONFIG_WATCHER_PID}" 2>/dev/null || true
   fi
@@ -1033,6 +1071,7 @@ else
   start_hermes_runtime() {
     echo "Starting ${SELF_ADDON_NAME} runtime (Hermes gateway)..."
     mkdir -p "$RUNTIME_WRAPPER_LOG_DIR"
+    stop_if_listening "$GATEWAY_INTERNAL_PORT" "Hermes gateway"
     (
       cd /config/homeops
       exec env         HOME=/config         HERMES_HOME=/config/.hermes         HERMES_ACCEPT_HOOKS=1         API_SERVER_ENABLED=true         API_SERVER_HOST=127.0.0.1         API_SERVER_PORT="$GATEWAY_INTERNAL_PORT"         HASS_URL="${HASS_URL:-http://supervisor/core}"         HASS_TOKEN="${HASS_TOKEN:-}"         OPENROUTER_API_KEY="${OPENROUTER_API_KEY:-}"         hermes gateway run
@@ -1044,6 +1083,7 @@ else
 
   start_dashboard_api() {
     local api_port="${DASHBOARD_API_PORT:-$DEFAULT_DASHBOARD_API_PORT}"
+    stop_if_listening "$api_port" "dashboard API"
     if [ ! -f /dashboard_api.py ]; then
       echo "WARN: dashboard_api.py not found; operator file editor will be unavailable"
       return 0
@@ -1070,6 +1110,7 @@ else
       echo "WARN: /opt/hermes-workspace missing; Workspace UI unavailable."
       return 0
     fi
+    stop_if_listening "$WORKSPACE_PORT" "Hermes Workspace"
     PORT="$WORKSPACE_PORT" HERMES_API_URL="http://127.0.0.1:${GATEWAY_INTERNAL_PORT}" homeops-workspace >>"$RUNTIME_WRAPPER_LOG_DIR/hermes-workspace.log" 2>&1 &
     WORKSPACE_PID=$!
     echo "INFO: Hermes Workspace UI started on 0.0.0.0:${WORKSPACE_PORT} (PID ${WORKSPACE_PID})."
@@ -1097,6 +1138,7 @@ if [ -f "$TTYD_PID_FILE" ]; then
 fi
 
 if [ "$ENABLE_TERMINAL" = "true" ] || [ "$ENABLE_TERMINAL" = "1" ]; then
+  stop_if_listening "$TERMINAL_PORT" "web terminal"
   # Check if the terminal port is already in use before starting ttyd
   if command -v ss >/dev/null 2>&1 && ss -tlnp 2>/dev/null | grep -q ":${TERMINAL_PORT} "; then
     echo ""
@@ -1142,6 +1184,7 @@ if command -v pkill >/dev/null 2>&1; then
   sleep 1
 fi
 # Verify the ingress port is actually free before proceeding
+stop_if_listening "$DEFAULT_INGRESS_PORT" "ingress proxy"
 if command -v ss >/dev/null 2>&1 && ss -tlnp 2>/dev/null | grep -q ":${DEFAULT_INGRESS_PORT} "; then
   echo "WARN: Port ${DEFAULT_INGRESS_PORT} still in use after cleanup; nginx may fail to start"
 fi

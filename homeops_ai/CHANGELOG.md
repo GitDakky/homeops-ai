@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.5]
+
+### Fixed
+- Fixes Home Assistant restart loops caused by stale in-container listeners holding the ingress, terminal, dashboard, Workspace, or Hermes gateway ports after watchdog restarts.
+- Restores Hermes-native default gateway port handling to 8642 in the runtime script.
+- Adds no-op compatibility wrappers for the removed OpenClaw gateway relay lifecycle so Hermes restarts do not fail on missing functions.
+
 ## [0.1.4]
 
 ### Fixed
