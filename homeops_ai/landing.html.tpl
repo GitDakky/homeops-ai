@@ -784,9 +784,9 @@
 
         <div class="action-row">
           <a class="btn primary" id="workspaceBtn" href="#" target="_blank" rel="noopener noreferrer">Open Hermes Workspace</a>
-          <a class="btn secondary" href="./dashboard/" target="_self">Open Hermes Dashboard</a>
+          <a class="btn secondary" id="dashboardBtn" href="#" target="_self">Open Hermes Dashboard</a>
           <a class="btn ghost" id="gwbtn" href="__GATEWAY_PUBLIC_URL____GW_PUBLIC_URL_PATH__?token=__GATEWAY_TOKEN__" target="_blank" rel="noopener noreferrer">Open Hermes API UI</a>
-          <a class="btn secondary" href="./terminal/" target="_self">Open Terminal</a>
+          <a class="btn secondary" id="terminalBtn" href="#" target="_self">Open Terminal</a>
           <a class="btn ghost hidden" id="certBtn" href="" target="_blank" rel="noopener noreferrer">Download CA Certificate</a>
         </div>
 
@@ -1183,6 +1183,14 @@ SSL tab:  Request a new SSL certificate</pre>
     };
     const browserHost = window.location.hostname || '';
     const browserProtocol = window.location.protocol || 'http:';
+    const ingressBasePath = window.location.pathname.replace(/\/?$/, '/');
+    const ingressUrl = path => new URL(path.replace(/^\/+/, ''), window.location.origin + ingressBasePath).toString();
+    function resolveWorkspaceUrl() {
+      if (!browserHost || !WORKSPACE_PORT || !/^\d+$/.test(String(WORKSPACE_PORT))) {
+        return '';
+      }
+      return `${browserProtocol}//${browserHost}:${WORKSPACE_PORT}/`;
+    }
     function resolveGatewayBaseUrl() {
       if (GW_PUBLIC_URL) {
         return GW_PUBLIC_URL.replace(/\/$/, '');
@@ -1211,7 +1219,34 @@ SSL tab:  Request a new SSL certificate</pre>
       return '';
     }
     const RESOLVED_GATEWAY_BASE_URL = resolveGatewayBaseUrl();
+    const RESOLVED_WORKSPACE_URL = resolveWorkspaceUrl();
     let activeFileKey = '';
+
+    const workspaceButton = $('workspaceBtn');
+    if (workspaceButton) {
+      if (RESOLVED_WORKSPACE_URL) {
+        workspaceButton.href = RESOLVED_WORKSPACE_URL;
+      } else {
+        workspaceButton.classList.remove('primary');
+        workspaceButton.classList.add('secondary');
+        workspaceButton.href = '#';
+        workspaceButton.addEventListener('click', function(event) {
+          event.preventDefault();
+          setBanner('errorBanner', 'Hermes Workspace URL could not be derived. Check that enable_workspace is on and workspace_port is set to a browser-reachable host port.', false);
+        });
+      }
+    }
+
+    const dashboardButton = $('dashboardBtn');
+    if (dashboardButton) {
+      dashboardButton.href = ingressUrl('dashboard/');
+    }
+
+    const terminalButton = $('terminalBtn');
+    if (terminalButton) {
+      terminalButton.href = ingressUrl('terminal/');
+    }
+
     const gwButton = $('gwbtn');
     if (RESOLVED_GATEWAY_BASE_URL) {
       gwButton.href = `${RESOLVED_GATEWAY_BASE_URL}/?token=${encodeURIComponent(GW_TOKEN)}`;

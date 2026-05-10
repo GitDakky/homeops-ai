@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.1.10]
+
+### Fixed
+- Fixes Home Assistant Ingress action buttons so Dashboard and Terminal links preserve the add-on Ingress base path instead of resolving to Home Assistant root paths.
+- Sets the Hermes Workspace button to a concrete browser URL derived from the current Home Assistant host and Workspace port.
+
 ## [0.1.9]
 
 ### Added

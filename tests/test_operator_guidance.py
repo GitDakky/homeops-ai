@@ -38,6 +38,15 @@ class OperatorGuidanceTests(unittest.TestCase):
             LANDING_TEMPLATE,
         )
 
+    def test_landing_action_buttons_preserve_ingress_base_path(self) -> None:
+        self.assertIn('id="dashboardBtn" href="#"', LANDING_TEMPLATE)
+        self.assertIn('id="terminalBtn" href="#"', LANDING_TEMPLATE)
+        self.assertIn("dashboardButton.href = ingressUrl('dashboard/');", LANDING_TEMPLATE)
+        self.assertIn("terminalButton.href = ingressUrl('terminal/');", LANDING_TEMPLATE)
+        self.assertIn('workspaceButton.href = RESOLVED_WORKSPACE_URL;', LANDING_TEMPLATE)
+        self.assertNotIn('href="./dashboard/"', LANDING_TEMPLATE)
+        self.assertNotIn('href="./terminal/" target="_self">Open Terminal</a>', LANDING_TEMPLATE)
+
     def test_docs_match_gateway_public_url_override_guidance(self) -> None:
         self.assertIn(
             "In most local installs you can leave `gateway_public_url` empty.",
