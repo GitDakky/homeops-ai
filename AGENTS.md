@@ -3,7 +3,7 @@
 ## Project Scope
 
 This repository builds the **HomeOps AI (DEV)** Home Assistant add-on.
-The add-on packages OpenClaw + nginx + ttyd and manages startup/configuration glue.
+The add-on packages Hermes Agent + nginx + ttyd and manages startup/configuration glue.
 
 ## Architecture at a Glance
 
@@ -14,7 +14,7 @@ The add-on packages OpenClaw + nginx + ttyd and manages startup/configuration gl
   - `repository.yaml`
 - Runtime implementation (all add-on behavior lives here):
   - `homeops_ai/run.sh` (PID 1 orchestrator)
-  - `homeops_ai/oc_config_helper.py` (safe JSON config edits)
+  - `homeops_ai/hermes_config_helper.py` (safe JSON config edits)
   - `homeops_ai/render_nginx.py` (template rendering)
   - `homeops_ai/nginx.conf.tpl`
   - `homeops_ai/landing.html.tpl`
@@ -53,14 +53,14 @@ If any of these are skipped, the UX becomes inconsistent in HA.
 ## Runtime Safety Rules
 
 - `run.sh` runs with `set -euo pipefail`; avoid constructs that fail unexpectedly under `set -e`.
-- Validate all user-provided values from `/data/options.json` before injecting into shell/nginx/openclaw config.
+- Validate all user-provided values from `/data/options.json` before injecting into shell/nginx/hermes config.
 - Keep `run.sh` idempotent on restart (multiple starts must not corrupt state).
 - Treat `/config/` as persistent state; never wipe user data unless explicitly requested.
 
 ## Gateway/Auth/Security Rules
 
-- OpenClaw v2026.2.22+ redacts sensitive values in `openclaw config get`.
-  - For token retrieval guidance, prefer: `jq -r '.gateway.auth.token' /config/.openclaw/openclaw.json`.
+- Hermes v2026.2.22+ redacts sensitive values in `hermes config get`.
+  - For token retrieval guidance, prefer: `jq -r '.gateway.auth.token' /config/.hermes/hermes.json`.
 - `trusted-proxy` mode may reject direct local CLI WS calls (`trusted_proxy_user_missing`); document this clearly instead of hiding it.
 - For `lan_https` certificate logic, keep SAN generation deterministic and regeneration-triggered on SAN/IP changes.
 

@@ -1,13 +1,13 @@
 ARG BUILD_ARCH=amd64
 FROM ghcr.io/home-assistant/${BUILD_ARCH}-base-debian:bookworm
 ARG BUILD_ARCH
-ARG OPENCLAW_VERSION=2026.4.2
+ARG HERMES_BRANCH=main
 
 # Base image is Debian Bookworm (glibc). This avoids musl-related native module issues
 # that occur on Alpine (e.g. clipboard, node-llama-cpp).
 
 # Install base packages (without nodejs/npm - we'll get Node 22 from NodeSource)
-# build-essential provides gcc/cc needed by Homebrew for OpenClaw's brew-managed dependencies
+# build-essential provides gcc/cc needed by Homebrew for Hermes's brew-managed dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     bash \
     git \
@@ -38,7 +38,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Node.js 22 LTS from NodeSource (Debian Bookworm ships Node 18, but current
-# OpenClaw releases require Node 22.16+ and upstream recommends Node 24 or 22.16+)
+# Hermes releases require Node 22.16+ and upstream recommends Node 24 or 22.16+)
 # Use explicit keyring + apt source instead of setup_22.x pipe script for deterministic builds.
 RUN mkdir -p /etc/apt/keyrings \
     && curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key \
@@ -65,7 +65,7 @@ RUN ARCH=$(echo ${TARGETARCH:-$(dpkg --print-architecture)} | sed 's|arm64|aarch
 
 RUN node -v && npm -v
 
-# Install pnpm globally (required by some OpenClaw skills like clawhub)
+# Install pnpm globally (required by some Hermes skills like clawhub)
 RUN npm install -g pnpm && pnpm -v
 
 # Install Chromium for website automation tasks
@@ -76,7 +76,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Homebrew (Linuxbrew) for OpenClaw skill dependencies
+# Install Homebrew (Linuxbrew) for Hermes skill dependencies
 # Homebrew is optional - some skills need CLI tools like gemini, aider, etc.
 # NOTE: Homebrew requires CPU with SSSE3 support (Intel Core 2 or newer, ~2006+)
 # If installation fails (e.g., older CPUs), the add-on will still work but some skills may not install
@@ -117,15 +117,15 @@ RUN if [ -x /home/linuxbrew/.linuxbrew/bin/brew ]; then \
     fi
 USER root
 
-# Install OpenClaw globally.
-# Keep the version pin in one place so future bumps are explicit and reviewable.
-ENV OPENCLAW_BUNDLED_VERSION="${OPENCLAW_VERSION}"
-RUN npm config set fund false && npm config set audit false \
-    && npm install -g "openclaw@${OPENCLAW_VERSION}" \
+# Install Hermes Agent using the official installer in non-interactive mode.
+# The add-on uses an FHS-style root install: code in /usr/local/lib/hermes-agent,
+# command at /usr/local/bin/hermes, data under /config/.hermes at runtime.
+ENV HERMES_BUNDLED_VERSION="${HERMES_BRANCH}"
+RUN curl -fsSL https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.sh -o /tmp/install-hermes.sh \
+    && bash /tmp/install-hermes.sh --branch "${HERMES_BRANCH}" --skip-setup --hermes-home /config/.hermes \
+    && rm -f /tmp/install-hermes.sh \
     && install -d /usr/local/share \
-    && printf '%s\n' "${OPENCLAW_VERSION}" > /usr/local/share/openclaw-bundled-version \
-    && openclaw --version \
-    && openclaw --version | grep -F "OpenClaw ${OPENCLAW_VERSION}"
+    && hermes --version | tee /usr/local/share/hermes-bundled-version
 
 # Install bundled MCP server dependencies locally inside the add-on image so the
 # built-in Home Assistant MCP bridge can run without relying on user-installed packages.
@@ -138,9 +138,9 @@ RUN tee -a /etc/bash.bashrc <<'EOF'
 # Aliases
 alias bat="batcat"
 alias fd="fdfind"
-alias oc-onboard="/usr/local/bin/oc-onboard"
-alias oc-configure="/usr/local/bin/oc-configure"
-alias oc-report-issue="/usr/local/bin/oc-report-issue"
+alias homeops-onboard="/usr/local/bin/homeops-onboard"
+alias homeops-configure="/usr/local/bin/homeops-configure"
+alias homeops-report-issue="/usr/local/bin/homeops-report-issue"
 
 # Enable colors
 alias ls="ls --color=auto"
@@ -158,18 +158,18 @@ COPY run_helpers.sh /opt/homeops-ai/run_helpers.sh
 COPY oc_config_helper.py /oc_config_helper.py
 COPY render_nginx.py /render_nginx.py
 COPY dashboard_api.py /dashboard_api.py
-COPY oc-managed-command.sh /usr/local/bin/oc-managed-command
-COPY oc-report-issue.sh /usr/local/bin/oc-report-issue
-COPY oc-cleanup.sh /usr/local/bin/oc-cleanup
+COPY homeops-managed-command.sh /usr/local/bin/homeops-managed-command
+COPY homeops-report-issue.sh /usr/local/bin/homeops-report-issue
+COPY homeops-cleanup.sh /usr/local/bin/homeops-cleanup
 COPY openclaw-proxy-shim.cjs /usr/local/lib/openclaw-proxy-shim.cjs
 COPY ha_mcp_server.cjs /opt/homeops-ai/ha_mcp_server.cjs
 COPY nginx.conf.tpl /etc/nginx/nginx.conf.tpl
 COPY landing.html.tpl /etc/nginx/landing.html.tpl
 COPY bootstrap-workspace /opt/homeops-ai/bootstrap-workspace
 COPY bundled-skills /opt/homeops-ai/bundled-skills
-RUN chmod +x /run.sh /opt/homeops-ai/run_helpers.sh /oc_config_helper.py /render_nginx.py /dashboard_api.py /usr/local/bin/oc-managed-command /usr/local/bin/oc-report-issue /usr/local/bin/oc-cleanup /opt/homeops-ai/ha_mcp_server.cjs \
-    && ln -sf /usr/local/bin/oc-managed-command /usr/local/bin/oc-onboard \
-    && ln -sf /usr/local/bin/oc-managed-command /usr/local/bin/oc-configure \
+RUN chmod +x /run.sh /opt/homeops-ai/run_helpers.sh /oc_config_helper.py /render_nginx.py /dashboard_api.py /usr/local/bin/homeops-managed-command /usr/local/bin/homeops-report-issue /usr/local/bin/homeops-cleanup /opt/homeops-ai/ha_mcp_server.cjs \
+    && ln -sf /usr/local/bin/homeops-managed-command /usr/local/bin/homeops-onboard \
+    && ln -sf /usr/local/bin/homeops-managed-command /usr/local/bin/homeops-configure \
     && mkdir -p /run/nginx
 
 CMD [ "/run.sh" ]

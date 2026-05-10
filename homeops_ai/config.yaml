@@ -1,7 +1,7 @@
 name: HomeOps AI
-version: "0.7.20"
+version: "0.1.0-dev"
 slug: homeops_ai
-description: Run the GitDakky OpenClaw fork as a Home Assistant app with migration support.
+description: Hermes-powered AI operations agent for Home Assistant.
 url: https://github.com/GitDakky/homeops-ai
 image: "ghcr.io/gitdakky/homeops-ai"
 arch:
@@ -51,7 +51,7 @@ options:
   homeassistant_token: ""
 
   # Enable the built-in Home Assistant MCP server that exposes live HA entities,
-  # devices, areas, automations, services, and history directly to OpenClaw.
+  # devices, areas, automations, services, and history directly to Hermes.
   # Read tools are enabled by default and use the add-on's trusted HA context.
   enable_builtin_ha_tools: true
 
@@ -59,7 +59,7 @@ options:
   # This keeps read-only HA access available by default while leaving writes opt-in.
   enable_ha_service_calls: false
 
-  # Optional: outbound HTTP/HTTPS proxy for OpenClaw network access.
+  # Optional: outbound HTTP/HTTPS proxy for Hermes network access.
   # Example: "http://192.168.2.1:3128"
   http_proxy: ""
 
@@ -123,7 +123,7 @@ options:
   # Set false only if you explicitly want strict per-device approvals.
   controlui_disable_device_auth: true
 
-  # Disable OpenClaw exec approval prompts for gateway/node host execution.
+  # Disable Hermes exec approval prompts for gateway/node host execution.
   # Default is ON because this fork is intended for uninterrupted Home Assistant automations.
   # When enabled, the add-on forces exec approvals defaults to security=full, ask=off,
   # askFallback=full and aligns tools.exec.host=gateway, tools.exec.security=full,
@@ -132,7 +132,7 @@ options:
   disable_exec_approvals: true
 
   # Enable OpenAI-compatible Chat Completions API endpoint
-  # When enabled, OpenClaw can be used as a conversation agent in HA Assist pipeline
+  # When enabled, Hermes can be used as a conversation agent in HA Assist pipeline
   # via Extended OpenAI Conversation (HACS) or any OpenAI-compatible client
   enable_openai_api: false
 
@@ -155,7 +155,7 @@ options:
   #     - name: LOG_LEVEL
   #       value: "debug"
   # Reserved keys are blocked to protect runtime/security
-  # (e.g. PATH, HOME, NODE_OPTIONS, NODE_PATH, OPENCLAW_*, proxy vars).
+  # (e.g. PATH, HOME, NODE_OPTIONS, NODE_PATH, HERMES_*, proxy vars).
   # Limits: max 50 variables, max key length 255 chars, max value length 10000 chars
   gateway_env_vars: []
 
@@ -179,10 +179,10 @@ options:
   github_issues_token: ""
 
   # Matrix channel support.
-  # Current OpenClaw Matrix defaults are fail-closed for rooms, which is awkward for
+  # Current Hermes Matrix defaults are fail-closed for rooms, which is awkward for
   # ad-hoc Home Assistant use. This add-on defaults Matrix rooms to groupPolicy=open
   # and autoJoin=always when enabled so users can invite the bot without separately
-  # pre-whitelisting every room. Mention-gating still applies by default in OpenClaw.
+  # pre-whitelisting every room. Mention-gating still applies by default in Hermes.
   enable_matrix: false
   matrix_homeserver: ""
   matrix_allow_private_network: false
