@@ -156,6 +156,7 @@ EOF
 COPY run.sh /run.sh
 COPY run_helpers.sh /opt/homeops-ai/run_helpers.sh
 COPY hermes_config_helper.py /hermes_config_helper.py
+COPY oc_config_helper.py /oc_config_helper.py
 COPY render_nginx.py /render_nginx.py
 COPY dashboard_api.py /dashboard_api.py
 COPY homeops-managed-command.sh /usr/local/bin/homeops-managed-command
@@ -167,7 +168,7 @@ COPY nginx.conf.tpl /etc/nginx/nginx.conf.tpl
 COPY landing.html.tpl /etc/nginx/landing.html.tpl
 COPY bootstrap-workspace /opt/homeops-ai/bootstrap-workspace
 COPY bundled-skills /opt/homeops-ai/bundled-skills
-RUN chmod +x /run.sh /opt/homeops-ai/run_helpers.sh /hermes_config_helper.py /render_nginx.py /dashboard_api.py /usr/local/bin/homeops-managed-command /usr/local/bin/homeops-report-issue /usr/local/bin/homeops-cleanup /opt/homeops-ai/ha_mcp_server.cjs \
+RUN chmod +x /run.sh /opt/homeops-ai/run_helpers.sh /hermes_config_helper.py /oc_config_helper.py /render_nginx.py /dashboard_api.py /usr/local/bin/homeops-managed-command /usr/local/bin/homeops-report-issue /usr/local/bin/homeops-cleanup /opt/homeops-ai/ha_mcp_server.cjs \
     && ln -sf /usr/local/bin/homeops-managed-command /usr/local/bin/homeops-onboard \
     && ln -sf /usr/local/bin/homeops-managed-command /usr/local/bin/homeops-configure \
     && mkdir -p /run/nginx
