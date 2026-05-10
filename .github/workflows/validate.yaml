@@ -33,16 +33,18 @@ jobs:
             --platform linux/amd64 \
             --build-arg BUILD_ARCH=amd64 \
             -f homeops_ai/Dockerfile \
-            -t openclaw-assistant-ci:amd64 \
+            -t homeops-ai-ci:amd64 \
             homeops_ai
 
       - name: Smoke test bundled tooling
         run: |
-          docker run --rm --entrypoint /bin/bash openclaw-assistant-ci:amd64 -lc '
+          docker run --rm --entrypoint /bin/bash homeops-ai-ci:amd64 -lc '
             test -x /run.sh
-            test -f /oc_config_helper.py
+            test -f /hermes_config_helper.py
+            test -x /usr/local/bin/homeops-hermes
             test -f /render_nginx.py
-            openclaw --version
+            hermes --version
+            homeops-hermes --version
             node -v
             python3 --version
           '

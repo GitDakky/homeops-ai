@@ -2,6 +2,15 @@ configuration:
   timezone:
     name: Timezone
     description: Timezone for the add-on (e.g., Europe/Sofia, America/New_York)
+  llm_provider:
+    name: LLM Provider
+    description: Hermes model provider. OpenRouter is recommended for HomeOps AI because it supports many models from one key.
+  llm_model:
+    name: LLM Model
+    description: Default Hermes model ID, for example openai/gpt-5.5 or anthropic/claude-sonnet-4.6.
+  openrouter_api_key:
+    name: OpenRouter API Key
+    description: Optional OpenRouter API key. Stored as a Home Assistant add-on password option and exported as OPENROUTER_API_KEY for Hermes.
   
   enable_terminal:
     name: Enable Web Terminal

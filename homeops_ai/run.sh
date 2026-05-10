@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # Ensure Homebrew and brew-installed binaries are in PATH
-# This is needed for OpenClaw skills that depend on CLI tools (gemini, aider, etc.)
+# This is needed for Hermes skills that depend on CLI tools (gemini, aider, etc.)
 export PATH="/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin:${PATH}"
 
 # Home Assistant add-on options are usually rendered to /data/options.json
@@ -17,11 +17,11 @@ DEFAULT_INGRESS_PORT="48109"
 DEFAULT_DASHBOARD_API_PORT="48110"
 BOOTSTRAP_SOURCE_DIR="/opt/homeops-ai/bootstrap-workspace"
 BUNDLED_SKILLS_SOURCE_DIR="/opt/homeops-ai/bundled-skills"
-OPENCLAW_CONFIG_PATH="/config/.openclaw/openclaw.json"
+OPENCLAW_CONFIG_PATH="/config/.hermes/hermes.json"
 HOME_ASSISTANT_CONFIG_DIR="${HOME_ASSISTANT_CONFIG_DIR:-/ha-config}"
-RUNTIME_RESTART_REQUEST_FILE="/tmp/openclaw-runtime-restart.request"
-MANAGED_COMMAND_ACTIVE_FILE="/tmp/openclaw-managed-command.active"
-RUNTIME_WRAPPER_LOG_DIR="/tmp/openclaw"
+RUNTIME_RESTART_REQUEST_FILE="/tmp/hermes-runtime-restart.request"
+MANAGED_COMMAND_ACTIVE_FILE="/tmp/hermes-managed-command.active"
+RUNTIME_WRAPPER_LOG_DIR="/tmp/hermes"
 RUNTIME_WRAPPER_LOG_FILE="${RUNTIME_WRAPPER_LOG_DIR}/homeops-ai-runtime-wrapper.log"
 RUN_HELPERS_PATH="/opt/homeops-ai/run_helpers.sh"
 
@@ -170,10 +170,13 @@ maybe_migrate_legacy_addon() {
 maybe_migrate_legacy_addon
 
 # ------------------------------------------------------------------------------
-# Read add-on options (only add-on-specific knobs; OpenClaw is configured via onboarding)
+# Read add-on options (only add-on-specific knobs; Hermes is configured via onboarding)
 # ------------------------------------------------------------------------------
 
 TZNAME=$(jq -r '.timezone // "Europe/Sofia"' "$OPTIONS_FILE")
+LLM_PROVIDER=$(jq -r '.llm_provider // "openrouter"' "$OPTIONS_FILE")
+LLM_MODEL=$(jq -r '.llm_model // "openai/gpt-5.5"' "$OPTIONS_FILE")
+OPENROUTER_API_KEY_OPTION=$(jq -r '.openrouter_api_key // empty' "$OPTIONS_FILE")
 GW_PUBLIC_URL=$(jq -r '.gateway_public_url // empty' "$OPTIONS_FILE")
 HA_TOKEN=$(jq -r '.homeassistant_token // empty' "$OPTIONS_FILE")
 ENABLE_BUILTIN_HA_TOOLS=$(jq -r '.enable_builtin_ha_tools // true' "$OPTIONS_FILE")
@@ -309,7 +312,7 @@ esac
 set +x
 
 # Optional outbound proxy from add-on settings.
-# If set, apply it to both HTTP and HTTPS for Node/undici/OpenClaw tooling.
+# If set, apply it to both HTTP and HTTPS for Node/undici/Hermes tooling.
 if [ -n "$ADDON_HTTP_PROXY" ]; then
   if [[ "$ADDON_HTTP_PROXY" =~ ^https?://[^[:space:]]+$ ]]; then
     # Keep local traffic direct to avoid accidental proxying of loopback/LAN services.
@@ -342,18 +345,18 @@ fi
 # Home Assistant maps addon_config to /addon_configs/{REPO}_{SLUG} on the host.
 export HOME=/config
 
-# Explicitly set OpenClaw directories to ensure they persist across add-on updates
+# Explicitly set Hermes directories to ensure they persist across add-on updates
 # This prevents loss of installed skills, configuration, and workspace state
-export OPENCLAW_CONFIG_DIR=/config/.openclaw
+export OPENCLAW_CONFIG_DIR=/config/.hermes
 export OPENCLAW_WORKSPACE_DIR=/config/clawd
 export XDG_CONFIG_HOME=/config
-export OPENCLAW_SKILLS_DIR=/config/.openclaw/skills
-export OPENCLAW_SYSTEM_GRAPH_PATH=/config/.openclaw/gitdakky-system-graph.sqlite3
+export OPENCLAW_SKILLS_DIR=/config/.hermes/skills
+export OPENCLAW_SYSTEM_GRAPH_PATH=/config/.hermes/gitdakky-system-graph.sqlite3
 export HA_REST_BASE_URL="http://supervisor/core/api"
 export HA_WS_URL="ws://supervisor/core/websocket"
 export HA_WRITE_TOOLS_ENABLED="$ENABLE_HA_SERVICE_CALLS"
 
-mkdir -p /config/.openclaw /config/.openclaw/identity /config/clawd /config/keys /config/secrets
+mkdir -p /config/.hermes /config/.hermes/identity /config/clawd /config/keys /config/secrets
 
 seed_managed_workspace_files() {
   if [ ! -d "$BOOTSTRAP_SOURCE_DIR" ]; then
@@ -376,12 +379,12 @@ seed_managed_workspace_files() {
 seed_managed_workspace_files
 
 DEFAULT_AGENT_ID="main"
-DEFAULT_AGENT_ROOT="/config/.openclaw/agents/${DEFAULT_AGENT_ID}"
+DEFAULT_AGENT_ROOT="/config/.hermes/agents/${DEFAULT_AGENT_ID}"
 DEFAULT_AGENT_STATE_DIR="${DEFAULT_AGENT_ROOT}/agent"
 DEFAULT_AGENT_SESSIONS_DIR="${DEFAULT_AGENT_ROOT}/sessions"
-LEGACY_AGENT_STATE_DIR="/config/.openclaw/agent"
-LEGACY_SESSIONS_DIR="/config/.openclaw/sessions"
-LEGACY_STATE_MIGRATION_MARKER="/config/.openclaw/.gitdakky-agent-layout-migration"
+LEGACY_AGENT_STATE_DIR="/config/.hermes/agent"
+LEGACY_SESSIONS_DIR="/config/.hermes/sessions"
+LEGACY_STATE_MIGRATION_MARKER="/config/.hermes/.gitdakky-agent-layout-migration"
 
 ensure_default_agent_layout() {
   mkdir -p "$DEFAULT_AGENT_STATE_DIR" "$DEFAULT_AGENT_SESSIONS_DIR"
@@ -389,17 +392,17 @@ ensure_default_agent_layout() {
 }
 
 run_safe_doctor_state_migration() {
-  local log_file="/tmp/openclaw-doctor-migration.log"
+  local log_file="/tmp/hermes-doctor-migration.log"
 
   if ! legacy_agent_state_needs_migration "$LEGACY_AGENT_STATE_DIR" "$LEGACY_SESSIONS_DIR" "$DEFAULT_AGENT_STATE_DIR" "$DEFAULT_AGENT_SESSIONS_DIR"; then
     return 0
   fi
 
-  echo "INFO: Running safe OpenClaw doctor migration for legacy agent/session layout..."
-  if openclaw doctor --non-interactive >"$log_file" 2>&1; then
-    echo "INFO: OpenClaw doctor completed safe migrations."
+  echo "INFO: Running safe Hermes doctor migration for legacy agent/session layout..."
+  if hermes doctor --non-interactive >"$log_file" 2>&1; then
+    echo "INFO: Hermes doctor completed safe migrations."
   else
-    echo "WARN: openclaw doctor --non-interactive did not complete cleanly; falling back to direct state sync."
+    echo "WARN: hermes doctor --non-interactive did not complete cleanly; falling back to direct state sync."
     tail -n 20 "$log_file" 2>/dev/null || true
   fi
 }
@@ -450,15 +453,15 @@ reconcile_default_agent_state() {
 }
 
 # ------------------------------------------------------------------------------
-# Sync built-in OpenClaw skills from image to persistent storage
+# Sync built-in Hermes skills from image to persistent storage
 # On each startup, copy new/updated built-in skills so they survive rebuilds.
-# We sync them to /config/.openclaw/skills and symlink back.
+# We sync them to /config/.hermes/skills and symlink back.
 # NOTE: We cannot use `npm root -g` here because HOME=/config may contain a
 # persisted .npmrc with a custom prefix from a previous run. Instead, we
 # resolve the real image path by temporarily overriding HOME.
 # ------------------------------------------------------------------------------
-IMAGE_SKILLS_DIR="$(HOME=/root npm root -g 2>/dev/null)/openclaw/skills"
-PERSISTENT_SKILLS_DIR="/config/.openclaw/skills"
+IMAGE_SKILLS_DIR="$(HOME=/root npm root -g 2>/dev/null)/hermes/skills"
+PERSISTENT_SKILLS_DIR="/config/.hermes/skills"
 
 if [ -d "$IMAGE_SKILLS_DIR" ] && [ ! -L "$IMAGE_SKILLS_DIR" ]; then
   mkdir -p "$PERSISTENT_SKILLS_DIR"
@@ -695,13 +698,13 @@ if [ ! -e /data ]; then
 fi
 
 # Ensure the agents base directory exists so cleanup scans work even before first run.
-# Do NOT pre-create agent-specific directories; OpenClaw creates them as needed.
-mkdir -p /config/.openclaw/agents || true
+# Do NOT pre-create agent-specific directories; Hermes creates them as needed.
+mkdir -p /config/.hermes/agents || true
 
 # ------------------------------------------------------------------------------
 # SINGLE-INSTANCE GUARD (prevents multiple gateway runs racing each other)
 # ------------------------------------------------------------------------------
-STARTUP_LOCK="/config/.openclaw/gateway.start.lock"
+STARTUP_LOCK="/config/.hermes/gateway.start.lock"
 exec 9>"$STARTUP_LOCK"
 if ! flock -n 9; then
   echo "ERROR: Another instance appears to be running (could not acquire $STARTUP_LOCK)."
@@ -714,11 +717,11 @@ fi
 # ------------------------------------------------------------------------------
 
 gateway_running() {
-  pgrep -f "openclaw-gateway" >/dev/null 2>&1
+  pgrep -f "hermes-gateway" >/dev/null 2>&1
 }
 
 cleanup_session_locks() {
-  local agents_dir="/config/.openclaw/agents"
+  local agents_dir="/config/.hermes/agents"
   local total_locks=0
   local cleaned_dirs=()
 
@@ -871,7 +874,7 @@ configure_external_integrations() {
     export HA_MCP_ENABLED=true
   fi
 
-  cat > /config/.openclaw/gitdakky-integrations.json <<EOF
+  cat > /config/.hermes/gitdakky-integrations.json <<EOF
 {
   "context7": {
     "enabled": ${CONTEXT7_ENABLED},
@@ -915,8 +918,8 @@ configure_external_integrations
 
 
 # ------------------------------------------------------------------------------
-# OpenClaw config is managed by OpenClaw itself (onboarding / configure).
-# This add-on intentionally does NOT create/patch /config/.openclaw/openclaw.json.
+# Hermes config is managed by Hermes itself (onboarding / configure).
+# This add-on intentionally does NOT create/patch /config/.hermes/hermes.json.
 # ------------------------------------------------------------------------------
 
 # Convenience info for later (router SSH access path & HA token file)
@@ -994,742 +997,74 @@ shutdown() {
 
 trap shutdown INT TERM
 
-if ! command -v openclaw >/dev/null 2>&1; then
-  echo "ERROR: openclaw is not installed."
-  exit 1
-fi
+if ! command -v hermes >/dev/null 2>&1; then
+  echo "ERROR: hermes is not installed or not on PATH."
+  echo "ERROR: The image should install Hermes during build; reinstall the add-on after the latest build completes."
+  GW_PID=""
+else
+  export HOME=/config
+  export HERMES_HOME=/config/.hermes
+  export HERMES_ACCEPT_HOOKS=1
+  export HASS_URL="${HASS_URL:-http://supervisor/core}"
+  mkdir -p "$HERMES_HOME" /config/homeops "$RUNTIME_WRAPPER_LOG_DIR"
 
-# Bootstrap minimal OpenClaw config ONLY if missing.
-# We do not overwrite or patch existing configs; onboarding owns everything else.
-if [ ! -f "$OPENCLAW_CONFIG_PATH" ]; then
-  echo "INFO: OpenClaw config missing; bootstrapping minimal config at $OPENCLAW_CONFIG_PATH"
-  python3 - <<'PY'
-import json
-import secrets
-from pathlib import Path
+  # Provider/model workflow: Home Assistant options -> Hermes config/env.
+  # OpenRouter is the default because it is provider-agnostic and matches the
+  # public HomeOps AI install path. Advanced users can still use gateway_env_vars
+  # or the integrated terminal to run `hermes model` / `hermes config set ...`.
+  if [ -n "$OPENROUTER_API_KEY_OPTION" ]; then
+    export OPENROUTER_API_KEY="$OPENROUTER_API_KEY_OPTION"
+  fi
 
-cfg_path = Path('/config/.openclaw/openclaw.json')
-cfg_path.parent.mkdir(parents=True, exist_ok=True)
+  if [ -n "$LLM_PROVIDER" ]; then
+    hermes config set model.provider "$LLM_PROVIDER" >/dev/null 2>&1 || true
+  fi
+  if [ -n "$LLM_MODEL" ]; then
+    hermes config set model.default "$LLM_MODEL" >/dev/null 2>&1 || true
+  fi
 
-cfg = {
-  "gateway": {
-    "mode": "local",
-    "port": 18790,
-    "bind": "loopback",
-    "auth": {
-      "mode": "token",
-      "token": secrets.token_urlsafe(24)
-    }
-  },
-  "agents": {
-    "defaults": {
-      "workspace": "/config/clawd"
-    }
+  # Enable the native Hermes Home Assistant tool path where possible.
+  if [ -n "${SUPERVISOR_TOKEN:-}" ]; then
+    export HASS_TOKEN="$SUPERVISOR_TOKEN"
+  fi
+
+  start_hermes_runtime() {
+    echo "Starting ${SELF_ADDON_NAME} runtime (Hermes gateway)..."
+    mkdir -p "$RUNTIME_WRAPPER_LOG_DIR"
+    (
+      cd /config/homeops
+      exec env         HOME=/config         HERMES_HOME=/config/.hermes         HERMES_ACCEPT_HOOKS=1         API_SERVER_ENABLED=true         API_SERVER_HOST=127.0.0.1         API_SERVER_PORT="$GATEWAY_INTERNAL_PORT"         HASS_URL="${HASS_URL:-http://supervisor/core}"         HASS_TOKEN="${HASS_TOKEN:-}"         OPENROUTER_API_KEY="${OPENROUTER_API_KEY:-}"         hermes gateway run
+    ) < /dev/null >>"$RUNTIME_WRAPPER_LOG_FILE" 2>&1 &
+    GW_PID=$!
+    echo "INFO: Hermes runtime wrapper log: ${RUNTIME_WRAPPER_LOG_FILE}"
+    return 0
   }
-}
 
-cfg_path.write_text(json.dumps(cfg, indent=2) + "\n", encoding='utf-8')
-print("INFO: Wrote minimal OpenClaw config (gateway.mode=local, auth.token generated)")
-PY
-fi
-
-reconcile_default_agent_state
-
-# ------------------------------------------------------------------------------
-# Apply gateway LAN mode settings safely using helper script
-# This updates gateway.bind and gateway.port without touching other settings
-# ------------------------------------------------------------------------------
-export OPENCLAW_CONFIG_PATH="/config/.openclaw/openclaw.json"
-
-# Find the helper script (copied to root in Dockerfile, or fallback to add-on dir)
-HELPER_PATH="/oc_config_helper.py"
-if [ ! -f "$HELPER_PATH" ] && [ -f "$(dirname "$0")/oc_config_helper.py" ]; then
-  HELPER_PATH="$(dirname "$0")/oc_config_helper.py"
-fi
-
-if [ -f "$OPENCLAW_CONFIG_PATH" ]; then
-  if [ -f "$HELPER_PATH" ]; then
-    # In lan_https mode the gateway uses an internal port; nginx owns the external one.
-    EFFECTIVE_GW_PORT="$GATEWAY_INTERNAL_PORT"
-    if ! sync_gateway_settings_from_options "$OPTIONS_FILE" "$HELPER_PATH" "$OPENCLAW_CONFIG_PATH" "$EFFECTIVE_GW_PORT"; then
-      rc=$?
-      echo "ERROR: Failed to apply gateway settings via oc_config_helper.py (exit code ${rc})."
-      echo "ERROR: Gateway configuration may be incorrect; aborting startup."
-      exit "${rc}"
+  start_dashboard_api() {
+    local api_port="${DASHBOARD_API_PORT:-$DEFAULT_DASHBOARD_API_PORT}"
+    if [ ! -f /dashboard_api.py ]; then
+      echo "WARN: dashboard_api.py not found; operator file editor will be unavailable"
+      return 0
     fi
-  else
-    echo "WARN: oc_config_helper.py not found, cannot apply gateway settings"
-    echo "INFO: Ensure the add-on image includes oc_config_helper.py and restart"
-  fi
-else
-  echo "WARN: OpenClaw config not found at $OPENCLAW_CONFIG_PATH, cannot apply gateway settings"
-  echo "INFO: Run 'openclaw onboard' first, then restart the add-on"
-fi
-
-if [ -f "$HELPER_PATH" ]; then
-  if ! python3 "$HELPER_PATH" configure-exec-approvals "$DISABLE_EXEC_APPROVALS"; then
-    rc=$?
-    echo "ERROR: Failed to configure exec approval policy via oc_config_helper.py (exit code ${rc})."
-    echo "ERROR: Host automation exec policy may be inconsistent; aborting startup."
-    exit "${rc}"
-  fi
-else
-  echo "WARN: oc_config_helper.py not found, cannot configure exec approval policy"
-fi
-
-if [ "$MATRIX_EFFECTIVE_ENABLED" = "true" ]; then
-  if openclaw plugins inspect @openclaw/matrix --json >/dev/null 2>&1; then
-    echo "INFO: Matrix plugin is available."
-  else
-    echo "INFO: Installing Matrix plugin @openclaw/matrix ..."
-    if ! openclaw plugins install @openclaw/matrix >/tmp/openclaw-matrix-plugin-install.log 2>&1; then
-      echo "WARN: Failed to install Matrix plugin automatically."
-      tail -n 40 /tmp/openclaw-matrix-plugin-install.log 2>/dev/null || true
-    fi
-  fi
-fi
-
-if [ -f "$HELPER_PATH" ]; then
-  if ! python3 "$HELPER_PATH" configure-matrix-channel \
-      "$MATRIX_EFFECTIVE_ENABLED" \
-      "$MATRIX_HOMESERVER" \
-      "$MATRIX_ALLOW_PRIVATE_NETWORK" \
-      "$MATRIX_USER_ID" \
-      "$MATRIX_PASSWORD" \
-      "$MATRIX_ACCESS_TOKEN" \
-      "$MATRIX_ENCRYPTION" \
-      "$MATRIX_AUTO_JOIN" \
-      "$MATRIX_DM_POLICY" \
-      "$MATRIX_DM_ALLOW_FROM" \
-      "$MATRIX_GROUP_POLICY" \
-      "$MATRIX_GROUP_ALLOW_FROM" \
-      "$MATRIX_ROOM_ALLOWLIST"; then
-    rc=$?
-    echo "ERROR: Failed to configure Matrix channel via oc_config_helper.py (exit code ${rc})."
-    echo "ERROR: Matrix configuration may be inconsistent; aborting startup."
-    exit "${rc}"
-  fi
-fi
-
-if [ "$GATEWAY_AUTH_MODE" = "trusted-proxy" ]; then
-  echo "NOTICE: gateway_auth_mode=trusted-proxy is enabled."
-  echo "NOTICE: Direct local CLI calls to the gateway may return unauthorized (trusted_proxy_user_missing) unless identity headers are injected by your reverse proxy."
-  echo "NOTICE: For local terminal CLI workflows, temporarily switch to token auth or use commands that don't require direct gateway WS auth."
-fi
-
-# ------------------------------------------------------------------------------
-# TLS certificate generation for built-in HTTPS proxy (lan_https mode)
-# Generates a local CA + server cert so phones/tablets get proper HTTPS.
-# The CA cert can be installed once on a device for trusted access.
-# ------------------------------------------------------------------------------
-LAN_IP=""
-if [ "$ENABLE_HTTPS_PROXY" = "true" ]; then
-  CERT_DIR="/config/certs"
-  mkdir -p "$CERT_DIR"
-
-  # Detect primary LAN IP
-  LAN_IP=$(hostname -I 2>/dev/null | awk '{print $1}')
-  STORED_IP=$(cat "$CERT_DIR/.cert_ip" 2>/dev/null || echo "")
-
-  # --- Local CA (generated once, persists across restarts) ---
-  if [ ! -f "$CERT_DIR/ca.key" ] || [ ! -f "$CERT_DIR/ca.crt" ]; then
-    echo "INFO: Generating local CA certificate (one-time)..."
-    openssl genrsa -out "$CERT_DIR/ca.key" 2048 2>/dev/null
-    openssl req -new -x509 -key "$CERT_DIR/ca.key" -out "$CERT_DIR/ca.crt" \
-      -days 3650 -nodes -subj "/CN=OpenClaw Local CA" 2>/dev/null
-    chmod 600 "$CERT_DIR/ca.key"
-    STORED_IP=""  # force server cert regeneration
-    echo "INFO: Local CA created at $CERT_DIR/ca.crt"
-  fi
-
-  # --- Extra SANs from gateway_additional_allowed_origins + gateway_public_url ---
-  EXTRA_SANS=""
-  EXTRA_SAN_SOURCES="${GATEWAY_ADDITIONAL_ALLOWED_ORIGINS},${GW_PUBLIC_URL}"
-  if [ "$EXTRA_SAN_SOURCES" != "," ]; then
-    EXTRA_SANS="$(python3 - "$EXTRA_SAN_SOURCES" "${LAN_IP:-}" <<'PY'
-import sys, re
-from urllib.parse import urlparse
-raw = sys.argv[1] if len(sys.argv) > 1 else ""
-lan_ip = sys.argv[2] if len(sys.argv) > 2 else ""
-entries = [e.strip() for e in raw.split(",") if e.strip()]
-sans = []
-seen = {"127.0.0.1", "localhost", "homeassistant", "homeassistant.local"}
-if lan_ip:
-    seen.add(lan_ip)
-for entry in entries:
-    if "://" not in entry:
-        entry = "https://" + entry
-    host = urlparse(entry).hostname or ""
-    if host and host not in seen:
-        seen.add(host)
-        if re.match(r"^\d{1,3}(\.\d{1,3}){3}$", host):
-            sans.append(f"IP:{host}")
-        else:
-            sans.append(f"DNS:{host}")
-print(",".join(sans), end="")
-PY
-)"
-  fi
-  STORED_EXTRA_SANS=$(cat "$CERT_DIR/.cert_extra_sans" 2>/dev/null || echo "")
-
-  # --- Server cert (regenerated when LAN IP or SANs change) ---
-  if [ ! -f "$CERT_DIR/gateway.crt" ] || [ ! -f "$CERT_DIR/gateway.key" ] || [ "$LAN_IP" != "$STORED_IP" ] || [ "$EXTRA_SANS" != "$STORED_EXTRA_SANS" ]; then
-    echo "INFO: Generating server TLS certificate for IP: ${LAN_IP:-unknown}..."
-    openssl genrsa -out "$CERT_DIR/gateway.key" 2048 2>/dev/null
-    openssl req -new -key "$CERT_DIR/gateway.key" -out "$CERT_DIR/gateway.csr" \
-      -subj "/CN=OpenClaw Gateway" 2>/dev/null
-
-    # SAN extension — include LAN IP, loopback, common mDNS names + user extras
-    cat > "$CERT_DIR/_san.ext" <<SANEOF
-subjectAltName=IP:${LAN_IP:-127.0.0.1},IP:127.0.0.1,DNS:localhost,DNS:homeassistant,DNS:homeassistant.local${EXTRA_SANS:+,${EXTRA_SANS}}
-SANEOF
-
-    openssl x509 -req -in "$CERT_DIR/gateway.csr" \
-      -CA "$CERT_DIR/ca.crt" -CAkey "$CERT_DIR/ca.key" -CAcreateserial \
-      -out "$CERT_DIR/gateway.crt" -days 3650 \
-      -extfile "$CERT_DIR/_san.ext" 2>/dev/null
-
-    rm -f "$CERT_DIR/gateway.csr" "$CERT_DIR/_san.ext" "$CERT_DIR/ca.srl"
-    chmod 600 "$CERT_DIR/gateway.key"
-    printf '%s' "$LAN_IP" > "$CERT_DIR/.cert_ip"
-    printf '%s' "$EXTRA_SANS" > "$CERT_DIR/.cert_extra_sans"
-    echo "INFO: Server TLS certificate generated (SAN: IP:${LAN_IP:-127.0.0.1}${EXTRA_SANS:+,${EXTRA_SANS}})"
-  else
-    echo "INFO: Reusing existing TLS certificate (IP: $STORED_IP)"
-  fi
-
-  # Make CA cert available for download via nginx
-  mkdir -p /etc/nginx/html
-  cp "$CERT_DIR/ca.crt" /etc/nginx/html/openclaw-ca.crt 2>/dev/null || true
-  echo "INFO: CA certificate available for download at /cert/ca.crt on the HTTPS port"
-
-fi
-
-# ------------------------------------------------------------------
-# Configure gateway.controlUi.allowedOrigins:
-# - In lan_https: include HTTPS proxy defaults (LAN IP + common hostnames)
-# - In all modes: also include origin from gateway_public_url when present
-# - Helper merges with existing origins + user extras and deduplicates
-# ------------------------------------------------------------------
-if [ -f "$HELPER_PATH" ] && [ -f "$OPENCLAW_CONFIG_PATH" ]; then
-  ALLOWED_ORIGINS=""
-
-  if [ "$ENABLE_HTTPS_PROXY" = "true" ] && [ -n "$LAN_IP" ]; then
-    ALLOWED_ORIGINS="https://${LAN_IP}:${GATEWAY_PORT}"
-    ALLOWED_ORIGINS="${ALLOWED_ORIGINS},https://homeassistant.local:${GATEWAY_PORT}"
-    ALLOWED_ORIGINS="${ALLOWED_ORIGINS},https://homeassistant:${GATEWAY_PORT}"
-  fi
-
-  if [ -n "$GW_PUBLIC_URL" ]; then
-    GW_PUBLIC_ORIGIN="$(python3 - "$GW_PUBLIC_URL" <<'PY'
-import sys
-from urllib.parse import urlparse
-u = (sys.argv[1] or '').strip()
-p = urlparse(u)
-if p.scheme in ('http', 'https') and p.netloc:
-    print(f"{p.scheme}://{p.netloc}", end='')
-PY
-)"
-    if [ -n "$GW_PUBLIC_ORIGIN" ]; then
-      if [ -n "$ALLOWED_ORIGINS" ]; then
-        ALLOWED_ORIGINS="${ALLOWED_ORIGINS},${GW_PUBLIC_ORIGIN}"
-      else
-        ALLOWED_ORIGINS="$GW_PUBLIC_ORIGIN"
-      fi
-    fi
-  fi
-
-  python3 "$HELPER_PATH" set-control-ui-origins "$ALLOWED_ORIGINS" "$GATEWAY_ADDITIONAL_ALLOWED_ORIGINS" "$CONTROLUI_DISABLE_DEVICE_AUTH" || \
-    echo "WARN: Could not set controlUi settings — gateway may reject the Control UI"
-fi
-
-# ------------------------------------------------------------------------------
-# Proxy shim for undici/OpenClaw startup
-# Keep official OpenClaw npm release while enabling HTTP(S)_PROXY support.
-# ------------------------------------------------------------------------------
-OPENCLAW_GLOBAL_NODE_MODULES="$(HOME=/root npm root -g 2>/dev/null || true)"
-if [ -f /usr/local/lib/openclaw-proxy-shim.cjs ]; then
-  if [ -n "${NODE_OPTIONS:-}" ]; then
-    export NODE_OPTIONS="--require /usr/local/lib/openclaw-proxy-shim.cjs ${NODE_OPTIONS}"
-  else
-    export NODE_OPTIONS="--require /usr/local/lib/openclaw-proxy-shim.cjs"
-  fi
-  export OPENCLAW_GLOBAL_NODE_MODULES
-fi
-
-configure_builtin_homeassistant_mcp() {
-  local mcp_name="homeassistant_local"
-  local mcp_payload
-
-  if [ "$ENABLE_BUILTIN_HA_TOOLS" != "true" ] && [ "$ENABLE_BUILTIN_HA_TOOLS" != "1" ]; then
-    if openclaw mcp unset "$mcp_name" >/dev/null 2>&1; then
-      echo "INFO: Removed built-in Home Assistant MCP server definition."
-    fi
-    return 0
-  fi
-
-  if [ -z "${SUPERVISOR_TOKEN:-}" ]; then
-    echo "WARN: SUPERVISOR_TOKEN is unavailable; built-in Home Assistant tools cannot be registered."
-    return 0
-  fi
-
-  if [ ! -f /opt/homeops-ai/ha_mcp_server.cjs ]; then
-    echo "WARN: Built-in Home Assistant MCP server script is missing; skipping registration."
-    return 0
-  fi
-
-  mcp_payload="$(jq -cn \
-    --arg command "node" \
-    --arg script "/opt/homeops-ai/ha_mcp_server.cjs" \
-    '{command: $command, args: [$script]}'
-  )"
-
-  if openclaw mcp set "$mcp_name" "$mcp_payload" >/dev/null 2>&1; then
-    echo "INFO: Registered built-in Home Assistant MCP server '$mcp_name' (service calls: $ENABLE_HA_SERVICE_CALLS)."
-  else
-    echo "WARN: Failed to register built-in Home Assistant MCP server '$mcp_name'."
-  fi
-}
-
-# ------------------------------------------------------------------------------
-# Built-in Home Assistant tool layer (preferred)
-# Registers a local MCP server backed by the HA Supervisor/Core APIs so OpenClaw
-# can see live entities, devices, services, automations, and history without a
-# separate user-managed token flow.
-# ------------------------------------------------------------------------------
-configure_builtin_homeassistant_mcp
-
-# ------------------------------------------------------------------------------
-# Legacy external MCP auto-configuration (compatibility path)
-# Keeps the old long-lived-token/manual-MCP workflow available only when the
-# built-in HA tool layer is disabled. This avoids duplicate Home Assistant tool
-# surfaces in normal installs.
-# ------------------------------------------------------------------------------
-if [ "$ENABLE_BUILTIN_HA_TOOLS" = "true" ] || [ "$ENABLE_BUILTIN_HA_TOOLS" = "1" ]; then
-  if [ "$AUTO_CONFIGURE_MCP" = "true" ]; then
-    echo "INFO: auto_configure_mcp is ignored because the built-in Home Assistant tool layer is enabled."
-  fi
-elif [ "$AUTO_CONFIGURE_MCP" = "true" ] && [ -n "$HA_TOKEN" ]; then
-  echo "WARN: Legacy external Home Assistant MCP auto-configuration is still enabled."
-  echo "WARN: This path is deprecated; prefer enable_builtin_ha_tools=true."
-  if command -v mcporter >/dev/null 2>&1; then
-    if [ -n "${SUPERVISOR_TOKEN:-}" ]; then
-      MCP_HA_URL="http://supervisor/core/api/mcp"
-    else
-      MCP_HA_URL="http://localhost:8123/api/mcp"
-    fi
-    MCP_FLAG="/config/.openclaw/.mcp_ha_configured"
-    MCP_TOKEN_HASH=$(printf '%s' "$HA_TOKEN" | sha256sum | cut -d' ' -f1)
-
-    if [ -f "$MCP_FLAG" ] && [ "$(cat "$MCP_FLAG" 2>/dev/null)" = "$MCP_TOKEN_HASH" ]; then
-      echo "INFO: MCP Home Assistant server already configured (token unchanged)"
-    else
-      echo "INFO: Configuring legacy MCP for Home Assistant at $MCP_HA_URL ..."
-      mcporter config remove HA 2>/dev/null || true
-
-      if mcporter config add HA "$MCP_HA_URL" \
-          --header "Authorization=Bearer $HA_TOKEN" \
-          --scope home 2>&1; then
-        printf '%s' "$MCP_TOKEN_HASH" > "$MCP_FLAG"
-        echo "INFO: MCP server 'HA' registered — OpenClaw can now control Home Assistant"
-      else
-        echo "WARN: MCP auto-configuration failed. Configure manually in the terminal:"
-        echo "WARN:   mcporter config add HA \"$MCP_HA_URL\" --header \"Authorization=Bearer YOUR_TOKEN\" --scope home"
-      fi
-    fi
-  else
-    echo "INFO: mcporter not available; skipping legacy MCP auto-configuration (run 'openclaw onboard' first)"
-  fi
-elif [ "$AUTO_CONFIGURE_MCP" = "true" ] && [ -z "$HA_TOKEN" ]; then
-  echo "INFO: MCP auto-configure enabled but homeassistant_token not set — skipping"
-  echo "INFO: To auto-configure, set homeassistant_token in add-on Configuration, then restart"
-fi
-
-start_openclaw_runtime() {
-  echo "Starting ${SELF_ADDON_NAME} runtime (openclaw)..."
-  mkdir -p "$RUNTIME_WRAPPER_LOG_DIR"
-  if [ "$GATEWAY_MODE" = "remote" ]; then
-    # Remote mode: do NOT start a local gateway service.
-    # Start a node/client host that connects to the configured remote gateway URL.
-    # Use $GATEWAY_REMOTE_URL directly from add-on options — do NOT read back via
-    # 'openclaw config get' which can time out at startup or return redacted values.
-    REMOTE_URL="$GATEWAY_REMOTE_URL"
-    if [ -z "$REMOTE_URL" ]; then
-      echo "ERROR: gateway_mode=remote but gateway_remote_url is not set in add-on options"
-      echo "ERROR: Set gateway_remote_url in add-on Configuration (e.g. ws://192.168.1.10:18790), then restart"
-      return 1
-    fi
-
-    NODE_HOST=""
-    NODE_PORT=""
-    NODE_TLS_FLAG=""
-    if ! eval "$(parse_remote_gateway_url "$REMOTE_URL")"; then
-      echo "ERROR: Failed to parse gateway.remote.url: $REMOTE_URL"
-      return 1
-    fi
-
-    echo "INFO: gateway_mode=remote detected; starting node host to $NODE_HOST:$NODE_PORT ${NODE_TLS_FLAG}"
-    echo "INFO: Managed runtime launch sets OPENCLAW_NO_RESPAWN=1 so the add-on supervises a single stable process."
-    # shellcheck disable=SC2086
-    nohup env OPENCLAW_NO_RESPAWN=1 openclaw node run --host "$NODE_HOST" --port "$NODE_PORT" $NODE_TLS_FLAG \
-      < /dev/null >>"$RUNTIME_WRAPPER_LOG_FILE" 2>&1 &
-  else
-    clear_stale_gateway_listener
-    echo "INFO: Managed gateway launch sets OPENCLAW_NO_RESPAWN=1 so the add-on supervises a single stable process."
-    nohup env OPENCLAW_NO_RESPAWN=1 openclaw gateway < /dev/null >>"$RUNTIME_WRAPPER_LOG_FILE" 2>&1 &
-  fi
-  GW_PID=$!
-  echo "INFO: Runtime wrapper log: ${RUNTIME_WRAPPER_LOG_FILE}"
-  return 0
-}
-
-# --- Loopback relay helpers for tailnet bind mode (issue #90) ---
-# When gateway.bind=tailnet the gateway only listens on the Tailscale IP.
-# The local CLI always tries ws://127.0.0.1:PORT and fails with
-# "Gateway not running" even though the gateway is healthy.
-# These functions start/stop a lightweight Node.js TCP relay on
-# 127.0.0.1:PORT -> TAILSCALE_IP:PORT so terminal CLI commands work.
-# IMPORTANT: stop_gw_relay must be called before restarting the gateway;
-# otherwise the relay holds the loopback port and the new gateway instance
-# detects it as "already listening" and exits with code 1.
-start_gw_relay() {
-  if [ "$GATEWAY_BIND_MODE" != "tailnet" ]; then
-    return 0
-  fi
-  local ts_ip
-  ts_ip=$(ip -4 addr show tailscale0 2>/dev/null \
-    | awk '/inet /{gsub(/\/.*/,"",$2); print $2; exit}' || true)
-  if [[ "${ts_ip:-}" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-    echo "INFO: Starting loopback relay for tailnet gateway (127.0.0.1:${GATEWAY_PORT} -> ${ts_ip}:${GATEWAY_PORT})"
-    node -e "
-const net = require('net');
-const TARGET_HOST = '${ts_ip}';
-const TARGET_PORT = ${GATEWAY_PORT};
-const server = net.createServer(function(c) {
-  const t = net.createConnection(TARGET_PORT, TARGET_HOST);
-  c.pipe(t); t.pipe(c);
-  c.on('error', function() { t.destroy(); });
-  t.on('error', function() { c.destroy(); });
-});
-server.listen(TARGET_PORT, '127.0.0.1');" &
-    GW_RELAY_PID=$!
-    echo "INFO: Loopback relay started (PID ${GW_RELAY_PID})"
-  else
-    echo "WARN: tailnet bind mode active but Tailscale IP not found on tailscale0 interface."
-    echo "WARN: Terminal CLI may show gateway as unreachable. Ensure Tailscale is running and restart."
-  fi
-}
-
-stop_gw_relay() {
-  if [ -n "${GW_RELAY_PID}" ] && kill -0 "${GW_RELAY_PID}" >/dev/null 2>&1; then
-    kill -TERM "${GW_RELAY_PID}" >/dev/null 2>&1 || true
-    wait "${GW_RELAY_PID}" 2>/dev/null || true
-    GW_RELAY_PID=""
-  fi
-}
-
-auto_approve_local_pairings_once() {
-  local devices_json request_ids request_id approved_count=0
-
-  if [ "$GATEWAY_MODE" != "local" ]; then
-    return 0
-  fi
-
-  case "$GATEWAY_BIND_MODE" in
-    loopback)
-      ;;
-    *)
-      if [ "$ENABLE_HTTPS_PROXY" != "true" ] && [ "$ACCESS_MODE" != "local_only" ]; then
-        return 0
-      fi
-      ;;
-  esac
-
-  devices_json="$(openclaw devices list --json 2>/dev/null || true)"
-  if [ -z "$devices_json" ]; then
-    return 0
-  fi
-
-  request_ids="$(printf '%s' "$devices_json" | jq -r '
-    .pending[]?
-    | select(
-        (
-          (.remoteIp // "") == "127.0.0.1"
-          or (.remoteIp // "") == "::1"
-          or ((.remoteIp // "") | startswith("::ffff:127."))
-          or (
-            (.remoteIp // "") == ""
-            and (
-              (.clientId // "") == "cli"
-              or (.clientMode // "") == "cli"
-              or (.clientId // "") == "openclaw-control-ui"
-              or (.clientId // "") == "clawdbot-control-ui"
-              or (.clientMode // "") == "webchat"
-            )
-          )
-        )
-        and (
-          (.role // "") == "operator"
-          or ((.roles // []) | index("operator"))
-        )
-      )
-    | .requestId
-  ' 2>/dev/null)" || true
-
-  if [ -z "$request_ids" ]; then
-    return 0
-  fi
-
-  while IFS= read -r request_id; do
-    [ -n "$request_id" ] || continue
-    if openclaw devices approve "$request_id" >/dev/null 2>&1; then
-      approved_count=$((approved_count + 1))
-      echo "INFO: Auto-approved same-host OpenClaw device pairing request ${request_id}."
-    fi
-  done <<EOF
-$request_ids
-EOF
-
-  if [ "$approved_count" -gt 0 ]; then
-    echo "INFO: Auto-approved ${approved_count} local device pairing request(s) for CLI/TUI access."
-  fi
-}
-
-start_local_pairing_approver() {
-  if [ "$GATEWAY_MODE" != "local" ]; then
-    return 0
-  fi
-
-  auto_approve_local_pairings_once || true
-
-  (
-    while true; do
-      sleep 8
-      auto_approve_local_pairings_once || true
-    done
-  ) &
-  LOCAL_PAIRING_APPROVER_PID=$!
-}
-
-start_dashboard_api() {
-  local api_port="${DASHBOARD_API_PORT:-$DEFAULT_DASHBOARD_API_PORT}"
-  if [ ! -f /dashboard_api.py ]; then
-    echo "WARN: dashboard_api.py not found; operator file editor will be unavailable"
-    return 0
-  fi
-
-  export OPENCLAW_DASHBOARD_API_PORT="$api_port"
-  python3 /dashboard_api.py &
-  DASHBOARD_API_PID=$!
-  sleep 1
-  if kill -0 "$DASHBOARD_API_PID" >/dev/null 2>&1; then
-    echo "INFO: Dashboard API started on 127.0.0.1:${api_port}"
-  else
-    echo "WARN: Dashboard API failed to start; file/schedule widgets may be unavailable"
-    DASHBOARD_API_PID=""
-  fi
-}
-
-clear_stale_gateway_listener() {
-  local listener_pid=""
-  local _i=0
-
-  if [ "$GATEWAY_MODE" = "remote" ]; then
-    return 0
-  fi
-
-  listener_pid="$(
-    ss -tlnp 2>/dev/null \
-      | awk -v port=":${GATEWAY_INTERNAL_PORT} " '
-          $0 ~ port {
-            if (match($0, /pid=[0-9]+/)) {
-              print substr($0, RSTART + 4, RLENGTH - 4)
-              exit
-            }
-          }
-        ' \
-      || true
-  )"
-
-  if [ -z "$listener_pid" ]; then
-    return 0
-  fi
-
-  echo "WARN: Gateway port ${GATEWAY_INTERNAL_PORT} is already occupied by PID ${listener_pid}; clearing stale listener before startup."
-  kill -TERM "$listener_pid" >/dev/null 2>&1 || true
-
-  for _i in 1 2 3 4 5; do
+    export OPENCLAW_DASHBOARD_API_PORT="$api_port"
+    export HERMES_DASHBOARD_API_PORT="$api_port"
+    python3 /dashboard_api.py &
+    DASHBOARD_API_PID=$!
     sleep 1
-    if ! ss -tlnp 2>/dev/null | grep -q ":${GATEWAY_INTERNAL_PORT} "; then
-      return 0
+    if kill -0 "$DASHBOARD_API_PID" >/dev/null 2>&1; then
+      echo "INFO: Dashboard API started on 127.0.0.1:${api_port}"
+    else
+      echo "WARN: Dashboard API failed to start; file/schedule widgets may be unavailable"
+      DASHBOARD_API_PID=""
     fi
-  done
+  }
 
-  echo "WARN: Gateway listener on ${GATEWAY_INTERNAL_PORT} did not exit after SIGTERM; forcing shutdown."
-  kill -KILL "$listener_pid" >/dev/null 2>&1 || true
-  sleep 1
-}
-
-# Find a running gateway daemon's PID using multiple detection methods.
-# Used by the supervisor loop to detect self-restarts (SIGUSR1) without
-# spawning duplicate gateway instances that collide on the port.
-#
-# Three tiers, tried in order of reliability:
-#   1. Port ownership via `ss -tlnp` — authoritative, but only works once
-#      the daemon has bound the port (can take 20+ s on Pi hardware).
-#   2. Process title via `pgrep -f openclaw-gateway` — works after Node.js
-#      sets process.title, which also happens late during init.
-#   3. /proc cmdline scan — catches the daemon IMMEDIATELY after fork,
-#      before title or port bind, by matching "openclaw" in the cmdline.
-#      Excludes known PIDs (nginx, ttyd, relay, our shell, old GW_PID).
-#
-# Returns the PID on stdout and exit 0, or exits with code 1 if nothing found.
-find_gateway_daemon_pid() {
-  local pid=""
-
-  # Tier 1: port ownership (authoritative once port is bound)
-  pid=$(ss -tlnp 2>/dev/null \
-    | grep ":${GATEWAY_INTERNAL_PORT} " \
-    | sed -n 's/.*pid=\([0-9]*\).*/\1/p' \
-    | head -1)
-  [ -n "$pid" ] && { echo "$pid"; return 0; }
-
-  # Tier 2: process title (after Node sets process.title)
-  pid=$(pgrep -f "openclaw-gateway" 2>/dev/null | head -1)
-  [ -n "$pid" ] && { echo "$pid"; return 0; }
-
-  # Tier 3: scan /proc for any openclaw process we don't already know about.
-  # The daemon's cmdline (e.g. node /usr/.../openclaw/...) contains "openclaw"
-  # from the moment it is forked, even before process.title is set.
-  local known=" ${NGINX_PID:-0} ${TTYD_PID:-0} ${GW_RELAY_PID:-0} ${GW_PID:-0} $$ "
-  local f cand
-  for f in /proc/[0-9]*/cmdline; do
-    [ -r "$f" ] || continue
-    if tr '\0' ' ' < "$f" 2>/dev/null | grep -q "openclaw"; then
-      cand="${f#/proc/}"
-      cand="${cand%%/*}"
-      case "$known" in *" $cand "*) continue ;; esac
-      echo "$cand"
-      return 0
-    fi
-  done
-
-  return 1
-}
-
-compute_runtime_config_fingerprint() {
-  python3 - "$OPENCLAW_CONFIG_PATH" <<'PY'
-import hashlib
-import json
-import sys
-from pathlib import Path
-
-cfg_path = Path(sys.argv[1])
-if not cfg_path.exists():
-    raise SystemExit(0)
-
-try:
-    data = json.loads(cfg_path.read_text(encoding="utf-8"))
-except Exception:
-    raise SystemExit(0)
-
-gateway = data.get("gateway") or {}
-payload = json.dumps(gateway, sort_keys=True, separators=(",", ":"))
-print(hashlib.sha256(payload.encode("utf-8")).hexdigest(), end="")
-PY
-}
-
-request_managed_runtime_restart() {
-  local reason="$1"
-  local target_pid=""
-
-  if [ -z "$target_pid" ] && [ -n "${GW_PID:-}" ] && kill -0 "${GW_PID}" >/dev/null 2>&1; then
-    target_pid="$GW_PID"
-  fi
-
-  if [ -z "$target_pid" ] && [ "$GATEWAY_MODE" = "remote" ]; then
-    target_pid="$(pgrep -f "openclaw.*node.*run" 2>/dev/null | head -1 || true)"
-  elif [ -z "$target_pid" ]; then
-    target_pid="$(find_gateway_daemon_pid 2>/dev/null || true)"
-  fi
-
-  if [ -n "$target_pid" ] && kill -0 "$target_pid" >/dev/null 2>&1; then
-    printf '%s\n' "$reason" > "$RUNTIME_RESTART_REQUEST_FILE"
-    echo "INFO: Managed OpenClaw runtime restart requested (${reason}); signalling PID ${target_pid}."
-    kill -TERM "$target_pid" >/dev/null 2>&1 || true
-    return 0
-  fi
-
-  echo "INFO: OpenClaw config changed (${reason}) but no active runtime PID was found to recycle."
-  return 1
-}
-
-start_runtime_config_watcher() {
-  local initial_fingerprint=""
-
-  initial_fingerprint="$(compute_runtime_config_fingerprint 2>/dev/null || true)"
-
-  (
-    local last_fingerprint="$initial_fingerprint"
-    local pending_change=false
-    local pending_reason="gateway-config-changed"
-    local last_change_ts=0
-    local current_fingerprint=""
-    local now=0
-
-    while true; do
-      sleep 4
-
-      if [ "$SHUTTING_DOWN" = "true" ]; then
-        exit 0
-      fi
-
-      current_fingerprint="$(compute_runtime_config_fingerprint 2>/dev/null || true)"
-      [ -n "$current_fingerprint" ] || continue
-
-      if [ -z "$last_fingerprint" ]; then
-        last_fingerprint="$current_fingerprint"
-        continue
-      fi
-
-      if [ "$current_fingerprint" != "$last_fingerprint" ]; then
-        last_fingerprint="$current_fingerprint"
-        pending_change=true
-        last_change_ts=$(date +%s)
-      fi
-
-      if [ "$pending_change" != "true" ]; then
-        continue
-      fi
-
-      if [ -f "$MANAGED_COMMAND_ACTIVE_FILE" ]; then
-        continue
-      fi
-
-      now=$(date +%s)
-      if [ $((now - last_change_ts)) -lt 8 ]; then
-        continue
-      fi
-
-      if request_managed_runtime_restart "$pending_reason"; then
-        pending_change=false
-      fi
-    done
-  ) &
-  CONFIG_WATCHER_PID=$!
-}
-
-if ! start_openclaw_runtime; then
-  exit 1
+  start_hermes_runtime || true
+  start_dashboard_api || true
 fi
-
-start_gw_relay
-start_local_pairing_approver
-start_dashboard_api
-start_runtime_config_watcher
 
 # Start web terminal (optional)
-TTYD_PID_FILE="/var/run/openclaw-ttyd.pid"
+TTYD_PID_FILE="/var/run/hermes-ttyd.pid"
 
 # Clean up stale ttyd process from previous run using PID file
 if [ -f "$TTYD_PID_FILE" ]; then
@@ -1771,7 +1106,7 @@ fi
 
 # Start ingress reverse proxy (nginx). This provides the add-on UI inside HA.
 # Token is injected server-side; never put it in the browser URL.
-NGINX_PID_FILE="/var/run/openclaw-nginx.pid"
+NGINX_PID_FILE="/var/run/hermes-nginx.pid"
 
 # Clean up stale nginx process from previous run (e.g., after crash/unclean restart)
 if [ -f "$NGINX_PID_FILE" ]; then
@@ -1795,11 +1130,11 @@ if command -v ss >/dev/null 2>&1 && ss -tlnp 2>/dev/null | grep -q ":${DEFAULT_I
 fi
 
 # Render nginx config from template.
-# The gateway token is NOT managed by the add-on; OpenClaw will generate/store it.
+# The gateway token is NOT managed by the add-on; Hermes will generate/store it.
 # Read directly from config file — the CLI redacts secrets since v2026.2.22+.
 GW_TOKEN="$(python3 -c "
 import json, os
-p = os.environ.get('OPENCLAW_CONFIG_PATH', '/config/.openclaw/openclaw.json')
+p = os.environ.get('OPENCLAW_CONFIG_PATH', '/config/.hermes/hermes.json')
 print(json.load(open(p)).get('gateway',{}).get('auth',{}).get('token',''), end='')
 " 2>/dev/null || true)"
 
@@ -1841,30 +1176,35 @@ else
   echo "WARN: nginx failed to start (PID $NGINX_PID exited); ingress UI may be unavailable"
 fi
 
-# Keep the add-on alive even if the managed OpenClaw runtime exits.
-# Important: we launch the runtime with OPENCLAW_NO_RESPAWN=1 so OpenClaw does
+# Keep the add-on alive even if the managed Hermes runtime exits.
+# Important: we launch the runtime with Hermes gateway does
 # not detach into a fresh PID under the add-on supervisor. The wrapper now owns
 # one stable child process and simply restarts it if it exits.
 while true; do
   GW_EXIT_CODE=0
-  wait "${GW_PID}" 2>/dev/null || GW_EXIT_CODE=$?
+  if [ -n "${GW_PID:-}" ]; then
+    wait "${GW_PID}" 2>/dev/null || GW_EXIT_CODE=$?
+  else
+    sleep 5
+    GW_EXIT_CODE=127
+  fi
 
   if [ "$SHUTTING_DOWN" = "true" ]; then
     break
   fi
 
   if [ "$GW_EXIT_CODE" -ne 0 ] && [ -f "$RUNTIME_WRAPPER_LOG_FILE" ]; then
-    echo "WARN: Managed OpenClaw runtime log tail after exit:"
+    echo "WARN: Managed Hermes runtime log tail after exit:"
     tail -n 40 "$RUNTIME_WRAPPER_LOG_FILE" 2>/dev/null || true
   fi
 
   if [ -f "$RUNTIME_RESTART_REQUEST_FILE" ]; then
     RESTART_REASON="$(cat "$RUNTIME_RESTART_REQUEST_FILE" 2>/dev/null || echo "managed-request")"
     rm -f "$RUNTIME_RESTART_REQUEST_FILE"
-    echo "INFO: OpenClaw runtime exited for a managed restart (${RESTART_REASON}). Restarting in 1s..."
+    echo "INFO: Hermes runtime exited for a managed restart (${RESTART_REASON}). Restarting in 1s..."
     sleep 1
   else
-    echo "WARN: OpenClaw runtime exited with code ${GW_EXIT_CODE}. Restarting in 2s..."
+    echo "WARN: Hermes runtime exited with code ${GW_EXIT_CODE}. Restarting in 2s..."
     sleep 2
   fi
 
@@ -1873,8 +1213,8 @@ while true; do
   # to detect the port as occupied and exit with code 1, re-entering the loop.
   stop_gw_relay
 
-  if ! start_openclaw_runtime; then
-    echo "ERROR: Failed to restart OpenClaw runtime; retrying in 5s..."
+  if ! start_hermes_runtime; then
+    echo "ERROR: Failed to restart Hermes runtime; retrying in 5s..."
     sleep 5
   else
     rm -f "$RUNTIME_RESTART_REQUEST_FILE"
