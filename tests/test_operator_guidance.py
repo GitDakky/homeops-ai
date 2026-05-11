@@ -47,6 +47,16 @@ class OperatorGuidanceTests(unittest.TestCase):
         self.assertNotIn('href="./dashboard/"', LANDING_TEMPLATE)
         self.assertNotIn('href="./terminal/" target="_self">Open Terminal</a>', LANDING_TEMPLATE)
 
+    def test_operations_board_is_sessions_first_and_terse(self) -> None:
+        self.assertIn('data-tab-target="runtime">Runtime</button>', LANDING_TEMPLATE)
+        self.assertIn('<div class="eyebrow">Operations</div>', LANDING_TEMPLATE)
+        self.assertIn('<h3>Sessions and controls</h3>', LANDING_TEMPLATE)
+        self.assertIn('id="sessionGrid"', LANDING_TEMPLATE)
+        self.assertIn('renderSessions(payload.sessions || {});', LANDING_TEMPLATE)
+        self.assertIn('data-copy-command', LANDING_TEMPLATE)
+        self.assertNotIn('Cron and heartbeat visibility', LANDING_TEMPLATE)
+        self.assertNotIn('This section reflects live Hermes scheduler state', LANDING_TEMPLATE)
+
     def test_docs_match_gateway_public_url_override_guidance(self) -> None:
         self.assertIn(
             "In most local installs you can leave `gateway_public_url` empty.",

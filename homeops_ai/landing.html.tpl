@@ -989,32 +989,36 @@ SSL tab:  Request a new SSL certificate</pre>
       <section class="tab-panel" id="tab-runtime" data-tab-panel="runtime" role="tabpanel">
         <section class="panel ops-panel">
         <div class="ops-head">
-          <div class="eyebrow">Automation Runtime</div>
-          <h3>Cron and heartbeat visibility</h3>
-          <p>
-            This section reflects live Hermes scheduler state so you can see what jobs exist,
-            whether the cron scheduler is healthy, and what the latest heartbeat recorded.
-          </p>
+          <div class="eyebrow">Operations</div>
+          <h3>Sessions and controls</h3>
+          <p>Resume Hermes sessions, copy exact IDs, and check runtime state. No filler.</p>
         </div>
         <div class="stack">
           <div class="stack-card">
-            <h4>Scheduler summary</h4>
-            <div class="pill-row" id="scheduleSummary">
-              <span class="pill">Loading</span>
+            <h4>Quick actions</h4>
+            <div class="action-row">
+              <button class="btn secondary" id="refreshOpsBtn" type="button">Refresh</button>
+              <button class="btn secondary" id="copyDoctorBtn" type="button">Copy doctor command</button>
+              <button class="btn secondary" id="copyCronBtn" type="button">Copy cron status command</button>
             </div>
           </div>
           <div class="stack-card">
-            <h4>Cron jobs</h4>
-            <pre id="cronJobsBlock">Loading live cron state...</pre>
+            <h4>Sessions</h4>
+            <div class="pill-row" id="sessionSummary"><span class="pill">Loading</span></div>
+            <div class="integration-grid" id="sessionGrid">
+              <div class="integration-card"><b>Loading sessions...</b></div>
+            </div>
           </div>
           <div class="stack-card">
-            <h4>Recent cron runs</h4>
-            <pre id="cronRunsBlock">Loading recent run history...</pre>
+            <h4>Runtime</h4>
+            <div class="pill-row" id="scheduleSummary"><span class="pill">Loading</span></div>
           </div>
-          <div class="stack-card">
-            <h4>Last heartbeat</h4>
-            <pre id="heartbeatBlock">Loading last heartbeat...</pre>
-          </div>
+          <details class="stack-card">
+            <summary>Cron detail</summary>
+            <pre id="cronJobsBlock">Loading cron jobs...</pre>
+            <pre id="cronRunsBlock">Loading cron runs...</pre>
+            <pre id="heartbeatBlock">Loading heartbeat...</pre>
+          </details>
         </div>
         </section>
       </section>
@@ -1504,6 +1508,60 @@ SSL tab:  Request a new SSL certificate</pre>
       await loadDashboardState();
     }
 
+    async function copyText(value, label) {
+      try {
+        await navigator.clipboard.writeText(value);
+        setBanner('successBanner', `${label} copied.`, false);
+        setTimeout(() => setBanner('successBanner', '', true), 2500);
+      } catch {
+        window.prompt(`Copy ${label}:`, value);
+      }
+    }
+
+    function formatSessionUpdated(session) {
+      if (session.lastActive) return session.lastActive;
+      if (!session.updatedAt) return 'unknown';
+      try { return new Date(session.updatedAt).toLocaleString(); } catch { return session.updatedAt; }
+    }
+
+    function renderSessions(sessionsPayload) {
+      const grid = $('sessionGrid');
+      const summary = $('sessionSummary');
+      const sessions = sessionsPayload?.data || [];
+      const source = sessionsPayload?.source || 'unknown';
+      const error = sessionsPayload?.error || '';
+      summary.innerHTML = `
+        <span class="pill ${sessions.length ? 'good' : 'warn'}">${sessions.length} session${sessions.length === 1 ? '' : 's'}</span>
+        <span class="pill">${escapeHtml(source)}</span>
+        ${error ? `<span class="pill warn">${escapeHtml(error)}</span>` : ''}`;
+      if (!sessions.length) {
+        grid.innerHTML = '<div class="integration-card"><b>No sessions found</b><div class="meta">Check /config/.hermes/state.db or run hermes sessions list in the terminal.</div></div>';
+        return;
+      }
+      grid.innerHTML = sessions.map(session => {
+        const id = escapeHtml(session.id || '');
+        const title = escapeHtml(session.title || '—');
+        const meta = [
+          session.source ? `source ${escapeHtml(session.source)}` : '',
+          session.model ? escapeHtml(session.model) : '',
+          session.messageCount !== undefined ? `${escapeHtml(String(session.messageCount))} messages` : '',
+          session.toolCallCount !== undefined ? `${escapeHtml(String(session.toolCallCount))} tools` : '',
+        ].filter(Boolean).join(' · ');
+        const resume = escapeHtml(session.resumeCommand || `hermes --resume ${session.id || ''}`);
+        return `
+          <div class="integration-card session-card">
+            <b>${title}</b>
+            <div class="meta"><code>${id}</code></div>
+            <div class="meta">${escapeHtml(formatSessionUpdated(session))}${meta ? ` · ${meta}` : ''}</div>
+            ${session.preview ? `<div class="meta">${escapeHtml(session.preview)}</div>` : ''}
+            <div class="action-row">
+              <button class="btn secondary" type="button" data-copy-session="${id}">Copy ID</button>
+              <button class="btn primary" type="button" data-copy-command="${resume}">Copy resume</button>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
     function schedulerPills(schedule) {
       const pills = [];
       const cronStatus = schedule?.cronStatus || {};
@@ -1642,6 +1700,7 @@ SSL tab:  Request a new SSL certificate</pre>
         const payload = await fetchDashboardJson('/state');
         lastDashboardState = payload;
         renderLastState();
+        renderSessions(payload.sessions || {});
         $('scheduleSummary').innerHTML = schedulerPills(payload.schedule || {});
         $('cronJobsBlock').textContent = prettyJson(payload.schedule?.cronJobs?.error || payload.schedule?.cronJobs?.data);
         $('cronRunsBlock').textContent = prettyJson(payload.schedule?.cronRuns?.error || payload.schedule?.cronRuns?.data);
@@ -1657,6 +1716,7 @@ SSL tab:  Request a new SSL certificate</pre>
         $('cronJobsBlock').textContent = 'Dashboard API unavailable.';
         $('cronRunsBlock').textContent = 'Dashboard API unavailable.';
         $('heartbeatBlock').textContent = 'Dashboard API unavailable.';
+        $('sessionGrid').innerHTML = '<div class="integration-card"><b>Sessions unavailable</b><div class="meta">Dashboard API unavailable.</div></div>';
         $('insightGrid').innerHTML = '<div class="integration-card"><b>Insight cards unavailable</b><div class="meta">Dashboard API unavailable.</div></div>';
         $('integrationGrid').innerHTML = '<div class="integration-card"><b>Integration rack unavailable</b><div class="meta">Dashboard API unavailable.</div></div>';
         $('doctorSummaryPills').innerHTML = '<span class="pill off">Unavailable</span>';
@@ -1673,6 +1733,17 @@ SSL tab:  Request a new SSL certificate</pre>
       if (activeFileKey) openDashboardFile(activeFileKey);
     });
     $('saveFileBtn').addEventListener('click', saveDashboardFile);
+    $('refreshOpsBtn')?.addEventListener('click', loadDashboardState);
+    $('copyDoctorBtn')?.addEventListener('click', () => copyText('hermes doctor', 'doctor command'));
+    $('copyCronBtn')?.addEventListener('click', () => copyText('hermes cron status', 'cron command'));
+    document.addEventListener('click', event => {
+      const target = event.target;
+      if (!(target instanceof HTMLElement)) return;
+      const sessionId = target.getAttribute('data-copy-session');
+      if (sessionId) copyText(sessionId, 'session ID');
+      const command = target.getAttribute('data-copy-command');
+      if (command) copyText(command, 'resume command');
+    });
     loadDashboardState();
 
   })();

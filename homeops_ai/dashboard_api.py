@@ -1350,6 +1350,86 @@ def integration_status() -> dict[str, Any]:
     }
 
 
+
+def parse_session_table(output: str, limit: int = 20) -> list[dict[str, Any]]:
+    sessions: list[dict[str, Any]] = []
+    for raw in output.splitlines():
+        line = raw.rstrip()
+        if not line.strip() or line.startswith("Title") or set(line.strip()) <= {"─", "-"}:
+            continue
+        parts = line.rsplit(None, 2)
+        if len(parts) < 3:
+            continue
+        prefix, last_active, session_id = parts
+        if not (session_id.startswith("20") or session_id.startswith("cron_") or session_id.startswith("api-")):
+            continue
+        title = prefix[:32].strip() or "—"
+        preview = prefix[32:].strip()
+        sessions.append({
+            "id": session_id,
+            "title": title,
+            "preview": preview,
+            "lastActive": last_active,
+            "resumeCommand": f"hermes --resume {session_id}",
+        })
+        if len(sessions) >= limit:
+            break
+    return sessions
+
+
+def sessions_from_db(limit: int = 20) -> tuple[list[dict[str, Any]], str | None]:
+    db_path = Path(os.environ.get("HERMES_STATE_DB", "/config/.hermes/state.db"))
+    if not db_path.exists():
+        return [], f"state DB not found: {db_path}"
+    try:
+        with sqlite3.connect(db_path) as con:
+            con.row_factory = sqlite3.Row
+            rows = con.execute(
+                """
+                SELECT id, title, source, model, started_at, ended_at, message_count, tool_call_count
+                FROM sessions
+                ORDER BY COALESCE(ended_at, started_at) DESC
+                LIMIT ?
+                """,
+                (limit,),
+            ).fetchall()
+    except Exception as exc:
+        return [], str(exc)
+
+    sessions: list[dict[str, Any]] = []
+    for row in rows:
+        updated = row["ended_at"] or row["started_at"]
+        updated_iso = ""
+        if updated:
+            try:
+                updated_iso = datetime.fromtimestamp(float(updated), tz=timezone.utc).isoformat()
+            except Exception:
+                updated_iso = ""
+        session_id = str(row["id"] or "")
+        sessions.append({
+            "id": session_id,
+            "title": row["title"] or "—",
+            "source": row["source"] or "",
+            "model": row["model"] or "",
+            "updatedAt": updated_iso,
+            "messageCount": row["message_count"] or 0,
+            "toolCallCount": row["tool_call_count"] or 0,
+            "resumeCommand": f"hermes --resume {session_id}",
+        })
+    return sessions, None
+
+
+def session_state() -> dict[str, Any]:
+    sessions, error = sessions_from_db(limit=24)
+    if sessions:
+        return {"data": sessions, "error": None, "source": "state.db"}
+    output, cli_error = run_text_command(["hermes", "sessions", "list", "--limit", "24"], timeout=5)
+    if output:
+        parsed = parse_session_table(output, limit=24)
+        if parsed:
+            return {"data": parsed, "error": None, "source": "hermes sessions list"}
+    return {"data": [], "error": error or cli_error or "no sessions found", "source": "none"}
+
 def schedule_state() -> dict[str, Any]:
     cron_status, cron_status_error = run_json_command(["hermes", "cron", "status", "--json"])
     cron_jobs, cron_jobs_error = run_json_command(["hermes", "cron", "list", "--json", "--all"])
@@ -1404,6 +1484,7 @@ class Handler(BaseHTTPRequestHandler):
                 "workspaceFiles": workspace_entries(),
                 "skillFiles": skill_entries(),
                 "integrations": integration_status(),
+                "sessions": session_state(),
                 "schedule": schedule,
                 "graph": refresh_graph_snapshot(),
                 "insights": generate_insights(states, options, schedule, states_error=states_error),

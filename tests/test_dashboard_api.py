@@ -19,6 +19,20 @@ def sample_entity(entity_id: str, state: str, *, attributes=None, hours_ago: int
     }
 
 
+
+class DashboardSessionTests(unittest.TestCase):
+    def test_parse_session_table_recognises_hermes_ids(self) -> None:
+        sample = """Title                            Preview                                  Last Active   ID
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────
+Hermes Home Assistant Install    did we install hermes on home assistan   2m ago        20260511_011713_5fb357
+—                                Reply exactly: ok                        yesterday     api-e5866e374e2ea169
+"""
+        sessions = dashboard_api.parse_session_table(sample)
+        self.assertEqual(sessions[0]["id"], "20260511_011713_5fb357")
+        self.assertEqual(sessions[0]["resumeCommand"], "hermes --resume 20260511_011713_5fb357")
+        self.assertEqual(sessions[1]["id"], "api-e5866e374e2ea169")
+
+
 class DashboardInsightTests(unittest.TestCase):
     def test_integration_status_reports_live_home_assistant_config_mount(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:

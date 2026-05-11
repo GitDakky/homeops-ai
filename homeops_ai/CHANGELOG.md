@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.11]
+
+### Changed
+- Replaces the noisy Runtime board with a terse Operations board focused on Hermes sessions, copy/resume commands, and compact runtime status.
+
+### Added
+- Adds recent Hermes session discovery from the Hermes state database, with CLI fallback, using Hermes session IDs such as `20260511_011713_5fb357`.
+
 ## [0.1.10]
 
 ### Fixed
