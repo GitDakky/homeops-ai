@@ -1065,6 +1065,10 @@ else
   export HOME=/config
   export HERMES_HOME=/config/.hermes
   export HERMES_ACCEPT_HOOKS=1
+  # HA add-on base images run s6-overlay as PID 1. Hermes >= v0.18 sees
+  # that and tries to hand `gateway run` to its own s6 slot, which does
+  # not exist in an HA add-on. Force the classic foreground behaviour.
+  export HERMES_GATEWAY_NO_SUPERVISE=1
   export HASS_URL="${HASS_URL:-http://supervisor/core}"
   mkdir -p "$HERMES_HOME" /config/homeops "$RUNTIME_WRAPPER_LOG_DIR"
 
@@ -1123,7 +1127,13 @@ else
     stop_if_listening "$GATEWAY_INTERNAL_PORT" "Hermes gateway"
     (
       cd /config/homeops
-      exec env         HOME=/config         HERMES_HOME=/config/.hermes         HERMES_ACCEPT_HOOKS=1         API_SERVER_ENABLED=true         API_SERVER_HOST=127.0.0.1         API_SERVER_PORT="$GATEWAY_INTERNAL_PORT"         HASS_URL="${HASS_URL:-http://supervisor/core}"         HASS_TOKEN="${HASS_TOKEN:-}"         OPENROUTER_API_KEY="${OPENROUTER_API_KEY:-}"         hermes gateway run
+      # HERMES_GATEWAY_NO_SUPERVISE=1: Hermes >= v0.18 detects s6-overlay
+      # (PID 1 in every HA add-on base image) and redirects `gateway run`
+      # to its OWN s6 service slot (gateway-default), which does not exist
+      # here — our s6 tree belongs to Home Assistant, and run.sh already
+      # supervises the gateway. Without this, the gateway exits 1 with
+      # "no such gateway 'default'" and boot-loops.
+      exec env         HOME=/config         HERMES_HOME=/config/.hermes         HERMES_ACCEPT_HOOKS=1         HERMES_GATEWAY_NO_SUPERVISE=1         API_SERVER_ENABLED=true         API_SERVER_HOST=127.0.0.1         API_SERVER_PORT="$GATEWAY_INTERNAL_PORT"         HASS_URL="${HASS_URL:-http://supervisor/core}"         HASS_TOKEN="${HASS_TOKEN:-}"         OPENROUTER_API_KEY="${OPENROUTER_API_KEY:-}"         hermes gateway run
     ) < /dev/null >>"$RUNTIME_WRAPPER_LOG_FILE" 2>&1 &
     GW_PID=$!
     echo "INFO: Hermes runtime wrapper log: ${RUNTIME_WRAPPER_LOG_FILE}"

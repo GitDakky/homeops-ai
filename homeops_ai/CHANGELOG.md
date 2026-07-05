@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.2.2]
+
+### Fixed
+- **Gateway boot loop on Hermes v0.18** — Hermes v0.18 auto-detects s6-overlay (PID 1 in every Home Assistant add-on base image) and redirects `hermes gateway run` to its own s6 service slot, which does not exist inside an HA add-on (`no such gateway 'default'`, exit 1, restart loop). The add-on now exports `HERMES_GATEWAY_NO_SUPERVISE=1` so the gateway runs in classic foreground mode under the add-on's own supervisor, as before.
+
 ## [0.2.1]
 
 ### Changed
