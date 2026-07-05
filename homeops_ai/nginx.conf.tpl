@@ -16,6 +16,15 @@ http {
   sendfile        on;
   keepalive_timeout  65;
 
+  # Normalise HA's X-Ingress-Path: some Supervisor versions send it with a
+  # trailing slash. Concatenating "/dashboard" onto that yields a double
+  # slash, which Hermes' X-Forwarded-Prefix validator rejects — the SPA
+  # then falls back to root-relative asset URLs and renders a blank page.
+  map $http_x_ingress_path $ingress_prefix {
+    default "";
+    "~^(?<p>.+?)/*$" $p;
+  }
+
   # Ingress note: keep redirects relative so we stay under HA Ingress.
 
   server {
@@ -45,9 +54,13 @@ http {
 
     # Landing page (shown inside HA Ingress)
     # Served as a real HTML file to avoid fragile quoting inside nginx.conf.
+    # no-cache: browsers must revalidate on every load so add-on updates
+    # are visible immediately (stale operator consoles caused repeated
+    # "still shows old version" confusion).
     location = / {
       root /etc/nginx/html;
       default_type text/html;
+      add_header Cache-Control "no-cache, must-revalidate";
       try_files /index.html =404;
     }
 
@@ -70,8 +83,9 @@ http {
       proxy_set_header Host 127.0.0.1:__HERMES_DASHBOARD_PORT__;
       # Let the dashboard reconstruct prefixed URLs under HA Ingress
       # (assets, redirects). HA supplies the ingress prefix in
-      # X-Ingress-Path; the dashboard honours X-Forwarded-Prefix.
-      proxy_set_header X-Forwarded-Prefix "$http_x_ingress_path/dashboard";
+      # X-Ingress-Path (normalised above to strip trailing slashes);
+      # the dashboard honours X-Forwarded-Prefix.
+      proxy_set_header X-Forwarded-Prefix "$ingress_prefix/dashboard";
       proxy_set_header X-Real-IP $remote_addr;
       proxy_set_header X-Forwarded-For $remote_addr;
       proxy_set_header X-Forwarded-Proto $scheme;

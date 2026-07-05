@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.2.5]
+
+### Fixed
+- **Blank dashboard page under HA Ingress** — Home Assistant sends `X-Ingress-Path` with a trailing slash on some Supervisor versions. Concatenating `/dashboard` produced a double-slash prefix that Hermes' `X-Forwarded-Prefix` validator rejected, so the SPA fell back to root-relative asset URLs and rendered blank. nginx now normalises the ingress path (strips trailing slashes) before building the prefix.
+- **Stale operator console after updates** — the landing page is now served with `Cache-Control: no-cache`, so browsers revalidate on every load and add-on updates are visible immediately instead of showing a cached page from a previous version.
+
 ## [0.2.4]
 
 ### Fixed
