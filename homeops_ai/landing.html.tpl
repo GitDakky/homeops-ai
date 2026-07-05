@@ -1629,6 +1629,8 @@ SSL tab:  Request a new SSL certificate</pre>
       cards.push(buildCard('GitHub Issues', !!data?.githubIssues?.configured, `Repo: <code>${escapeHtml(data?.githubIssues?.repo || 'GitDakky/homeops-ai')}</code><br>Command: <code>${escapeHtml(data?.githubIssues?.command || 'homeops-report-issue')}</code><br>Secret path: <code>${escapeHtml(data?.githubIssues?.secretPath || '')}</code>`));
       cards.push(buildCard('MQTT / HiveMQ', !!data?.mqtt?.configured, `Broker: <code>${escapeHtml(data?.mqtt?.brokerUrl || 'unset')}</code><br>Username: ${data?.mqtt?.usernameConfigured ? 'configured' : 'unset'}<br>Password: ${data?.mqtt?.passwordConfigured ? 'configured' : 'unset'}`));
       cards.push(buildCard('BACnet Scout', !!data?.bacnet?.configured, escapeHtml(data?.bacnet?.notes || 'Opt-in only.')));
+      cards.push(buildCard('Temporal', !!data?.temporal?.configured, `Address: <code>${escapeHtml(data?.temporal?.address || 'unset')}</code><br>Namespace: <code>${escapeHtml(data?.temporal?.namespace || 'default')}</code> · Task queue: <code>${escapeHtml(data?.temporal?.taskQueue || 'homeops')}</code><br>API key: ${data?.temporal?.apiKeyConfigured ? 'configured' : 'unset'} · mTLS: ${data?.temporal?.tlsConfigured ? 'configured' : 'unset'}`));
+      cards.push(buildCard('Airflow', !!data?.airflow?.configured, `API URL: <code>${escapeHtml(data?.airflow?.apiUrl || 'unset')}</code><br>Basic auth: ${data?.airflow?.usernameConfigured ? 'configured' : 'unset'} · Token: ${data?.airflow?.tokenConfigured ? 'configured' : 'unset'}`));
       cards.push(buildCard('Home Assistant MCP', !!data?.homeAssistantMcp?.configured, `Token path: <code>${escapeHtml(data?.homeAssistantMcp?.tokenPath || '')}</code>`));
       cards.push(`
         <div class="integration-card">

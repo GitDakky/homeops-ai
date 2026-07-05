@@ -1,5 +1,5 @@
 name: HomeOps AI
-version: "0.2.5"
+version: "0.3.0"
 slug: homeops_ai
 description: Hermes-powered AI operations agent for Home Assistant.
 url: https://github.com/GitDakky/homeops-ai
@@ -234,6 +234,28 @@ options:
   # bootstrap, dashboard status, and skill pack.
   enable_bacnet_scout: false
 
+  # Temporal connector — durable long-running workflows and schedules.
+  # Point at a Temporal server (self-hosted: host:7233, Temporal Cloud:
+  # <ns>.<acct>.tmprl.cloud:7233). API key auth is used by Temporal Cloud;
+  # mTLS cert paths are for self-hosted clusters with TLS. Leave auth
+  # fields empty for a plain local dev server.
+  enable_temporal: false
+  temporal_address: ""
+  temporal_namespace: "default"
+  temporal_api_key: ""
+  temporal_tls_cert_path: ""
+  temporal_tls_key_path: ""
+  temporal_task_queue: "homeops"
+
+  # Airflow connector — scheduled DAGs and batch pipelines.
+  # airflow_api_url example: "http://192.168.1.50:8080" (base URL, no /api suffix).
+  # Auth: username+password for basic auth, or token for a bearer/JWT setup.
+  enable_airflow: false
+  airflow_api_url: ""
+  airflow_username: ""
+  airflow_password: ""
+  airflow_api_token: ""
+
 
 schema:
   timezone: str
@@ -307,3 +329,15 @@ schema:
   mqtt_username: str?
   mqtt_password: str?
   enable_bacnet_scout: bool?
+  enable_temporal: bool?
+  temporal_address: str?
+  temporal_namespace: str?
+  temporal_api_key: password?
+  temporal_tls_cert_path: str?
+  temporal_tls_key_path: str?
+  temporal_task_queue: str?
+  enable_airflow: bool?
+  airflow_api_url: str?
+  airflow_username: str?
+  airflow_password: password?
+  airflow_api_token: password?

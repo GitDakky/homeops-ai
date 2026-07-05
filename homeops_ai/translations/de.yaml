@@ -5,7 +5,7 @@ configuration:
   
   agent_mode:
     name: Agent Routing Mode
-    description: Select how HomeOps routes requests. Router is recommended: fast voice/status tasks use the fast lane, diagnostics use the complex lane, and long investigations use the deep lane.
+    description: "Select how HomeOps routes requests. Router is recommended: fast voice/status tasks use the fast lane, diagnostics use the complex lane, and long investigations use the deep lane."
     options:
       router: "Router (recommended)"
       fast: "Fast only"
@@ -70,7 +70,7 @@ configuration:
 
   http_proxy:
     name: Ausgehender HTTP-Proxy
-    description: Optional - Proxy-URL für ausgehende HTTP/HTTPS-Anfragen (Beispiel - http://192.168.2.1:3128)
+    description: "Optional - Proxy-URL für ausgehende HTTP/HTTPS-Anfragen (Beispiel - http://192.168.2.1:3128)"
   
   router_ssh_host:
     name: Router SSH-Host
@@ -101,11 +101,11 @@ configuration:
 
   gateway_remote_url:
     name: Remote Gateway-URL
-    description: Remote-Gateway-WebSocket-URL, verwendet wenn Gateway-Modus auf Remote steht (Beispiel - ws://192.168.1.20:18790 oder wss://gateway.example.com:443)
+    description: "Remote-Gateway-WebSocket-URL, verwendet wenn Gateway-Modus auf Remote steht (Beispiel - ws://192.168.1.20:18790 oder wss://gateway.example.com:443)"
 
   gateway_additional_allowed_origins:
     name: Zusätzliche erlaubte Origins
-    description: Kommagetrennte zusätzliche Control-UI-Origins, die bei lan_https in gateway.controlUi.allowedOrigins zusammengeführt werden (Beispiel - https://ha.example.com:8443,capacitor://localhost)
+    description: "Kommagetrennte zusätzliche Control-UI-Origins, die bei lan_https in gateway.controlUi.allowedOrigins zusammengeführt werden (Beispiel - https://ha.example.com:8443,capacitor://localhost)"
 
   controlui_disable_device_auth:
     name: Control-UI-Geräte-Pairing deaktivieren (lan_https)
@@ -235,7 +235,7 @@ configuration:
     description: Optional - Fine-grained GitHub-Token mit Issues-Schreibzugriff für direktes Anlegen von Issues in GitDakky/homeops-ai
   mqtt_broker_url:
     name: MQTT-Broker-URL
-    description: Optional - Externe MQTT-Broker-URL (Beispiel - mqtts://cluster.s2.eu.hivemq.cloud:8883)
+    description: "Optional - Externe MQTT-Broker-URL (Beispiel - mqtts://cluster.s2.eu.hivemq.cloud:8883)"
   mqtt_username:
     name: MQTT-Benutzername
     description: Optional - Benutzername für den konfigurierten MQTT-Broker
@@ -245,3 +245,39 @@ configuration:
   enable_bacnet_scout:
     name: BACnet Scout aktivieren
     description: "Wenn AN, werden BACnet/IP-Hinweise, Dashboard-Status und Graph-Grundlagen aktiviert. Es findet kein stilles Netzwerkscanning statt."
+  enable_temporal:
+    name: Temporal-Connector aktivieren
+    description: "Verbindet mit einem Temporal-Server für langlaufende Workflows und Zeitpläne. Benötigt temporal_address."
+  temporal_address:
+    name: Temporal-Adresse
+    description: "Temporal-gRPC-Adresse. Selbst gehostet: host:7233. Temporal Cloud: <namespace>.<account>.tmprl.cloud:7233."
+  temporal_namespace:
+    name: Temporal-Namespace
+    description: "Zu verwendender Temporal-Namespace (Standard: default)."
+  temporal_api_key:
+    name: Temporal-API-Schlüssel
+    description: "Temporal-Cloud-API-Schlüssel. Wird als Secret-Datei gespeichert; für selbst gehostete Cluster leer lassen."
+  temporal_tls_cert_path:
+    name: Temporal-mTLS-Zertifikatspfad
+    description: "Client-Zertifikatspfad für selbst gehostete TLS-Cluster."
+  temporal_tls_key_path:
+    name: Temporal-mTLS-Schlüsselpfad
+    description: "Client-Schlüsselpfad passend zum mTLS-Zertifikat."
+  temporal_task_queue:
+    name: Temporal-Task-Queue
+    description: "Standard-Task-Queue für HomeOps-Workflows (Standard: homeops)."
+  enable_airflow:
+    name: Airflow-Connector aktivieren
+    description: "Verbindet mit der Airflow-REST-API für geplante DAGs und Pipelines. Benötigt airflow_api_url."
+  airflow_api_url:
+    name: Airflow-API-URL
+    description: "Basis-URL des Airflow-Webservers, z. B. http://192.168.1.50:8080."
+  airflow_username:
+    name: Airflow-Benutzername
+    description: "Benutzername für Airflow-Basic-Auth."
+  airflow_password:
+    name: Airflow-Passwort
+    description: "Passwort für Airflow-Basic-Auth. Wird als Secret-Datei gespeichert."
+  airflow_api_token:
+    name: Airflow-API-Token
+    description: "Alternatives Bearer/JWT-Token für die Airflow-API. Wird als Secret-Datei gespeichert."

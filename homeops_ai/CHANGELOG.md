@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0]
+
+### Added
+- **Temporal connector** — point the agent at a Temporal server (self-hosted or Temporal Cloud) for durable long-running workflows, robust schedules, and retryable batch jobs. Options: `enable_temporal`, `temporal_address`, `temporal_namespace`, `temporal_api_key` (secret), `temporal_tls_cert_path`/`temporal_tls_key_path` (mTLS), `temporal_task_queue`. Ships a bundled `temporal-operator` skill; read-only inspection by default, state-changing operations require operator confirmation.
+- **Airflow connector** — connect to an Airflow webserver's stable REST API for scheduled DAGs and repeatable pipelines. Options: `enable_airflow`, `airflow_api_url`, `airflow_username`/`airflow_password` (basic auth) or `airflow_api_token` (bearer). Ships a bundled `airflow-operator` skill with the same read-first safety rules.
+- Both connectors follow the existing integrations pattern: secrets in `/config/secrets/` (0600, never in logs or the repo), env flags for the agent, status cards on the Integrations tab, and nodes in the system graph.
+
 ## [0.2.5]
 
 ### Fixed

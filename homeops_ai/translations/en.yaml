@@ -13,7 +13,7 @@ configuration:
     description: Optional OpenRouter API key. Stored as a Home Assistant add-on password option and exported as OPENROUTER_API_KEY for Hermes.
   agent_mode:
     name: Agent Routing Mode
-    description: Select how HomeOps routes requests. Router is recommended: fast voice/status tasks use the fast lane, diagnostics use the complex lane, and long investigations use the deep lane.
+    description: "Select how HomeOps routes requests. Router is recommended: fast voice/status tasks use the fast lane, diagnostics use the complex lane, and long investigations use the deep lane."
     options:
       router: "Router (recommended)"
       fast: "Fast only"
@@ -260,3 +260,39 @@ configuration:
   enable_bacnet_scout:
     name: Enable BACnet Scout
     description: "When ON, seeds BACnet discovery guidance, dashboard status, and graph scaffolding for BACnet/IP workflows. It does not silently scan the network."
+  enable_temporal:
+    name: Enable Temporal connector
+    description: "Connect to a Temporal server for durable long-running workflows and schedules. Requires temporal_address."
+  temporal_address:
+    name: Temporal address
+    description: "Temporal gRPC address. Self-hosted: host:7233. Temporal Cloud: <namespace>.<account>.tmprl.cloud:7233."
+  temporal_namespace:
+    name: Temporal namespace
+    description: "Temporal namespace to operate in (default: default)."
+  temporal_api_key:
+    name: Temporal API key
+    description: "Temporal Cloud API key. Stored as a secret file; leave empty for self-hosted clusters."
+  temporal_tls_cert_path:
+    name: Temporal mTLS certificate path
+    description: "Client certificate path for self-hosted TLS clusters."
+  temporal_tls_key_path:
+    name: Temporal mTLS key path
+    description: "Client key path matching the mTLS certificate."
+  temporal_task_queue:
+    name: Temporal task queue
+    description: "Default task queue for HomeOps workflows (default: homeops)."
+  enable_airflow:
+    name: Enable Airflow connector
+    description: "Connect to an Airflow webserver REST API for scheduled DAGs and pipelines. Requires airflow_api_url."
+  airflow_api_url:
+    name: Airflow API URL
+    description: "Airflow webserver base URL, for example http://192.168.1.50:8080."
+  airflow_username:
+    name: Airflow username
+    description: "Username for Airflow basic auth."
+  airflow_password:
+    name: Airflow password
+    description: "Password for Airflow basic auth. Stored as a secret file."
+  airflow_api_token:
+    name: Airflow API token
+    description: "Alternative bearer/JWT token for Airflow API auth. Stored as a secret file."

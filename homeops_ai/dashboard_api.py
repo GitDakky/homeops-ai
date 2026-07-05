@@ -61,6 +61,8 @@ BUNDLED_SKILL_NAMES = [
     "domotz-operator",
     "bacnet-scout",
     "mqtt-broker",
+    "temporal-operator",
+    "airflow-operator",
     "repo-issue-reporter",
 ]
 
@@ -1233,6 +1235,24 @@ def refresh_graph_snapshot() -> dict[str, Any]:
             ),
             ("bacnet", bool_env("BACNET_SCOUT_ENABLED"), {"configured": bool_env("BACNET_SCOUT_ENABLED")}),
             (
+                "temporal",
+                bool_env("TEMPORAL_ENABLED"),
+                {
+                    "configured": bool_env("TEMPORAL_ENABLED"),
+                    "address": os.environ.get("TEMPORAL_ADDRESS", ""),
+                    "namespace": os.environ.get("TEMPORAL_NAMESPACE", ""),
+                    "taskQueue": os.environ.get("TEMPORAL_TASK_QUEUE", ""),
+                },
+            ),
+            (
+                "airflow",
+                bool_env("AIRFLOW_ENABLED"),
+                {
+                    "configured": bool_env("AIRFLOW_ENABLED"),
+                    "apiUrl": os.environ.get("AIRFLOW_API_URL", ""),
+                },
+            ),
+            (
                 "home-assistant-mcp",
                 bool_env("HA_MCP_ENABLED"),
                 {"configured": bool_env("HA_MCP_ENABLED")},
@@ -1334,6 +1354,25 @@ def integration_status() -> dict[str, Any]:
         "bacnet": {
             "configured": bool_env("BACNET_SCOUT_ENABLED"),
             "notes": "Opt-in BACnet discovery scaffolding is enabled when the add-on option is on.",
+        },
+        "temporal": {
+            "configured": bool_env("TEMPORAL_ENABLED"),
+            "address": os.environ.get("TEMPORAL_ADDRESS", ""),
+            "namespace": os.environ.get("TEMPORAL_NAMESPACE", ""),
+            "taskQueue": os.environ.get("TEMPORAL_TASK_QUEUE", ""),
+            "apiKeyConfigured": bool_env("TEMPORAL_API_KEY_CONFIGURED"),
+            "tlsConfigured": bool_env("TEMPORAL_TLS_CONFIGURED"),
+            "secretPath": "/config/secrets/temporal.api_key",
+        },
+        "airflow": {
+            "configured": bool_env("AIRFLOW_ENABLED"),
+            "apiUrl": os.environ.get("AIRFLOW_API_URL", ""),
+            "usernameConfigured": bool_env("AIRFLOW_BASIC_AUTH_CONFIGURED"),
+            "tokenConfigured": bool_env("AIRFLOW_TOKEN_CONFIGURED"),
+            "secretPaths": [
+                "/config/secrets/airflow.password",
+                "/config/secrets/airflow.api_token",
+            ],
         },
         "homeAssistantMcp": {
             "configured": bool_env("HA_MCP_ENABLED"),

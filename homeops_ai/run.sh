@@ -268,6 +268,18 @@ MQTT_BROKER_URL=$(jq -r '.mqtt_broker_url // empty' "$OPTIONS_FILE")
 MQTT_USERNAME=$(jq -r '.mqtt_username // empty' "$OPTIONS_FILE")
 MQTT_PASSWORD=$(jq -r '.mqtt_password // empty' "$OPTIONS_FILE")
 ENABLE_BACNET_SCOUT=$(jq -r '.enable_bacnet_scout // false' "$OPTIONS_FILE")
+ENABLE_TEMPORAL=$(jq -r '.enable_temporal // false' "$OPTIONS_FILE")
+TEMPORAL_ADDRESS=$(jq -r '.temporal_address // empty' "$OPTIONS_FILE")
+TEMPORAL_NAMESPACE=$(jq -r '.temporal_namespace // "default"' "$OPTIONS_FILE")
+TEMPORAL_API_KEY=$(jq -r '.temporal_api_key // empty' "$OPTIONS_FILE")
+TEMPORAL_TLS_CERT_PATH=$(jq -r '.temporal_tls_cert_path // empty' "$OPTIONS_FILE")
+TEMPORAL_TLS_KEY_PATH=$(jq -r '.temporal_tls_key_path // empty' "$OPTIONS_FILE")
+TEMPORAL_TASK_QUEUE=$(jq -r '.temporal_task_queue // "homeops"' "$OPTIONS_FILE")
+ENABLE_AIRFLOW=$(jq -r '.enable_airflow // false' "$OPTIONS_FILE")
+AIRFLOW_API_URL=$(jq -r '.airflow_api_url // empty' "$OPTIONS_FILE")
+AIRFLOW_USERNAME=$(jq -r '.airflow_username // empty' "$OPTIONS_FILE")
+AIRFLOW_PASSWORD=$(jq -r '.airflow_password // empty' "$OPTIONS_FILE")
+AIRFLOW_API_TOKEN=$(jq -r '.airflow_api_token // empty' "$OPTIONS_FILE")
 GW_ENV_VARS_TYPE=$(jq -r 'if .gateway_env_vars == null then "null" else (.gateway_env_vars | type) end' "$OPTIONS_FILE")
 GW_ENV_VARS_RAW=$(jq -r '.gateway_env_vars // empty' "$OPTIONS_FILE")
 GW_ENV_VARS_JSON=$(jq -c '.gateway_env_vars // []' "$OPTIONS_FILE")
@@ -810,11 +822,20 @@ configure_external_integrations() {
   write_secret_file /config/secrets/mqtt.broker_url "$MQTT_BROKER_URL"
   write_secret_file /config/secrets/mqtt.username "$MQTT_USERNAME"
   write_secret_file /config/secrets/mqtt.password "$MQTT_PASSWORD"
+  write_secret_file /config/secrets/temporal.api_key "$TEMPORAL_API_KEY"
+  write_secret_file /config/secrets/airflow.password "$AIRFLOW_PASSWORD"
+  write_secret_file /config/secrets/airflow.api_token "$AIRFLOW_API_TOKEN"
 
   export CONTEXT7_ENABLED=false
   export DOMOTZ_ENABLED=false
   export MQTT_ENABLED=false
   export BACNET_SCOUT_ENABLED=false
+  export TEMPORAL_ENABLED=false
+  export TEMPORAL_API_KEY_CONFIGURED=false
+  export TEMPORAL_TLS_CONFIGURED=false
+  export AIRFLOW_ENABLED=false
+  export AIRFLOW_BASIC_AUTH_CONFIGURED=false
+  export AIRFLOW_TOKEN_CONFIGURED=false
   export MATRIX_ENABLED=false
   export MATRIX_ACCESS_TOKEN_CONFIGURED=false
   export MATRIX_PASSWORD_CONFIGURED=false
@@ -886,6 +907,42 @@ configure_external_integrations() {
     export BACNET_SCOUT_ENABLED=true
   fi
 
+  if { [ "$ENABLE_TEMPORAL" = "true" ] || [ "$ENABLE_TEMPORAL" = "1" ]; } && [ -n "$TEMPORAL_ADDRESS" ]; then
+    export TEMPORAL_ENABLED=true
+    export TEMPORAL_ADDRESS
+    export TEMPORAL_NAMESPACE
+    export TEMPORAL_TASK_QUEUE
+    if [ -n "$TEMPORAL_API_KEY" ]; then
+      export TEMPORAL_API_KEY_FILE=/config/secrets/temporal.api_key
+      export TEMPORAL_API_KEY_CONFIGURED=true
+    fi
+    if [ -n "$TEMPORAL_TLS_CERT_PATH" ] && [ -n "$TEMPORAL_TLS_KEY_PATH" ]; then
+      export TEMPORAL_TLS_CERT_PATH TEMPORAL_TLS_KEY_PATH
+      export TEMPORAL_TLS_CONFIGURED=true
+    fi
+  elif [ "$ENABLE_TEMPORAL" = "true" ] && [ -z "$TEMPORAL_ADDRESS" ]; then
+    echo "WARN: Temporal enabled but temporal_address is empty; connector left disabled."
+  fi
+
+  if { [ "$ENABLE_AIRFLOW" = "true" ] || [ "$ENABLE_AIRFLOW" = "1" ]; } && [ -n "$AIRFLOW_API_URL" ]; then
+    export AIRFLOW_ENABLED=true
+    export AIRFLOW_API_URL="${AIRFLOW_API_URL%/}"
+    if [ -n "$AIRFLOW_USERNAME" ] && [ -n "$AIRFLOW_PASSWORD" ]; then
+      export AIRFLOW_USERNAME
+      export AIRFLOW_PASSWORD_FILE=/config/secrets/airflow.password
+      export AIRFLOW_BASIC_AUTH_CONFIGURED=true
+    fi
+    if [ -n "$AIRFLOW_API_TOKEN" ]; then
+      export AIRFLOW_API_TOKEN_FILE=/config/secrets/airflow.api_token
+      export AIRFLOW_TOKEN_CONFIGURED=true
+    fi
+    if [ "$AIRFLOW_BASIC_AUTH_CONFIGURED" = "false" ] && [ "$AIRFLOW_TOKEN_CONFIGURED" = "false" ]; then
+      echo "WARN: Airflow enabled without credentials; only unauthenticated endpoints will work."
+    fi
+  elif [ "$ENABLE_AIRFLOW" = "true" ] && [ -z "$AIRFLOW_API_URL" ]; then
+    echo "WARN: Airflow enabled but airflow_api_url is empty; connector left disabled."
+  fi
+
   if [ "$AUTO_CONFIGURE_MCP" = "true" ] && [ -n "$HA_TOKEN" ]; then
     export HA_MCP_ENABLED=true
   fi
@@ -923,6 +980,20 @@ configure_external_integrations() {
   },
   "bacnet": {
     "enabled": ${BACNET_SCOUT_ENABLED}
+  },
+  "temporal": {
+    "enabled": ${TEMPORAL_ENABLED},
+    "address": $(printf '%s' "$TEMPORAL_ADDRESS" | jq -Rs .),
+    "namespace": $(printf '%s' "$TEMPORAL_NAMESPACE" | jq -Rs .),
+    "taskQueue": $(printf '%s' "$TEMPORAL_TASK_QUEUE" | jq -Rs .),
+    "apiKeyConfigured": ${TEMPORAL_API_KEY_CONFIGURED},
+    "tlsConfigured": ${TEMPORAL_TLS_CONFIGURED}
+  },
+  "airflow": {
+    "enabled": ${AIRFLOW_ENABLED},
+    "apiUrl": $(printf '%s' "$AIRFLOW_API_URL" | jq -Rs .),
+    "basicAuthConfigured": ${AIRFLOW_BASIC_AUTH_CONFIGURED},
+    "tokenConfigured": ${AIRFLOW_TOKEN_CONFIGURED}
   }
 }
 EOF
@@ -944,6 +1015,9 @@ Home Assistant token (if set): /config/secrets/homeassistant.token
 GitHub issues token (if set): /config/secrets/github_issues.token
 Matrix access token (if set): /config/secrets/matrix.access_token
 Matrix password (if set): /config/secrets/matrix.password
+Temporal API key (if set): /config/secrets/temporal.api_key
+Airflow password (if set): /config/secrets/airflow.password
+Airflow API token (if set): /config/secrets/airflow.api_token
 Router SSH (generic):
   host=${ROUTER_HOST}
   user=${ROUTER_USER}

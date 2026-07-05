@@ -5,7 +5,7 @@ configuration:
   
   agent_mode:
     name: Agent Routing Mode
-    description: Select how HomeOps routes requests. Router is recommended: fast voice/status tasks use the fast lane, diagnostics use the complex lane, and long investigations use the deep lane.
+    description: "Select how HomeOps routes requests. Router is recommended: fast voice/status tasks use the fast lane, diagnostics use the complex lane, and long investigations use the deep lane."
     options:
       router: "Router (recommended)"
       fast: "Fast only"
@@ -70,7 +70,7 @@ configuration:
 
   http_proxy:
     name: Proxy HTTP de saída
-    description: Opcional - URL de proxy para requisições HTTP/HTTPS de saída (exemplo - http://192.168.2.1:3128)
+    description: "Opcional - URL de proxy para requisições HTTP/HTTPS de saída (exemplo - http://192.168.2.1:3128)"
   
   router_ssh_host:
     name: Host SSH do Roteador
@@ -101,11 +101,11 @@ configuration:
 
   gateway_remote_url:
     name: URL do Gateway Remoto
-    description: URL WebSocket do gateway remoto usada quando Gateway Mode está em Remote (exemplo - ws://192.168.1.20:18790 ou wss://gateway.example.com:443)
+    description: "URL WebSocket do gateway remoto usada quando Gateway Mode está em Remote (exemplo - ws://192.168.1.20:18790 ou wss://gateway.example.com:443)"
 
   gateway_additional_allowed_origins:
     name: Origens permitidas adicionais
-    description: Origens extras da Control UI separadas por vírgula, mescladas em gateway.controlUi.allowedOrigins no modo lan_https (exemplo - https://ha.example.com:8443,capacitor://localhost)
+    description: "Origens extras da Control UI separadas por vírgula, mescladas em gateway.controlUi.allowedOrigins no modo lan_https (exemplo - https://ha.example.com:8443,capacitor://localhost)"
 
   controlui_disable_device_auth:
     name: Desativar pareamento por dispositivo no Control UI (lan_https)
@@ -235,7 +235,7 @@ configuration:
     description: Opcional - token fine-grained do GitHub com permissão Issues write para criar issues diretamente em GitDakky/homeops-ai
   mqtt_broker_url:
     name: URL do broker MQTT
-    description: Opcional - URL de broker MQTT externo (exemplo - mqtts://cluster.s2.eu.hivemq.cloud:8883)
+    description: "Opcional - URL de broker MQTT externo (exemplo - mqtts://cluster.s2.eu.hivemq.cloud:8883)"
   mqtt_username:
     name: Usuário MQTT
     description: Opcional - usuário para o broker MQTT configurado
@@ -245,3 +245,39 @@ configuration:
   enable_bacnet_scout:
     name: Ativar BACnet Scout
     description: "Quando LIGADO, adiciona orientação BACnet/IP, status no painel e base do grafo. Não faz varredura silenciosa da rede."
+  enable_temporal:
+    name: Ativar conector Temporal
+    description: "Conecta a um servidor Temporal para fluxos de trabalho duráveis e agendamentos. Requer temporal_address."
+  temporal_address:
+    name: Endereço do Temporal
+    description: "Endereço gRPC do Temporal. Auto-hospedado: host:7233. Temporal Cloud: <namespace>.<account>.tmprl.cloud:7233."
+  temporal_namespace:
+    name: Namespace do Temporal
+    description: "Namespace do Temporal a utilizar (padrão: default)."
+  temporal_api_key:
+    name: Chave de API do Temporal
+    description: "Chave de API do Temporal Cloud. Armazenada como arquivo secreto; deixe vazio para clusters auto-hospedados."
+  temporal_tls_cert_path:
+    name: Caminho do certificado mTLS do Temporal
+    description: "Caminho do certificado de cliente para clusters TLS auto-hospedados."
+  temporal_tls_key_path:
+    name: Caminho da chave mTLS do Temporal
+    description: "Caminho da chave de cliente correspondente ao certificado mTLS."
+  temporal_task_queue:
+    name: Fila de tarefas do Temporal
+    description: "Fila de tarefas padrão para fluxos HomeOps (padrão: homeops)."
+  enable_airflow:
+    name: Ativar conector Airflow
+    description: "Conecta à API REST do Airflow para DAGs agendados e pipelines. Requer airflow_api_url."
+  airflow_api_url:
+    name: URL da API do Airflow
+    description: "URL base do servidor web do Airflow, por exemplo http://192.168.1.50:8080."
+  airflow_username:
+    name: Usuário do Airflow
+    description: "Usuário para autenticação básica do Airflow."
+  airflow_password:
+    name: Senha do Airflow
+    description: "Senha para autenticação básica do Airflow. Armazenada como arquivo secreto."
+  airflow_api_token:
+    name: Token de API do Airflow
+    description: "Token bearer/JWT alternativo para a API do Airflow. Armazenado como arquivo secreto."

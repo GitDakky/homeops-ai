@@ -414,6 +414,18 @@ When `gateway_auth_mode: trusted-proxy` is used, the add-on sets `gateway.auth.t
 | `matrix_room_allowlist` | string | _(empty)_ | Optional comma-separated Matrix room IDs allowed when `matrix_group_policy: allowlist` or `matrix_auto_join: allowlist`. |
 | `matrix_auto_join` | `always` / `allowlist` / `off` | `always` | Invite auto-join policy. `always` lets users invite the bot into rooms without pre-whitelisting, `allowlist` only joins rooms in `matrix_room_allowlist`, and `off` disables auto-join entirely. |
 | `enable_bacnet_scout` | bool | `false` | Enables BACnet/IP operator scaffolding and dashboard status. It does not silently probe the network by itself. |
+| `enable_temporal` | bool | `false` | Enables the Temporal connector for durable long-running workflows and schedules. Requires `temporal_address`. |
+| `temporal_address` | string | _(empty)_ | Temporal server gRPC address. Self-hosted: `host:7233`. Temporal Cloud: `<namespace>.<account>.tmprl.cloud:7233`. |
+| `temporal_namespace` | string | `default` | Temporal namespace to operate in. |
+| `temporal_api_key` | password | _(empty)_ | Temporal Cloud API key. Stored in `/config/secrets/temporal.api_key`. Leave empty for self-hosted clusters without API-key auth. |
+| `temporal_tls_cert_path` | string | _(empty)_ | Path to an mTLS client certificate for self-hosted TLS clusters (place the file under the add-on config directory). |
+| `temporal_tls_key_path` | string | _(empty)_ | Path to the matching mTLS client key. |
+| `temporal_task_queue` | string | `homeops` | Default task queue name for HomeOps workflows. |
+| `enable_airflow` | bool | `false` | Enables the Airflow connector for scheduled DAGs and batch pipelines. Requires `airflow_api_url`. |
+| `airflow_api_url` | string | _(empty)_ | Airflow webserver base URL, e.g. `http://192.168.1.50:8080` (the REST API lives under `/api/v1`). |
+| `airflow_username` | string | _(empty)_ | Airflow username for basic auth. |
+| `airflow_password` | password | _(empty)_ | Airflow password for basic auth. Stored in `/config/secrets/airflow.password`. |
+| `airflow_api_token` | password | _(empty)_ | Alternative bearer/JWT token auth. Stored in `/config/secrets/airflow.api_token`. |
 
 ### Router SSH
 
