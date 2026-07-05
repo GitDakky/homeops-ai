@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.2.3]
+
+### Fixed
+- **Hermes dashboard unreachable via Ingress ("Invalid Host header")** — Hermes v0.18 validates the Host header against the interface the dashboard is bound to (DNS-rebinding defence). The nginx proxy forwarded the HA ingress hostname, which the loopback-bound dashboard rejected with `400 Invalid Host header`. The proxy now presents a loopback Host and passes `X-Forwarded-Prefix` (derived from HA's `X-Ingress-Path`) so dashboard URLs resolve correctly under Ingress.
+- Dashboard startup now passes `--skip-build` (the web UI dist ships prebuilt in the image), avoiding a slow/fragile npm rebuild at container boot, with an automatic one-shot fallback to a building start if the dist is missing.
+
 ## [0.2.2]
 
 ### Fixed

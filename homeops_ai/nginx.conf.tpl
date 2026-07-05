@@ -62,7 +62,16 @@ http {
       proxy_http_version 1.1;
       proxy_set_header Upgrade $http_upgrade;
       proxy_set_header Connection "upgrade";
-      proxy_set_header Host $host;
+      # Hermes >= v0.18 validates the Host header against its bound
+      # interface (DNS-rebinding defence, GHSA-ppp5-vxwm-4cf7). The
+      # dashboard binds to loopback, so we must present a loopback Host
+      # — NOT $host, which carries the HA ingress hostname and gets a
+      # 400 "Invalid Host header".
+      proxy_set_header Host 127.0.0.1:__HERMES_DASHBOARD_PORT__;
+      # Let the dashboard reconstruct prefixed URLs under HA Ingress
+      # (assets, redirects). HA supplies the ingress prefix in
+      # X-Ingress-Path; the dashboard honours X-Forwarded-Prefix.
+      proxy_set_header X-Forwarded-Prefix "$http_x_ingress_path/dashboard";
       proxy_set_header X-Real-IP $remote_addr;
       proxy_set_header X-Forwarded-For $remote_addr;
       proxy_set_header X-Forwarded-Proto $scheme;

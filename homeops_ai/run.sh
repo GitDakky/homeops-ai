@@ -1194,14 +1194,27 @@ else
   start_hermes_dashboard_ui() {
     local dashboard_port="${HERMES_DASHBOARD_PORT:-$DEFAULT_HERMES_DASHBOARD_PORT}"
     stop_if_listening "$dashboard_port" "Hermes dashboard"
-    HERMES_DASHBOARD_TUI=1 hermes dashboard --host 127.0.0.1 --port "$dashboard_port" --no-open >>"$RUNTIME_WRAPPER_LOG_DIR/hermes-dashboard.log" 2>&1 &
+    # --skip-build: the web UI dist ships prebuilt inside the image
+    # (hermes_cli/web_dist). Without this flag the dashboard may try an
+    # npm rebuild at boot, which is slow and fragile in the container.
+    HERMES_DASHBOARD_TUI=1 hermes dashboard --host 127.0.0.1 --port "$dashboard_port" --no-open --skip-build >>"$RUNTIME_WRAPPER_LOG_DIR/hermes-dashboard.log" 2>&1 &
     HERMES_DASHBOARD_PID=$!
     sleep 1
     if kill -0 "$HERMES_DASHBOARD_PID" >/dev/null 2>&1; then
       echo "INFO: Hermes dashboard UI started on 127.0.0.1:${dashboard_port}"
     else
-      echo "WARN: Hermes dashboard UI failed to start; dashboard link may be unavailable"
-      HERMES_DASHBOARD_PID=""
+      # Retry once without --skip-build in case the dist is genuinely
+      # missing from the image (older builds).
+      echo "WARN: dashboard with --skip-build failed; retrying with build enabled"
+      HERMES_DASHBOARD_TUI=1 hermes dashboard --host 127.0.0.1 --port "$dashboard_port" --no-open >>"$RUNTIME_WRAPPER_LOG_DIR/hermes-dashboard.log" 2>&1 &
+      HERMES_DASHBOARD_PID=$!
+      sleep 2
+      if kill -0 "$HERMES_DASHBOARD_PID" >/dev/null 2>&1; then
+        echo "INFO: Hermes dashboard UI started on 127.0.0.1:${dashboard_port} (with build)"
+      else
+        echo "WARN: Hermes dashboard UI failed to start; dashboard link may be unavailable"
+        HERMES_DASHBOARD_PID=""
+      fi
     fi
   }
 
