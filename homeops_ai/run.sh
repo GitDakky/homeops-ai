@@ -1194,27 +1194,38 @@ else
   start_hermes_dashboard_ui() {
     local dashboard_port="${HERMES_DASHBOARD_PORT:-$DEFAULT_HERMES_DASHBOARD_PORT}"
     stop_if_listening "$dashboard_port" "Hermes dashboard"
-    # --skip-build: the web UI dist ships prebuilt inside the image
-    # (hermes_cli/web_dist). Without this flag the dashboard may try an
-    # npm rebuild at boot, which is slow and fragile in the container.
+    # --skip-build: the web UI dist is prebuilt into the image at Docker
+    # build time (see Dockerfile). Building at boot is slow/fragile.
     HERMES_DASHBOARD_TUI=1 hermes dashboard --host 127.0.0.1 --port "$dashboard_port" --no-open --skip-build >>"$RUNTIME_WRAPPER_LOG_DIR/hermes-dashboard.log" 2>&1 &
     HERMES_DASHBOARD_PID=$!
-    sleep 1
-    if kill -0 "$HERMES_DASHBOARD_PID" >/dev/null 2>&1; then
-      echo "INFO: Hermes dashboard UI started on 127.0.0.1:${dashboard_port}"
-    else
-      # Retry once without --skip-build in case the dist is genuinely
-      # missing from the image (older builds).
-      echo "WARN: dashboard with --skip-build failed; retrying with build enabled"
-      HERMES_DASHBOARD_TUI=1 hermes dashboard --host 127.0.0.1 --port "$dashboard_port" --no-open >>"$RUNTIME_WRAPPER_LOG_DIR/hermes-dashboard.log" 2>&1 &
-      HERMES_DASHBOARD_PID=$!
-      sleep 2
-      if kill -0 "$HERMES_DASHBOARD_PID" >/dev/null 2>&1; then
-        echo "INFO: Hermes dashboard UI started on 127.0.0.1:${dashboard_port} (with build)"
-      else
-        echo "WARN: Hermes dashboard UI failed to start; dashboard link may be unavailable"
-        HERMES_DASHBOARD_PID=""
+    # Wait for the port to actually listen — a live PID is not enough
+    # (the process can die seconds later if the dist is missing).
+    local waited=0
+    while [ "$waited" -lt 20 ]; do
+      if ! kill -0 "$HERMES_DASHBOARD_PID" >/dev/null 2>&1; then
+        break
       fi
+      if curl -fsS -o /dev/null --max-time 2 "http://127.0.0.1:${dashboard_port}/" 2>/dev/null; then
+        echo "INFO: Hermes dashboard UI started on 127.0.0.1:${dashboard_port}"
+        return 0
+      fi
+      sleep 1
+      waited=$((waited + 1))
+    done
+    echo "WARN: dashboard with --skip-build did not come up; retrying with build enabled (slow first start)"
+    kill "$HERMES_DASHBOARD_PID" >/dev/null 2>&1 || true
+    HERMES_DASHBOARD_TUI=1 hermes dashboard --host 127.0.0.1 --port "$dashboard_port" --no-open >>"$RUNTIME_WRAPPER_LOG_DIR/hermes-dashboard.log" 2>&1 &
+    HERMES_DASHBOARD_PID=$!
+    # The building path can take minutes on first boot; don't block the
+    # add-on on it. Report status and move on — nginx will start serving
+    # /dashboard/ as soon as the port opens.
+    sleep 2
+    if kill -0 "$HERMES_DASHBOARD_PID" >/dev/null 2>&1; then
+      echo "INFO: Hermes dashboard UI starting (building web UI in background) on 127.0.0.1:${dashboard_port}"
+    else
+      echo "WARN: Hermes dashboard UI failed to start; see ${RUNTIME_WRAPPER_LOG_DIR}/hermes-dashboard.log"
+      tail -n 20 "$RUNTIME_WRAPPER_LOG_DIR/hermes-dashboard.log" 2>/dev/null || true
+      HERMES_DASHBOARD_PID=""
     fi
   }
 

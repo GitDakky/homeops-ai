@@ -130,6 +130,17 @@ RUN curl -fsSL https://raw.githubusercontent.com/NousResearch/hermes-agent/${HER
     && install -d /usr/local/share \
     && hermes --version | tee /usr/local/share/hermes-bundled-version
 
+# Pre-build the Hermes dashboard web UI at image build time. The repo ships
+# no prebuilt dist (hermes_cli/web_dist is gitignored), so without this the
+# dashboard must run a full npm install + Vite build at container boot —
+# slow, memory-hungry, and fragile on HA boxes. Building here lets run.sh
+# start the dashboard with --skip-build for instant, deterministic startup.
+RUN cd /usr/local/lib/hermes-agent \
+    && (npm install --workspace web --silent || (cd web && npm install --silent)) \
+    && (npm run build -w web || (cd web && npm run build)) \
+    && test -f hermes_cli/web_dist/index.html \
+    && rm -rf node_modules web/node_modules /root/.npm
+
 # Install bundled MCP server dependencies locally inside the add-on image so the
 # built-in Home Assistant MCP bridge can run without relying on user-installed packages.
 RUN mkdir -p /opt/homeops-ai \

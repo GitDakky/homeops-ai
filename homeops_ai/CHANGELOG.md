@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.2.4]
+
+### Fixed
+- **Hermes dashboard now actually starts** — the 0.2.3 `--skip-build` flag assumed the dashboard web UI dist ships with Hermes; it does not (`hermes_cli/web_dist` is gitignored upstream and the installer never builds it), so the dashboard exited at boot and `/dashboard/` had nothing to proxy to. The dashboard web UI is now **pre-built into the add-on image at Docker build time**, and startup health-checks the port (not just the PID) with an automatic build-at-boot fallback for resilience.
+
 ## [0.2.3]
 
 ### Fixed
