@@ -40,3 +40,11 @@ before every push. Version bumps matter because the
 Home Assistant pulls a new image. The Home Assistant builder workflow is
 the authoritative image build path — do not add duplicate hand-written
 Docker smoke builds.
+
+Staying current: the bundled Hermes Agent is pinned to a tagged upstream
+release (`ARG HERMES_VERSION`, never `main`). The scheduled
+`hermes-version-watch` workflow checks the latest
+NousResearch/hermes-agent release twice a week and opens a validated pull
+request via `scripts/bump_hermes_version.py`, which updates the Dockerfile
+pin, add-on version, changelog, and DOCS.md together — merging it is the
+human review gate.

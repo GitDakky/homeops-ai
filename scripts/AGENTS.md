@@ -18,6 +18,12 @@ AGENTS.md points at; keep them fast, offline, and deterministic.
   choice, context diet, tool round-trips, escalation fidelity, and stats
   hygiene. `--live <url>` mode runs read-only probes against a running
   add-on for on-box dogfooding.
+- `bump_hermes_version.py` — bumps the bundled Hermes Agent consistently
+  across Dockerfile pin, add-on version, changelog, and DOCS.md;
+  `--check` exits 1 when upstream has a newer release. Driven by the
+  scheduled `.github/workflows/hermes-version-watch.yaml`, which opens a
+  validated PR for each upstream release (keep the pin a tagged release,
+  never `main`).
 
 ## Local Contracts
 

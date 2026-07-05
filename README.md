@@ -5,7 +5,7 @@
 <p align="center">
   <img alt="Validate" src="https://github.com/GitDakky/homeops-ai/actions/workflows/validate.yaml/badge.svg"/>
   <img alt="Build" src="https://github.com/GitDakky/homeops-ai/actions/workflows/build-addon.yaml/badge.svg"/>
-  <img alt="Version" src="https://img.shields.io/badge/add--on-v0.2.0-7C3AED"/>
+  <img alt="Version" src="https://img.shields.io/badge/add--on-v0.2.1-7C3AED"/>
   <img alt="Arch" src="https://img.shields.io/badge/arch-amd64%20%7C%20aarch64-06B6D4"/>
   <img alt="Runtime" src="https://img.shields.io/badge/runtime-Hermes%20Agent-F59E0B"/>
 </p>

@@ -1,0 +1,69 @@
+name: Hermes version watch
+
+# Keeps the bundled Hermes Agent current: checks the latest upstream release
+# twice a week and opens a ready-to-review PR with the pin bump, add-on
+# version bump, and changelog entry. Merging the PR triggers the normal
+# build-addon workflow, which publishes the updated image.
+
+on:
+  schedule:
+    - cron: "17 6 * * 1,4" # Mon + Thu 06:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  check-and-bump:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Check upstream Hermes release
+        id: check
+        run: |
+          set +e
+          OUT=$(python3 scripts/bump_hermes_version.py --check)
+          BEHIND=$?
+          set -e
+          echo "$OUT"
+          LATEST=$(echo "$OUT" | grep -oP 'latest=\K\S+')
+          PINNED=$(echo "$OUT" | grep -oP 'pinned=\K\S+')
+          echo "latest=$LATEST" >> "$GITHUB_OUTPUT"
+          echo "pinned=$PINNED" >> "$GITHUB_OUTPUT"
+          echo "behind=$BEHIND" >> "$GITHUB_OUTPUT"
+
+      - name: Apply bump
+        if: steps.check.outputs.behind == '1'
+        run: python3 scripts/bump_hermes_version.py "${{ steps.check.outputs.latest }}"
+
+      - name: Validate
+        if: steps.check.outputs.behind == '1'
+        run: |
+          pip install pytest
+          bash scripts/validate_local.sh
+
+      - name: Open pull request
+        if: steps.check.outputs.behind == '1'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          branch: auto/hermes-${{ steps.check.outputs.latest }}
+          delete-branch: true
+          commit-message: "chore: bump bundled Hermes Agent to ${{ steps.check.outputs.latest }}"
+          title: "Bump bundled Hermes Agent to ${{ steps.check.outputs.latest }}"
+          body: |
+            Automated bump of the bundled Hermes Agent runtime.
+
+            - Pinned: `${{ steps.check.outputs.pinned }}` → `${{ steps.check.outputs.latest }}`
+            - Upstream release notes: https://github.com/NousResearch/hermes-agent/releases/tag/${{ steps.check.outputs.latest }}
+            - `scripts/validate_local.sh` passed on the bumped tree (see the Validate step in the workflow run).
+
+            Merging this PR triggers the add-on image build. After merge, refresh
+            the add-on repository in Home Assistant and update the add-on.
+          labels: dependencies

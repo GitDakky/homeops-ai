@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.2.1]
+
+### Changed
+- Bundled Hermes Agent updated from `v2026.5.7` (v0.13) to `v2026.7.1` (v0.18.0) — four upstream feature releases: background subagents, first-class Mixture-of-Agents, major memory-tool upgrade, faster startup/session-search, image-editing generation, and the upstream P0/P1 clean sweep. See the [v2026.7.1 release notes](https://github.com/NousResearch/hermes-agent/releases/tag/v2026.7.1).
+
+### Added
+- Automated Hermes freshness: a scheduled `hermes-version-watch` workflow checks upstream twice a week and opens a validated pull request bumping the pin, add-on version, changelog, and docs (`scripts/bump_hermes_version.py`).
+
 ## [0.2.0]
 
 ### Added
