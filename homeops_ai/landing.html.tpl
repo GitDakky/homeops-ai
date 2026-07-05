@@ -756,6 +756,7 @@
         <button class="tab-btn" type="button" role="tab" aria-selected="false" aria-controls="tab-help" data-tab-target="help">Help</button>
         <button class="tab-btn" type="button" role="tab" aria-selected="false" aria-controls="tab-workspace" data-tab-target="workspace">Workspace</button>
         <button class="tab-btn" type="button" role="tab" aria-selected="false" aria-controls="tab-runtime" data-tab-target="runtime">Runtime</button>
+        <button class="tab-btn" type="button" role="tab" aria-selected="false" aria-controls="tab-voice" data-tab-target="voice">Voice</button>
         <button class="tab-btn" type="button" role="tab" aria-selected="false" aria-controls="tab-insights" data-tab-target="insights">Insights</button>
         <button class="tab-btn" type="button" role="tab" aria-selected="false" aria-controls="tab-integrations" data-tab-target="integrations">Integrations</button>
         <button class="tab-btn" type="button" role="tab" aria-selected="false" aria-controls="tab-memory" data-tab-target="memory">Memory</button>
@@ -1023,6 +1024,33 @@ SSL tab:  Request a new SSL certificate</pre>
         </section>
       </section>
 
+      <section class="tab-panel" id="tab-voice" data-tab-panel="voice" role="tabpanel">
+        <section class="panel ops-panel">
+        <div class="ops-head">
+          <div class="eyebrow">Voice Router</div>
+          <h3>Fast lane health &amp; context diet</h3>
+          <p>
+            The HomeOps router keeps voice snappy: it trims the entity table Home Assistant
+            sends on every utterance down to a small candidate set, gives the fast model
+            on-demand lookup tools for everything else, and escalates complex requests to
+            the full Hermes agent automatically.
+          </p>
+        </div>
+        <div class="status-grid" id="voiceStatGrid">
+          <div class="status-item"><span class="icon">⚡</span><div><b id="voiceLane">–</b><div class="meta">fast-lane turns</div></div></div>
+          <div class="status-item"><span class="icon">🧠</span><div><b id="voiceEsc">–</b><div class="meta">escalated to full agent</div></div></div>
+          <div class="status-item"><span class="icon">✂️</span><div><b id="voiceDiet">–</b><div class="meta">entity diet (seen → sent)</div></div></div>
+          <div class="status-item"><span class="icon">⏱️</span><div><b id="voiceLat">–</b><div class="meta">p50 / p95 latency</div></div></div>
+        </div>
+        <div class="hero-note" id="voiceRouterNote">
+          Checking router status…
+        </div>
+        <div class="action-row">
+          <button class="btn secondary" id="refreshVoiceBtn" type="button">Refresh stats</button>
+          <button class="btn secondary" id="copyDogfoodBtn" type="button">Copy dogfood command</button>
+        </div>
+        </section>
+      </section>
       <section class="tab-panel" id="tab-insights" data-tab-panel="insights" role="tabpanel">
         <section class="panel ops-panel">
         <div class="ops-head">
@@ -1736,6 +1764,31 @@ SSL tab:  Request a new SSL certificate</pre>
     $('refreshOpsBtn')?.addEventListener('click', loadDashboardState);
     $('copyDoctorBtn')?.addEventListener('click', () => copyText('hermes doctor', 'doctor command'));
     $('copyCronBtn')?.addEventListener('click', () => copyText('hermes cron status', 'cron command'));
+
+    // --- Voice router stats (read-only, proxied via ingress /router/) ---
+    const ROUTER_API_BASE = './router';
+    async function loadVoiceStats() {
+      const note = $('voiceRouterNote');
+      try {
+        const resp = await fetch(`${ROUTER_API_BASE}/stats`, { cache: 'no-store' });
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const s = await resp.json();
+        $('voiceLane').textContent = String(s.fast_lane ?? 0);
+        $('voiceEsc').textContent = String(s.escalated ?? 0);
+        $('voiceDiet').textContent = `${s.entities_seen_last ?? '–'} → ${s.entities_sent_last ?? '–'}`;
+        $('voiceLat').textContent = s.p50_ms != null ? `${s.p50_ms} / ${s.p95_ms} ms` : 'no traffic yet';
+        if (note) note.textContent = `Router online — fast model ${s.fast_model || 'unknown'}, ` +
+          `cap ${s.max_fast_entities} entities/turn, service calls ${s.service_calls_enabled ? 'enabled' : 'disabled'}.`;
+      } catch (err) {
+        if (note) note.textContent = 'Router not reachable. If agent_mode is not "router" this is expected; ' +
+          'otherwise check the add-on log for [router] lines.';
+      }
+    }
+    $('refreshVoiceBtn')?.addEventListener('click', loadVoiceStats);
+    $('copyDogfoodBtn')?.addEventListener('click', () =>
+      copyText('python3 scripts/dogfood_router.py', 'dogfood command'));
+    loadVoiceStats();
+
     document.addEventListener('click', event => {
       const target = event.target;
       if (!(target instanceof HTMLElement)) return;

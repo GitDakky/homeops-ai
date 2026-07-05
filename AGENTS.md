@@ -1,106 +1,84 @@
-# Repository Guidelines
+# AGENTS.md — DOX rail for HomeOps AI
 
-## Project Scope
+This repo uses the [DOX](https://github.com/agent0ai/dox) documentation method:
+a hierarchy of `AGENTS.md` files that are **binding work contracts** for their
+subtrees. This root file is the rail; child files own domain detail.
 
-This repository builds the **HomeOps AI (DEV)** Home Assistant add-on.
-The add-on packages Hermes Agent + nginx + ttyd and manages startup/configuration glue.
+## DOX framework
 
-## Architecture at a Glance
+- AGENTS.md files are binding work contracts for their subtrees.
+- Work products, source materials, instructions, records, assets, and durable
+  docs must stay understandable from the nearest applicable AGENTS.md plus
+  every parent AGENTS.md above it.
 
-- Add-on root metadata/docs:
-  - `README.md`
-  - `DOCS.md`
-  - `SECURITY.md`
-  - `repository.yaml`
-- Runtime implementation (all add-on behavior lives here):
-  - `homeops_ai/run.sh` (PID 1 orchestrator)
-  - `homeops_ai/hermes_config_helper.py` (safe JSON config edits)
-  - `homeops_ai/render_nginx.py` (template rendering)
-  - `homeops_ai/nginx.conf.tpl`
-  - `homeops_ai/landing.html.tpl`
-  - `homeops_ai/config.yaml` (HA options + schema)
-  - `homeops_ai/translations/*.yaml` (all locale UI strings)
-  - `homeops_ai/Dockerfile`
-  - `homeops_ai/CHANGELOG.md`
+### Read before editing
 
-## Core Rules
+1. Read this root AGENTS.md.
+2. Identify every file or folder you expect to touch.
+3. Walk from the repository root to each target path and read every
+   AGENTS.md found along each route.
+4. Use the nearest AGENTS.md as the local contract and parent docs for
+   repo-wide rules. Closer docs control local detail; no child doc may
+   weaken DOX or the non-negotiables below.
 
-- Fix root causes, not symptoms.
-- Keep edits surgical; do not refactor unrelated code.
-- Never introduce insecure defaults.
-- Never log secrets or auth tokens.
-- Keep behavior backward-compatible unless the change explicitly requires a migration.
+Do not rely on memory. Re-read the applicable DOX chain in the current
+session before editing.
 
-## Add-on Config Coupling Rules (Critical)
+### Update after editing
 
-When adding/changing any add-on option, update **all** of the following in one change:
+Every meaningful change requires a DOX pass before the task is done. Update
+the closest owning AGENTS.md when a change affects purpose, scope, structure,
+contracts, workflows, constraints, side effects, artifacts, or preferences.
+Refresh affected Child DOX Indexes. Remove stale text immediately.
 
-1. `homeops_ai/config.yaml`
-   - `options:` default
-   - `schema:` validation entry
-   - comments/help text
-2. `homeops_ai/translations/en.yaml`
-3. `homeops_ai/translations/bg.yaml`
-4. `homeops_ai/translations/de.yaml`
-5. `homeops_ai/translations/es.yaml`
-6. `homeops_ai/translations/pl.yaml`
-7. `homeops_ai/translations/pt-BR.yaml`
-8. `DOCS.md` configuration reference / troubleshooting if user-facing
-9. `homeops_ai/CHANGELOG.md`
+## Purpose
 
-If any of these are skipped, the UX becomes inconsistent in HA.
+HomeOps AI is a Home Assistant add-on that packages **Hermes Agent** as a
+local AI operations agent, plus a **fast-lane voice router** that makes
+Assist voice interactions fast on large installs by dieting the entity
+context and lazy-loading the rest through on-demand tools.
 
-## Runtime Safety Rules
+## Non-negotiable design rules (repo-wide)
 
-- `run.sh` runs with `set -euo pipefail`; avoid constructs that fail unexpectedly under `set -e`.
-- Validate all user-provided values from `/data/options.json` before injecting into shell/nginx/hermes config.
-- Keep `run.sh` idempotent on restart (multiple starts must not corrupt state).
-- Treat `/config/` as persistent state; never wipe user data unless explicitly requested.
+- **PUBLIC REPO.** Never commit secrets, tokens, internal IPs, private
+  hostnames, or real household entity data. Redact examples.
+- Fix root causes, not symptoms. Keep edits surgical.
+- Never introduce insecure defaults. Never log secrets or auth tokens.
+- Keep behavior backward-compatible unless the change explicitly requires a
+  migration.
+- **Release rule:** every change Home Assistant must see requires a version
+  bump in `homeops_ai/config.yaml` AND a matching top entry in
+  `homeops_ai/CHANGELOG.md`, committed together and pushed to `main`.
+- No OpenClaw terminology on current user-facing/runtime surfaces
+  (`scripts/validate_no_openclaw_user_surface.py` enforces this; history
+  lives only in `docs/legacy/` and `PORTING.md`).
 
-## Gateway/Auth/Security Rules
-
-- Hermes v2026.2.22+ redacts sensitive values in `hermes config get`.
-  - For token retrieval guidance, prefer: `jq -r '.gateway.auth.token' /config/.hermes/config.yaml`.
-- `trusted-proxy` mode may reject direct local CLI WS calls (`trusted_proxy_user_missing`); document this clearly instead of hiding it.
-- For `lan_https` certificate logic, keep SAN generation deterministic and regeneration-triggered on SAN/IP changes.
-
-## Template Coupling Rules
-
-- If adding placeholders in `landing.html.tpl` or `nginx.conf.tpl`, update `render_nginx.py` in the same change.
-- If landing-page guidance changes (commands/errors), sync corresponding troubleshooting text in `DOCS.md`.
-
-## Versioning and Changelog
-
-- User-visible changes should update:
-  - `homeops_ai/CHANGELOG.md`
-  - `homeops_ai/config.yaml` version
-- Keep changelog entries user-facing and action-oriented.
-
-## Coding Style
-
-- Shell: POSIX-friendly Bash, explicit quoting, descriptive variable names.
-- Python: small focused helpers, explicit error handling, no hidden side effects.
-- YAML/Markdown: preserve existing style and structure.
-- Avoid adding dependencies unless necessary.
-
-## Validation Checklist (Run After Relevant Changes)
-
-From repo root:
+## Verification (run from repo root)
 
 ```sh
-bash scripts/validate_local.sh
+bash scripts/validate_local.sh        # full local gate (tests + guards + SVG)
+python3 scripts/dogfood_router.py     # offline end-to-end router dogfood
 ```
 
-For option changes:
-- verify `config.yaml` option + schema + all translations exist
-- verify `DOCS.md` matches current behavior
+CI after push: `gh run list --repo GitDakky/homeops-ai --limit 6`
+(or check GitHub Actions in the browser).
 
-For startup/auth/proxy/cert changes:
-- verify log messages remain clear and actionable
-- verify `landing.html.tpl` instructions match actual commands
+## Add-on config coupling (critical)
 
-## Commit Scope
+When adding/changing any add-on option, update **all** in one change:
+`homeops_ai/config.yaml` (options + schema + comments), all six
+`homeops_ai/translations/*.yaml`, `DOCS.md` if user-facing, and
+`homeops_ai/CHANGELOG.md`. Skipping any yields inconsistent HA UX.
 
-- Group related changes only.
-- Do not include unrelated formatting churn.
+## Commit scope
+
+- Group related changes only; no unrelated formatting churn.
 - Do not edit generated/cache folders (`__pycache__`, temporary outputs).
+
+## Child DOX Index
+
+- `homeops_ai/AGENTS.md` — add-on runtime: run.sh lifecycle, router,
+  Dockerfile, config/schema/translations, nginx + landing templates.
+- `tests/AGENTS.md` — offline unit test suite; what must stay covered.
+- `scripts/AGENTS.md` — validation gates and the dogfood harness.
+- `docs/AGENTS.md` — documentation, knowledge bundle, and legacy history.

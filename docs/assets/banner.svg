@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 200" font-family="ui-sans-serif, system-ui, -apple-system, sans-serif">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0c0a1e"/>
+      <stop offset="55%" stop-color="#131033"/>
+      <stop offset="100%" stop-color="#1a1235"/>
+    </linearGradient>
+    <radialGradient id="orbA" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0%" stop-color="#7C3AED" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#7C3AED" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="orbB" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0%" stop-color="#06B6D4" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#06B6D4" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="pulse" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0%" stop-color="#06B6D4" stop-opacity="1"/>
+      <stop offset="60%" stop-color="#06B6D4" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#06B6D4" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <rect width="920" height="200" rx="14" fill="url(#bg)"/>
+
+  <circle cx="120" cy="60" r="80" fill="url(#orbA)">
+    <animate attributeName="cy" values="60;74;60" dur="7s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="820" cy="150" r="90" fill="url(#orbB)">
+    <animate attributeName="cy" values="150;136;150" dur="8s" repeatCount="indefinite"/>
+  </circle>
+
+  <!-- house glyph -->
+  <g transform="translate(64,58)" filter="url(#glow)">
+    <path d="M0,42 L42,8 L84,42" fill="none" stroke="#06B6D4" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M10,38 L10,84 L74,84 L74,38" fill="none" stroke="#7C3AED" stroke-width="4" stroke-linecap="round"/>
+    <!-- voice wave inside the house -->
+    <g stroke="#F8FAFC" stroke-width="3" stroke-linecap="round">
+      <line x1="28" y1="58" x2="28" y2="70">
+        <animate attributeName="y1" values="58;52;58" dur="1.6s" repeatCount="indefinite"/>
+        <animate attributeName="y2" values="70;76;70" dur="1.6s" repeatCount="indefinite"/>
+      </line>
+      <line x1="42" y1="50" x2="42" y2="78">
+        <animate attributeName="y1" values="50;56;50" dur="1.6s" begin="0.2s" repeatCount="indefinite"/>
+        <animate attributeName="y2" values="78;72;78" dur="1.6s" begin="0.2s" repeatCount="indefinite"/>
+      </line>
+      <line x1="56" y1="58" x2="56" y2="70">
+        <animate attributeName="y1" values="58;52;58" dur="1.6s" begin="0.4s" repeatCount="indefinite"/>
+        <animate attributeName="y2" values="70;76;70" dur="1.6s" begin="0.4s" repeatCount="indefinite"/>
+      </line>
+    </g>
+  </g>
+
+  <!-- pulses flowing across the banner -->
+  <path id="flow" d="M170,168 C320,150 560,150 880,166" fill="none" stroke="#7C3AED" stroke-width="1" opacity="0.35"/>
+  <circle r="3.5" fill="url(#pulse)">
+    <animateMotion dur="4s" repeatCount="indefinite" path="M170,168 C320,150 560,150 880,166"/>
+  </circle>
+  <circle r="2.5" fill="url(#pulse)">
+    <animateMotion dur="4s" begin="1.3s" repeatCount="indefinite" path="M170,168 C320,150 560,150 880,166"/>
+  </circle>
+  <circle r="3" fill="url(#pulse)">
+    <animateMotion dur="4s" begin="2.6s" repeatCount="indefinite" path="M170,168 C320,150 560,150 880,166"/>
+  </circle>
+
+  <text x="185" y="86" font-size="42" font-weight="700" fill="#F8FAFC" letter-spacing="0.5">HomeOps AI</text>
+  <text x="187" y="116" font-size="16" fill="#B9B4D9">A real AI agent inside Home Assistant — with voice that keeps up.</text>
+  <text x="187" y="141" font-size="12.5" fill="#8E88B8">Hermes Agent runtime · fast-lane voice router · context diet + lazy entity tools · dogfooded before every release</text>
+</svg>

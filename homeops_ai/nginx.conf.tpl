@@ -83,6 +83,15 @@ http {
       proxy_send_timeout 30s;
     }
 
+    # Voice router health/stats (read-only) used by the landing page.
+    location ^~ /router/ {
+      proxy_pass http://127.0.0.1:__ROUTER_PORT__/router/;
+      proxy_http_version 1.1;
+      proxy_set_header Host $host;
+      proxy_read_timeout 10s;
+      proxy_send_timeout 10s;
+    }
+
     # (Optional) Gateway UI via ingress has been intentionally removed.
     # See landing page link that opens the gateway in a separate tab.
 

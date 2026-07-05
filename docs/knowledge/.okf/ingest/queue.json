@@ -1,0 +1,113 @@
+{
+  "mission": {
+    "brief": "HomeOps AI \u2014 the Hermes-powered Home Assistant add-on (GitDakky/homeops-ai): its architecture (add-on packaging, run.sh lifecycle, Hermes gateway, fast-lane voice router, ingress UI), the voice latency problem on large HA installs (exposed-entity context bloat) and the router's context-diet + lazy-loading solution, configuration options and model lanes, testing/dogfood workflow, and release/maintenance rules. Audience: contributors and technically-minded HA power users operating the add-on. NOT in scope: general Home Assistant tutorials, Hermes Agent internals beyond what the add-on configures, household-specific data.",
+    "created": "2026-07-05T16:58:58+00:00",
+    "round": 1
+  },
+  "sources": [
+    {
+      "id": "c09eac34729b",
+      "url": "repo:homeops_ai/run.sh",
+      "kind": "file",
+      "title": "run.sh add-on lifecycle orchestrator",
+      "status": "pending",
+      "round": 1,
+      "claimed_by": null,
+      "claimed_at": null,
+      "notes": null,
+      "concepts": [],
+      "updated": "2026-07-05T16:59:49+00:00"
+    },
+    {
+      "id": "745ade80dc0f",
+      "url": "repo:homeops_ai/homeops_router.py",
+      "kind": "file",
+      "title": "Fast-lane voice router implementation",
+      "status": "in-progress",
+      "round": 1,
+      "claimed_by": "fable",
+      "claimed_at": "2026-07-05T16:59:51+00:00",
+      "notes": null,
+      "concepts": [],
+      "updated": "2026-07-05T16:59:51+00:00"
+    },
+    {
+      "id": "c8be8cb14aa3",
+      "url": "repo:homeops_ai/config.yaml",
+      "kind": "file",
+      "title": "Add-on options and schema",
+      "status": "pending",
+      "round": 1,
+      "claimed_by": null,
+      "claimed_at": null,
+      "notes": null,
+      "concepts": [],
+      "updated": "2026-07-05T16:59:49+00:00"
+    },
+    {
+      "id": "c20b87f04096",
+      "url": "repo:homeops_ai/Dockerfile",
+      "kind": "file",
+      "title": "Image build and packaging",
+      "status": "pending",
+      "round": 1,
+      "claimed_by": null,
+      "claimed_at": null,
+      "notes": null,
+      "concepts": [],
+      "updated": "2026-07-05T16:59:50+00:00"
+    },
+    {
+      "id": "d80d584f725b",
+      "url": "repo:scripts/dogfood_router.py",
+      "kind": "file",
+      "title": "Dogfood harness and validation gates",
+      "status": "pending",
+      "round": 1,
+      "claimed_by": null,
+      "claimed_at": null,
+      "notes": null,
+      "concepts": [],
+      "updated": "2026-07-05T16:59:50+00:00"
+    },
+    {
+      "id": "e14fdb3f85ae",
+      "url": "repo:homeops_ai/nginx.conf.tpl+landing.html.tpl",
+      "kind": "file",
+      "title": "Ingress UI and nginx routing",
+      "status": "pending",
+      "round": 1,
+      "claimed_by": null,
+      "claimed_at": null,
+      "notes": null,
+      "concepts": [],
+      "updated": "2026-07-05T16:59:50+00:00"
+    },
+    {
+      "id": "18566375ddb9",
+      "url": "https://developers.home-assistant.io/docs/core/llm/",
+      "kind": "web",
+      "title": "HA LLM API developer docs (async_get_tools lazy loading)",
+      "status": "pending",
+      "round": 1,
+      "claimed_by": null,
+      "claimed_at": null,
+      "notes": null,
+      "concepts": [],
+      "updated": "2026-07-05T16:59:51+00:00"
+    },
+    {
+      "id": "7d0c6d8c5aaa",
+      "url": "note:ha-assist-lazy-loading-findings",
+      "kind": "file",
+      "title": "HA Assist exposure/latency findings (live diagnosis 2026-07-05)",
+      "status": "discovered",
+      "round": 1,
+      "claimed_by": null,
+      "claimed_at": null,
+      "notes": null,
+      "concepts": [],
+      "updated": "2026-07-05T16:59:39+00:00"
+    }
+  ]
+}

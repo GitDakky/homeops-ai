@@ -15,6 +15,7 @@ DEFAULT_TERMINAL_PORT="7682"
 DEFAULT_GATEWAY_PORT="8642"
 DEFAULT_INGRESS_PORT="48109"
 DEFAULT_DASHBOARD_API_PORT="48110"
+DEFAULT_ROUTER_PORT="8643"
 DEFAULT_HERMES_DASHBOARD_PORT="9119"
 BOOTSTRAP_SOURCE_DIR="/opt/homeops-ai/bootstrap-workspace"
 BUNDLED_SKILLS_SOURCE_DIR="/opt/homeops-ai/bundled-skills"
@@ -1137,7 +1138,6 @@ else
       return 0
     fi
     export HERMES_DASHBOARD_API_PORT="$api_port"
-    export HERMES_DASHBOARD_API_PORT="$api_port"
     python3 /dashboard_api.py &
     DASHBOARD_API_PID=$!
     sleep 1
@@ -1146,6 +1146,37 @@ else
     else
       echo "WARN: Dashboard API failed to start; file/schedule widgets may be unavailable"
       DASHBOARD_API_PID=""
+    fi
+  }
+
+  start_homeops_router() {
+    # Fast-lane conversation router: context diet + lazy entity tools.
+    # HA's conversation integration should point at this port, not the
+    # raw Hermes gateway. Complex requests are escalated automatically.
+    if [ "$AGENT_MODE" != "router" ]; then
+      echo "INFO: agent_mode=${AGENT_MODE}; HomeOps router not started (HA should call the gateway directly)."
+      return 0
+    fi
+    if [ ! -f /homeops_router.py ]; then
+      echo "WARN: homeops_router.py not found; falling back to direct gateway"
+      return 0
+    fi
+    stop_if_listening "$ROUTER_PORT" "HomeOps router"
+    ROUTER_PORT="$ROUTER_PORT" \
+    GATEWAY_URL="http://127.0.0.1:${GATEWAY_INTERNAL_PORT}" \
+    FAST_LLM_MODEL="$FAST_LLM_MODEL" \
+    FAST_LLM_API_KEY="${OPENROUTER_API_KEY_OPTION:-}" \
+    MAX_FAST_ENTITIES="$MAX_FAST_ENTITIES" \
+    ENABLE_HA_SERVICE_CALLS="$ENABLE_HA_SERVICE_CALLS" \
+    python3 /homeops_router.py >>"$RUNTIME_WRAPPER_LOG_DIR/homeops-router.log" 2>&1 &
+    ROUTER_PID=$!
+    sleep 1
+    if kill -0 "$ROUTER_PID" >/dev/null 2>&1; then
+      echo "INFO: HomeOps router started on 127.0.0.1:${ROUTER_PORT} (fast lane: ${FAST_LLM_MODEL}, max ${MAX_FAST_ENTITIES} entities/turn)"
+      echo "INFO: Point HA conversation integrations at http://127.0.0.1:${ROUTER_PORT}/v1"
+    else
+      echo "WARN: HomeOps router failed to start; HA should call the gateway directly on ${GATEWAY_INTERNAL_PORT}"
+      ROUTER_PID=""
     fi
   }
 
@@ -1180,6 +1211,8 @@ else
   }
 
   start_hermes_runtime || true
+  ROUTER_PORT="${ROUTER_PORT:-$DEFAULT_ROUTER_PORT}"
+  start_homeops_router || true
   start_dashboard_api || true
   start_hermes_dashboard_ui || true
   start_workspace_ui || true

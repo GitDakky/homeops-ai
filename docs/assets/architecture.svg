@@ -1,0 +1,96 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 400" font-family="ui-sans-serif, system-ui, -apple-system, sans-serif">
+  <defs>
+    <linearGradient id="bg2" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0c0a1e"/>
+      <stop offset="100%" stop-color="#161031"/>
+    </linearGradient>
+    <radialGradient id="p2" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0%" stop-color="#06B6D4" stop-opacity="1"/>
+      <stop offset="100%" stop-color="#06B6D4" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="p3" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0%" stop-color="#F59E0B" stop-opacity="1"/>
+      <stop offset="100%" stop-color="#F59E0B" stop-opacity="0"/>
+    </radialGradient>
+    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 Z" fill="#4C4477"/>
+    </marker>
+  </defs>
+
+  <rect width="920" height="400" rx="14" fill="url(#bg2)"/>
+  <text x="30" y="40" font-size="17" font-weight="700" fill="#F8FAFC">The fast-lane voice router</text>
+  <text x="30" y="60" font-size="12" fill="#8E88B8">small context for speed · full house reach through lazy tools · complex work escalated to the full agent</text>
+
+  <!-- Column 1: Home Assistant -->
+  <g>
+    <rect x="30" y="120" width="180" height="150" rx="12" fill="#1b1440" stroke="#7C3AED" stroke-width="1.2"/>
+    <text x="120" y="146" font-size="13" font-weight="700" fill="#F8FAFC" text-anchor="middle">Home Assistant</text>
+    <text x="120" y="168" font-size="11" fill="#B9B4D9" text-anchor="middle">Assist pipeline / voice puck</text>
+    <rect x="48" y="184" width="144" height="30" rx="7" fill="#241a52"/>
+    <text x="120" y="203" font-size="10.5" fill="#B9B4D9" text-anchor="middle">prompt + FULL entity table</text>
+    <rect x="48" y="222" width="144" height="30" rx="7" fill="#241a52"/>
+    <text x="120" y="241" font-size="10.5" fill="#B9B4D9" text-anchor="middle">thousands of entities</text>
+  </g>
+
+  <!-- Column 2: Router -->
+  <g>
+    <rect x="330" y="90" width="230" height="220" rx="12" fill="#101c33" stroke="#06B6D4" stroke-width="1.4"/>
+    <text x="445" y="116" font-size="13" font-weight="700" fill="#F8FAFC" text-anchor="middle">HomeOps Router :8643</text>
+    <rect x="348" y="130" width="194" height="34" rx="7" fill="#132741"/>
+    <text x="445" y="151" font-size="10.5" fill="#9fdbea" text-anchor="middle">1 · parse entity table</text>
+    <rect x="348" y="170" width="194" height="34" rx="7" fill="#132741"/>
+    <text x="445" y="191" font-size="10.5" fill="#9fdbea" text-anchor="middle">2 · score vs utterance</text>
+    <rect x="348" y="210" width="194" height="34" rx="7" fill="#132741"/>
+    <text x="445" y="231" font-size="10.5" fill="#9fdbea" text-anchor="middle">3 · diet: top-K candidates only</text>
+    <rect x="348" y="250" width="194" height="34" rx="7" fill="#132741"/>
+    <text x="445" y="271" font-size="10.5" fill="#9fdbea" text-anchor="middle">4 · classify: fast vs escalate</text>
+    <circle cx="545" cy="105" r="5" fill="#22c55e">
+      <animate attributeName="opacity" values="1;0.35;1" dur="2s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+
+  <!-- Column 3 top: fast model -->
+  <g>
+    <rect x="690" y="80" width="200" height="120" rx="12" fill="#0f2430" stroke="#06B6D4" stroke-width="1.2"/>
+    <text x="790" y="106" font-size="13" font-weight="700" fill="#F8FAFC" text-anchor="middle">Fast model</text>
+    <text x="790" y="126" font-size="10.5" fill="#9fdbea" text-anchor="middle">tiny prompt · sub-second turns</text>
+    <rect x="706" y="138" width="168" height="24" rx="6" fill="#123043"/>
+    <text x="790" y="154" font-size="10" fill="#9fdbea" text-anchor="middle">search_entities · get_state</text>
+    <rect x="706" y="168" width="168" height="24" rx="6" fill="#123043"/>
+    <text x="790" y="184" font-size="10" fill="#9fdbea" text-anchor="middle">call_service (gated)</text>
+  </g>
+
+  <!-- Column 3 bottom: Hermes -->
+  <g>
+    <rect x="690" y="240" width="200" height="110" rx="12" fill="#231539" stroke="#F59E0B" stroke-width="1.2"/>
+    <text x="790" y="266" font-size="13" font-weight="700" fill="#F8FAFC" text-anchor="middle">Hermes Agent :8642</text>
+    <text x="790" y="286" font-size="10.5" fill="#e8c088" text-anchor="middle">diagnostics · automations</text>
+    <text x="790" y="304" font-size="10.5" fill="#e8c088" text-anchor="middle">deep ops · full context</text>
+    <text x="790" y="330" font-size="10" fill="#a98756" text-anchor="middle">gets the ORIGINAL request verbatim</text>
+  </g>
+
+  <!-- HA API loop under fast model -->
+  <path d="M790,200 C790,215 700,220 620,218 C560,216 545,240 545,240" fill="none" stroke="#2b3f52" stroke-width="1" stroke-dasharray="4 4"/>
+  <text x="640" y="234" font-size="9.5" fill="#5f7d94">lazy tools hit the FULL entity graph via HA REST API</text>
+
+  <!-- connections -->
+  <path id="c1" d="M210,195 C260,190 290,175 330,168" fill="none" stroke="#4C4477" stroke-width="1.2" marker-end="url(#arr)"/>
+  <path id="c2" d="M560,140 C610,128 640,124 690,120" fill="none" stroke="#4C4477" stroke-width="1.2" marker-end="url(#arr)"/>
+  <path id="c3" d="M560,280 C610,286 640,290 690,294" fill="none" stroke="#4C4477" stroke-width="1.2" marker-end="url(#arr)"/>
+
+  <!-- animated pulses -->
+  <circle r="4" fill="url(#p2)">
+    <animateMotion dur="2.6s" repeatCount="indefinite" path="M210,195 C260,190 290,175 330,168"/>
+  </circle>
+  <circle r="4" fill="url(#p2)">
+    <animateMotion dur="2.6s" begin="0.9s" repeatCount="indefinite" path="M560,140 C610,128 640,124 690,120"/>
+  </circle>
+  <circle r="4" fill="url(#p3)">
+    <animateMotion dur="3.4s" begin="1.6s" repeatCount="indefinite" path="M560,280 C610,286 640,290 690,294"/>
+  </circle>
+
+  <!-- labels on paths -->
+  <text x="240" y="160" font-size="10" fill="#8E88B8">every utterance</text>
+  <text x="596" y="108" font-size="10" fill="#06B6D4">fast lane · top-K entities</text>
+  <text x="588" y="312" font-size="10" fill="#F59E0B">escalate · fail-open</text>
+</svg>

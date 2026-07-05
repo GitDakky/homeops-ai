@@ -330,6 +330,22 @@ HomeOps AI is designed as a routed agent system rather than one slow all-purpose
 
 Recommended default is `agent_mode: router`. Avoid passing every Home Assistant entity to a model. Use retrieval and keep `max_fast_entities` low, usually 10–20. Groq or local OpenAI-compatible inference can be excellent for the fast lane, but only enable write/control use after tool-calling tests pass.
 
+### The voice router (how the fast lane actually works)
+
+When `agent_mode: router`, the add-on starts a loopback **voice router** on port `8643` speaking the OpenAI `/v1/chat/completions` protocol. Point your Home Assistant conversation integration (for example `extended_openai_conversation`) at `http://127.0.0.1:8643/v1` instead of the raw Hermes gateway.
+
+Per utterance the router:
+
+1. extracts the entity table Home Assistant embedded in the prompt,
+2. scores every entity against what you said (names, aliases, domain keywords),
+3. sends only the top `max_fast_entities` candidates to the fast-lane model,
+4. attaches three on-demand tools — `search_entities`, `get_state`, `call_service` — so devices *not* in the candidate set are still reachable against the full entity graph,
+5. escalates complex requests (diagnostics, automations, "why…", long messages, streaming) verbatim to the full Hermes gateway.
+
+The router is fail-open: any router-side error escalates to the full agent rather than dropping your request. `call_service` stays disabled unless `enable_ha_service_calls` is on, and all entity/service names are strictly validated.
+
+Health and live stats are on the add-on page under the **Voice** tab (fast vs escalated turns, entity diet, p50/p95 latency), or directly at `/router/health` and `/router/stats` via ingress. To self-test the routing logic offline, run `python3 scripts/dogfood_router.py` from a repo checkout.
+
 
 All options are set via **Settings → Apps → HomeOps AI → Configuration** in Home Assistant. They are applied automatically on each app restart.
 

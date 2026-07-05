@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.2.0]
+
+### Added
+- **Fast-lane voice router** (`homeops_router.py`, loopback port 8643): an OpenAI-compatible proxy that makes voice fast on large installs. It trims the entity table Home Assistant sends on every utterance down to the top `max_fast_entities` candidates, gives the fast model on-demand `search_entities`/`get_state`/`call_service` tools for everything else, and escalates complex requests to the full Hermes agent automatically. Fail-open by design. Point conversation integrations at `http://127.0.0.1:8643/v1`.
+- **Voice tab** on the add-on page: live router stats — fast vs escalated turns, entity diet (seen → sent), p50/p95 latency — plus router health notes.
+- Read-only router observability endpoints `/router/health` and `/router/stats`, proxied under ingress.
+- Offline dogfood harness `scripts/dogfood_router.py`: boots the real router against fake LLM/gateway/HA upstreams and asserts lane choice, context diet, tool round-trips, escalation fidelity, and stats hygiene; `--live` mode probes a running add-on read-only.
+- Router unit test suite `tests/test_homeops_router.py` (wired into `scripts/validate_local.sh`).
+- DOX documentation rails: root `AGENTS.md` rewritten per the DOX method with child contracts in `homeops_ai/`, `tests/`, `scripts/`, and `docs/`.
+- Agentic-OKF knowledge bundle scaffold under `docs/knowledge/`.
+
+### Changed
+- `call_service` in the router respects `enable_ha_service_calls` (default off) and strictly validates entity/domain/service names.
+- DOCS.md: new "The voice router" section explaining the context-diet architecture and how to wire conversation integrations to it.
+
 ## [0.1.11]
 
 ### Changed

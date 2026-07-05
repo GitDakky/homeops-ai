@@ -104,6 +104,7 @@ def main():
     conf = tpl.replace('__NGINX_ACCESS_LOG__', access_log_block)
     conf = conf.replace('__TERMINAL_PORT__', terminal_port)
     conf = conf.replace('__DASHBOARD_API_PORT__', dashboard_api_port)
+    conf = conf.replace('__ROUTER_PORT__', os.environ.get('ROUTER_PORT', '8643'))
     conf = conf.replace('__HERMES_DASHBOARD_PORT__', hermes_dashboard_port)
 
     # Build HTTPS gateway proxy block (only for lan_https mode)

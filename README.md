@@ -1,135 +1,106 @@
-# HomeOps AI
+<p align="center">
+  <img src="docs/assets/banner.svg" alt="HomeOps AI" width="100%"/>
+</p>
 
-**HomeOps AI** is a Home Assistant add-on that brings a Hermes-powered operations agent into HAOS properly — as a native add-on/app, not as a fragile side-load that HA can wipe on update.
+<p align="center">
+  <img alt="Validate" src="https://github.com/GitDakky/homeops-ai/actions/workflows/validate.yaml/badge.svg"/>
+  <img alt="Build" src="https://github.com/GitDakky/homeops-ai/actions/workflows/build-addon.yaml/badge.svg"/>
+  <img alt="Version" src="https://img.shields.io/badge/add--on-v0.2.0-7C3AED"/>
+  <img alt="Arch" src="https://img.shields.io/badge/arch-amd64%20%7C%20aarch64-06B6D4"/>
+  <img alt="Runtime" src="https://img.shields.io/badge/runtime-Hermes%20Agent-F59E0B"/>
+</p>
 
-The project is seeded from the GitDakky Hermes Home Assistant add-on work, but the direction is now Hermes-first: a clean, popular, installable Home Assistant AI operations layer.
+<p align="center">
+  <strong>A real AI operations agent inside Home Assistant — with voice that keeps up.</strong><br/>
+  Native add-on · fast-lane voice router · full-house control with a tiny prompt · dogfooded before every release
+</p>
 
-## Product promise
+---
 
-HomeOps AI aims to become the most useful AI add-on for Home Assistant:
+## Why this exists
 
-- diagnose Home Assistant issues from inside the supervised environment
-- inspect live entities, devices, automations, services, templates, and bounded history
-- keep a persistent operator workspace and Home Assistant skill pack
-- expose a clean operator dashboard via Home Assistant ingress
-- support voice-ready and OpenAI-compatible workflows where appropriate
-- keep user data under add-on-managed persistent storage
-- avoid unsupported HAOS hacks or non-native side-loaded services
+Voice assistants built on Home Assistant's LLM integration get **slower as your home gets smarter**. HA serialises every exposed entity into the model prompt on every single utterance — on a large install that's thousands of entities and tens of thousands of tokens just to turn on a light. Worse, exposure is welded to access: shrink the prompt with the stock agent and you shrink what the agent can control.
 
-## Install from the Home Assistant dashboard
+HomeOps AI breaks that trade-off. It packages the full [Hermes Agent](https://github.com/NousResearch/hermes-agent) as a native HA add-on for the heavy work, and puts a purpose-built **voice router** in front of it for the fast work. The router sends the model a *diet* of only the entities relevant to what you said, gives it lazy-loading tools to reach everything else on demand, and silently escalates complex requests to the full agent. Small context. Full house. Fast answers.
 
-HomeOps AI is intended to be installed through the Home Assistant **Settings → Apps** / add-on dashboard so it is managed by Home Assistant Supervisor and survives HAOS updates/rebuilds. Do **not** SSH into HAOS and install Hermes manually; Home Assistant can reset non-native applications.
+## Architecture
 
-> **Development status:** the repository is importable as an add-on repository, but the Hermes runtime port is still in progress. Use this only for development/testing until the first release is marked production-ready.
+<p align="center">
+  <img src="docs/assets/architecture.svg" alt="Fast-lane voice router architecture" width="100%"/>
+</p>
 
-### One-click repository import
+| Stage | What happens |
+|---|---|
+| **Home Assistant** | Assist pipeline / conversation integration sends the prompt (with its full entity table) to the router at `http://127.0.0.1:8643/v1` |
+| **Parse + score** | The router extracts the entity table and scores every entity against your utterance (names, aliases, domain keywords) |
+| **Context diet** | Only the top `max_fast_entities` candidates (default 20) go to the fast model — not thousands |
+| **Lazy tools** | `search_entities` · `get_state` · `call_service` reach the **full** entity graph via the HA API when the diet missed something |
+| **Escalation** | Diagnostics, automations, "why did…", long or streaming requests are forwarded **verbatim** to the full Hermes Agent — fail-open by design |
+
+The `call_service` tool is off by default (`enable_ha_service_calls: false`) and every entity/domain/service string is strictly validated before any HA API call.
+
+## Install
 
 [![Open your Home Assistant instance and add this repository.](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2FGitDakky%2Fhomeops-ai)
 
-1. Open your Home Assistant dashboard.
-2. Go to **Settings → Apps**.
-   - On older Home Assistant versions this may be **Settings → Add-ons** or **Settings → Add-ons → Add-on Store**.
-3. Use the button above, or choose **Add repository** / **Add app repository** from the dashboard.
-4. Paste this repository URL when prompted:
+1. **Settings → Apps** (or Add-on Store) → **Add repository** → `https://github.com/GitDakky/homeops-ai`
+2. Install **HomeOps AI**, review the **Configuration** tab (provider API key, `agent_mode: router`, terminal/workspace toggles), then **Start**.
+3. Open the add-on page: the **Overview** tab walks you through onboarding (`homeops-onboard` in the integrated terminal).
+4. Point your conversation integration (e.g. `extended_openai_conversation`) at `http://127.0.0.1:8643/v1` and select it in your Assist pipeline.
 
-   ```text
-   https://github.com/GitDakky/homeops-ai
-   ```
+Always install through the HA dashboard — Supervisor owns the lifecycle, persistence (`/config/.hermes`, `/config/homeops`), ingress, and updates. Manual side-loads inside HAOS are unsupported and get wiped.
 
-5. Return to the Apps/Add-ons list and select **HomeOps AI**.
-6. Click **Install**.
-7. Open the **Configuration** tab before first start and review options such as:
-   - terminal access
-   - gateway/access mode
-   - Home Assistant write permissions
-   - provider/API environment variables
-8. Click **Start**.
-9. Open the HomeOps AI page from the Home Assistant sidebar/add-on page.
+## The operator UI
 
-### Why install it this way?
+The ingress page is a tabbed operator console:
 
-Home Assistant OS and Supervisor own the application lifecycle. Installing through the dashboard means Home Assistant can:
+- **Overview** — runtime snapshot, one-click links to Hermes Workspace, Dashboard, API UI, Terminal
+- **Voice** — live router stats: fast vs escalated turns, entity diet (seen → sent), p50/p95 latency, router health
+- **Workspace / Runtime / Insights / Integrations / Memory** — bootstrap editing, sessions board, read-only home insights, MCP setup, agent memory
+- **Help** — token recovery, reverse-proxy recipes (NPM/Caddy/Traefik/Tailscale), operator notes
 
-- pull the correct add-on image
-- mount persistent add-on storage under `/config`
-- expose Home Assistant ingress properly
-- inject Supervisor/Home Assistant API access safely
-- restart/update the add-on without wiping state
-- keep HomeOps AI visible and manageable from the dashboard
+## Dogfooding & tests
 
-Manual installs inside HAOS are unsupported for this project.
-
-## Starting Hermes in the integrated terminal
-
-After the add-on starts, open the integrated terminal and run:
+Every release passes the full local gate — and you can run the same gate yourself:
 
 ```sh
-homeops-hermes
+bash scripts/validate_local.sh        # unit suites + coupling guards + SVG + router e2e
+python3 scripts/dogfood_router.py     # offline end-to-end: real router, fake LLM/gateway/HA
+python3 scripts/dogfood_router.py --live http://<ha-host>:8643   # read-only probe of a live install
 ```
 
-Short alias:
+The offline dogfood boots the actual router against fake upstreams and asserts lane choice, context diet, tool round-trips, escalation fidelity, and that stats never leak secrets — 18 checks, ~2 seconds, no network.
 
-```sh
-h
-```
+## Configuration highlights
 
-For setup/configuration:
+| Option | Default | What it does |
+|---|---|---|
+| `agent_mode` | `router` | `router` starts the fast lane; other modes call the gateway directly |
+| `fast_llm_model` | `google/gemini-3.1-flash-lite` | Fast-lane model (any OpenAI-compatible provider) |
+| `max_fast_entities` | `20` | Candidate entity cap per voice turn — the context diet |
+| `enable_ha_service_calls` | `false` | Gate for the router's mutating `call_service` tool |
+| `llm_model` / `complex` / `deep` lanes | `openai/gpt-5.5` | Models for the full Hermes agent |
 
-```sh
-homeops-onboard
-homeops-configure
-```
-
-If `hermes` itself is on PATH you can also run `hermes` directly, but `homeops-hermes` sets the add-on-safe `HERMES_HOME=/config/.hermes` and workspace `/config/homeops` first.
-
-## Current status
-
-This repository has just been created from the proven Home Assistant add-on shell in `GitDakky/HermesHomeAssistant`. The first milestone is to replace the Hermes runtime assumptions with Hermes Agent while preserving the good Home Assistant packaging, ingress, persistence, dashboard, and validation patterns.
-
-Do not treat the current image as production-ready until the Hermes runtime port is complete.
-
-## Bundled upstream components
-
-HomeOps AI packages:
-
-- Hermes Agent stable release `v2026.5.7` from `https://github.com/NousResearch/hermes-agent`
-- Hermes Paperclip Adapter from `https://github.com/NousResearch/hermes-paperclip-adapter`
-- Hermes Workspace from `https://hermes-workspace.com/` (`outsourc-e/hermes-workspace`)
-
-## Intended architecture
-
-- Home Assistant add-on/app packaging
-- Debian-based HA add-on image
-- Hermes Agent runtime
-- nginx ingress landing/operator dashboard
-- optional web terminal for setup/recovery
-- Home Assistant config mounted at `/ha-config`
-- HomeOps/Hermes state persisted under `/config/.hermes` and `/config/homeops`
-- built-in Home Assistant tools using the Supervisor/Core APIs from the add-on context
+Full reference: [DOCS.md](DOCS.md) (rendered inside HA under the add-on's Documentation tab).
 
 ## Repository layout
 
-- `homeops_ai/` — Home Assistant add-on package
-- `homeops_ai/config.yaml` — add-on metadata, options, schema
-- `homeops_ai/Dockerfile` — add-on image build
-- `homeops_ai/run.sh` — add-on PID 1 runtime orchestrator
-- `homeops_ai/dashboard_api.py` — local dashboard/status API
-- `homeops_ai/ha_mcp_server.cjs` — Home Assistant MCP/tool bridge inherited from the Hermes line; to be evaluated for Hermes
-- `scripts/validate_local.sh` — local validation entrypoint
+- `homeops_ai/` — the add-on: `run.sh` (PID 1), `homeops_router.py` (voice router), `dashboard_api.py`, `config.yaml`, Dockerfile, templates, translations
+- `scripts/` — validation gates + dogfood harness
+- `tests/` — offline unit suites
+- `docs/knowledge/` — [Agentic-OKF](https://github.com/CG-Labs/Agentic-OKF) knowledge bundle (concepts, searchable, publishable)
+- `AGENTS.md` — [DOX](https://github.com/agent0ai/dox) documentation rail; child AGENTS.md files are binding work contracts per subtree
 
-## Roadmap
+## Bundled upstream components
 
-1. Rename and clean Hermes-specific runtime/state references.
-2. Install Hermes Agent in the add-on image using the official installer or a pinned source build.
-3. Map add-on options to Hermes config/environment safely.
-4. Replace Hermes gateway lifecycle with Hermes gateway/API/dashboard lifecycle.
-5. Convert bundled Hermes skills/bootstrap files into Hermes-native skills and workspace context.
-6. Rework docs, translations, tests, and CI for a clean HomeOps AI public release.
+- **Hermes Agent** stable release (pinned via `ARG HERMES_VERSION`) — [NousResearch/hermes-agent](https://github.com/NousResearch/hermes-agent)
+- **Hermes Paperclip Adapter** — [NousResearch/hermes-paperclip-adapter](https://github.com/NousResearch/hermes-paperclip-adapter)
+- **Hermes Workspace** — [hermes-workspace.com](https://hermes-workspace.com/)
 
-## Name
+## Contributing
 
-**HomeOps AI** — the Hermes-powered operations brain for Home Assistant.
+Read `AGENTS.md` first — it's the binding work contract (public repo: no secrets, tokens, IPs, or real household data, ever). Every HA-visible change bumps `homeops_ai/config.yaml` version + `CHANGELOG.md` together. `bash scripts/validate_local.sh` must pass before every push.
 
-## Lineage
-
-This project starts from the Home Assistant add-on work in `GitDakky/HermesHomeAssistant`, then ports the agent runtime and user experience to Hermes Agent.
+<p align="center">
+  <sub>HomeOps AI — the Hermes-powered operations brain for Home Assistant.</sub>
+</p>

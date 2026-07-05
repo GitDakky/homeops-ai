@@ -10,6 +10,9 @@ ALLOW = [
     re.compile(r"^homeops_ai/CHANGELOG\.md$"),
     re.compile(r"^scripts/validate_no_openclaw_user_surface\.py$"),
     re.compile(r"^scripts/validate_local\.sh$"),
+    # AGENTS.md files are agent-facing work contracts, not user surfaces;
+    # they may name this guard and the frozen legacy history file.
+    re.compile(r"(^|/)AGENTS\.md$"),
 ]
 SKIP_DIRS = {'.git','__pycache__','.pytest_cache','.mypy_cache','node_modules'}
 SUFFIXES = {'.sh','.py','.yaml','.yml','.json','.md','.tpl','.html','.svg'}
