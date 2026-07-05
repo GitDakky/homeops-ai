@@ -10,104 +10,123 @@
       "url": "repo:homeops_ai/run.sh",
       "kind": "file",
       "title": "run.sh add-on lifecycle orchestrator",
-      "status": "pending",
+      "status": "done",
       "round": 1,
-      "claimed_by": null,
-      "claimed_at": null,
-      "notes": null,
-      "concepts": [],
-      "updated": "2026-07-05T16:59:49+00:00"
+      "claimed_by": "fable",
+      "claimed_at": "2026-07-05T17:13:06+00:00",
+      "notes": "Lifecycle + port map",
+      "concepts": [
+        "addon-runtime-lifecycle"
+      ],
+      "updated": "2026-07-05T17:13:06+00:00"
     },
     {
       "id": "745ade80dc0f",
       "url": "repo:homeops_ai/homeops_router.py",
       "kind": "file",
       "title": "Fast-lane voice router implementation",
-      "status": "in-progress",
+      "status": "done",
       "round": 1,
       "claimed_by": "fable",
       "claimed_at": "2026-07-05T16:59:51+00:00",
-      "notes": null,
-      "concepts": [],
-      "updated": "2026-07-05T16:59:51+00:00"
+      "notes": "Router distilled into 3 concepts",
+      "concepts": [
+        "fast-lane-voice-router",
+        "on-demand-entity-tools",
+        "routing-lane-classification"
+      ],
+      "updated": "2026-07-05T17:13:06+00:00"
     },
     {
       "id": "c8be8cb14aa3",
       "url": "repo:homeops_ai/config.yaml",
       "kind": "file",
       "title": "Add-on options and schema",
-      "status": "pending",
+      "status": "done",
       "round": 1,
-      "claimed_by": null,
-      "claimed_at": null,
-      "notes": null,
-      "concepts": [],
-      "updated": "2026-07-05T16:59:49+00:00"
+      "claimed_by": "fable",
+      "claimed_at": "2026-07-05T17:13:07+00:00",
+      "notes": "Options/lanes distilled",
+      "concepts": [
+        "model-lanes"
+      ],
+      "updated": "2026-07-05T17:13:07+00:00"
     },
     {
       "id": "c20b87f04096",
       "url": "repo:homeops_ai/Dockerfile",
       "kind": "file",
       "title": "Image build and packaging",
-      "status": "pending",
+      "status": "done",
       "round": 1,
-      "claimed_by": null,
-      "claimed_at": null,
-      "notes": null,
-      "concepts": [],
-      "updated": "2026-07-05T16:59:50+00:00"
+      "claimed_by": "fable",
+      "claimed_at": "2026-07-05T17:13:07+00:00",
+      "notes": "Packaging covered within lifecycle concept; no separate concept warranted",
+      "concepts": [
+        "addon-runtime-lifecycle"
+      ],
+      "updated": "2026-07-05T17:13:08+00:00"
     },
     {
       "id": "d80d584f725b",
       "url": "repo:scripts/dogfood_router.py",
       "kind": "file",
       "title": "Dogfood harness and validation gates",
-      "status": "pending",
+      "status": "done",
       "round": 1,
-      "claimed_by": null,
-      "claimed_at": null,
-      "notes": null,
-      "concepts": [],
-      "updated": "2026-07-05T16:59:50+00:00"
+      "claimed_by": "fable",
+      "claimed_at": "2026-07-05T17:13:08+00:00",
+      "notes": "Gauntlet + live mode",
+      "concepts": [
+        "dogfood-and-validation-workflow"
+      ],
+      "updated": "2026-07-05T17:13:08+00:00"
     },
     {
       "id": "e14fdb3f85ae",
       "url": "repo:homeops_ai/nginx.conf.tpl+landing.html.tpl",
       "kind": "file",
       "title": "Ingress UI and nginx routing",
-      "status": "pending",
+      "status": "done",
       "round": 1,
-      "claimed_by": null,
-      "claimed_at": null,
-      "notes": null,
-      "concepts": [],
-      "updated": "2026-07-05T16:59:50+00:00"
+      "claimed_by": "fable",
+      "claimed_at": "2026-07-05T17:13:09+00:00",
+      "notes": "UI + ingress link rules",
+      "concepts": [
+        "ingress-operator-ui"
+      ],
+      "updated": "2026-07-05T17:13:09+00:00"
     },
     {
       "id": "18566375ddb9",
       "url": "https://developers.home-assistant.io/docs/core/llm/",
       "kind": "web",
       "title": "HA LLM API developer docs (async_get_tools lazy loading)",
-      "status": "pending",
+      "status": "done",
       "round": 1,
-      "claimed_by": null,
-      "claimed_at": null,
-      "notes": null,
-      "concepts": [],
-      "updated": "2026-07-05T16:59:51+00:00"
+      "claimed_by": "fable",
+      "claimed_at": "2026-07-05T17:13:09+00:00",
+      "notes": "HA docs findings from 2026-07-05 research",
+      "concepts": [
+        "ha-llm-api-lazy-loading-hook",
+        "entity-context-bloat-problem"
+      ],
+      "updated": "2026-07-05T17:13:10+00:00"
     },
     {
       "id": "7d0c6d8c5aaa",
       "url": "note:ha-assist-lazy-loading-findings",
       "kind": "file",
       "title": "HA Assist exposure/latency findings (live diagnosis 2026-07-05)",
-      "status": "discovered",
+      "status": "done",
       "round": 1,
-      "claimed_by": null,
-      "claimed_at": null,
-      "notes": null,
-      "concepts": [],
-      "updated": "2026-07-05T16:59:39+00:00"
+      "claimed_by": "fable",
+      "claimed_at": "2026-07-05T17:13:20+00:00",
+      "notes": "Live-diagnosis findings folded into the bloat-problem concept",
+      "concepts": [
+        "entity-context-bloat-problem"
+      ],
+      "updated": "2026-07-05T17:13:20+00:00"
     }
   ]
 }

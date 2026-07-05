@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="generator" content="agentic-okf publish">
+<title>knowledge</title>
+<style>
+:root{
+  --bg:#ffffff;--bg2:#f6f7f9;--fg:#1a202c;--fg2:#5a6472;--line:#e3e7ec;
+  --accent:#2563eb;--accent2:#eff4ff;--ok:#16803c;--warn:#b45309;--bad:#b91c1c;
+  --chip:#eef1f5;--code:#f4f5f7;--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+:root[data-theme=dark]{
+  --bg:#12151a;--bg2:#181c23;--fg:#e6e9ee;--fg2:#98a2b3;--line:#2a3140;
+  --accent:#7aa2ff;--accent2:#1c2536;--ok:#4ade80;--warn:#fbbf24;--bad:#f87171;
+  --chip:#232936;--code:#1c212b;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font:15px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  background:var(--bg);color:var(--fg)}
+#app{display:flex;flex-direction:column;height:100vh}
+#topbar{display:flex;align-items:center;gap:14px;padding:10px 18px;
+  border-bottom:1px solid var(--line);background:var(--bg2);flex:0 0 auto}
+#topbar .brand{font-weight:700;color:var(--fg);text-decoration:none;white-space:nowrap}
+#nav-toggle{display:none}
+#search{flex:1;max-width:440px;padding:7px 12px;border:1px solid var(--line);
+  border-radius:8px;background:var(--bg);color:var(--fg);font-size:14px}
+#search:focus{outline:2px solid var(--accent);border-color:transparent}
+.top-links{display:flex;align-items:center;gap:14px;margin-left:auto}
+.top-links a{color:var(--fg2);text-decoration:none;font-size:14px}
+.top-links a:hover{color:var(--accent)}
+#theme-toggle,#nav-toggle{border:1px solid var(--line);background:var(--bg);
+  color:var(--fg);border-radius:8px;padding:4px 10px;cursor:pointer;font-size:14px}
+#layout{display:flex;flex:1;min-height:0}
+#sidebar{width:270px;flex:0 0 auto;overflow-y:auto;padding:14px 10px 40px;
+  border-right:1px solid var(--line);background:var(--bg2)}
+#sidebar details{margin:2px 0}
+#sidebar summary{cursor:pointer;font-weight:600;font-size:13px;color:var(--fg2);
+  text-transform:capitalize;padding:3px 8px;border-radius:6px;user-select:none}
+#sidebar summary:hover{background:var(--chip)}
+#sidebar a{display:block;padding:3px 8px 3px 20px;border-radius:6px;font-size:13.5px;
+  color:var(--fg);text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#sidebar a:hover{background:var(--chip)}
+#sidebar a.active{background:var(--accent2);color:var(--accent);font-weight:600}
+#content{flex:1;overflow-y:auto;padding:28px 40px 80px;min-width:0}
+.inner{max-width:800px;margin:0 auto}
+h1{font-size:26px;margin:.2em 0 .3em}
+h2{font-size:19px;margin-top:1.6em;border-bottom:1px solid var(--line);padding-bottom:4px}
+a{color:var(--accent)}
+code{background:var(--code);padding:1px 5px;border-radius:5px;font-family:var(--mono);font-size:.88em}
+pre{background:var(--code);padding:12px 14px;border-radius:10px;overflow-x:auto}
+pre code{background:none;padding:0}
+blockquote{margin:0;padding:2px 16px;border-left:3px solid var(--line);color:var(--fg2)}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{border:1px solid var(--line);padding:6px 10px;text-align:left}
+th{background:var(--bg2)}
+.badges{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 14px}
+.badge{font-size:12px;padding:2px 9px;border-radius:999px;background:var(--chip);color:var(--fg2)}
+.badge.type{background:var(--accent2);color:var(--accent);font-weight:600}
+.badge.v-reviewed{background:color-mix(in srgb,var(--ok) 16%,transparent);color:var(--ok)}
+.badge.v-agent-checked{background:color-mix(in srgb,var(--warn) 16%,transparent);color:var(--warn)}
+.badge.v-draft{background:color-mix(in srgb,var(--bad) 14%,transparent);color:var(--bad)}
+.desc{color:var(--fg2);font-size:15.5px;margin:0 0 18px}
+.section-label{font-size:12px;font-weight:700;letter-spacing:.06em;color:var(--fg2);
+  text-transform:uppercase;margin:26px 0 8px}
+.rel-chip{display:inline-block;margin:2px 6px 2px 0;padding:3px 10px;border-radius:8px;
+  background:var(--chip);font-size:13px;text-decoration:none}
+.rel-chip b{color:var(--fg2);font-weight:600;font-size:11px;text-transform:uppercase;margin-right:6px}
+.provenance{margin-top:34px;padding-top:12px;border-top:1px solid var(--line);
+  font-size:12.5px;color:var(--fg2)}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:18px 0}
+.card{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.card .n{font-size:26px;font-weight:700}
+.card .l{font-size:12.5px;color:var(--fg2)}
+.finding{font-size:13.5px;padding:5px 0;border-bottom:1px solid var(--line)}
+.finding .sev{display:inline-block;width:70px;font-weight:700;font-size:11px;text-transform:uppercase}
+.sev.error{color:var(--bad)}.sev.warning{color:var(--warn)}.sev.info{color:var(--fg2)}
+#search-results{position:fixed;top:54px;left:50%;transform:translateX(-50%);
+  width:min(620px,92vw);max-height:60vh;overflow-y:auto;background:var(--bg);
+  border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,.18);z-index:50}
+#search-results a{display:block;padding:10px 16px;text-decoration:none;color:var(--fg);
+  border-bottom:1px solid var(--line)}
+#search-results a:hover,#search-results a.sel{background:var(--accent2)}
+#search-results .t{font-weight:600}
+#search-results .d{font-size:12.5px;color:var(--fg2)}
+#search-results .empty{padding:14px 16px;color:var(--fg2);font-size:14px}
+svg.graph{width:100%;height:auto;background:var(--bg2);border:1px solid var(--line);border-radius:12px}
+svg.graph text{fill:var(--fg);font-size:11px}
+svg.graph text.kind{fill:var(--fg2);font-size:9px}
+svg.graph line{stroke:var(--fg2);stroke-opacity:.5}
+svg.graph circle{fill:var(--accent)}
+svg.graph a{cursor:pointer}
+.crumbs{font-size:12.5px;color:var(--fg2);margin-bottom:2px}
+.crumbs a{color:var(--fg2)}
+@media(max-width:860px){
+  #sidebar{position:fixed;left:0;top:53px;bottom:0;z-index:40;transform:translateX(-100%);
+    transition:transform .18s}
+  #sidebar.open{transform:none}
+  #nav-toggle{display:block}
+  #content{padding:20px 18px 60px}
+  #search{max-width:none}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <header id="topbar">
+    <button id="nav-toggle" title="Toggle navigation">☰</button>
+    <a class="brand" href="#/">knowledge</a>
+    <input id="search" type="search" placeholder="Search concepts… ( / )" autocomplete="off">
+    <nav class="top-links">
+      <a href="#/dash">Dashboard</a>
+      <a href="#/log">Changelog</a>
+      <button id="theme-toggle" title="Toggle theme">◐</button>
+    </nav>
+  </header>
+  <div id="layout">
+    <aside id="sidebar"></aside>
+    <main id="content"></main>
+  </div>
+  <div id="search-results" hidden></div>
+</div>
+<script id="okf-data" type="application/json">{"meta": {"name": "knowledge", "description": null, "generated_at": "2026-07-05T17:13:44+00:00", "generator": "agentic-okf publish"}, "concepts": [{"id": "addon-runtime-lifecycle", "title": "Add-on Runtime Lifecycle", "type": "Architecture", "description": "What run.sh starts inside the HomeOps AI container, in what order, and the ports each service owns.", "resource": "https://github.com/GitDakky/homeops-ai/blob/main/homeops_ai/run.sh", "tags": ["runtime", "lifecycle", "ports", "architecture"], "timestamp": "2026-07-05", "aokf": {"verification": "agent-checked", "confidence": "high", "aliases": ["run.sh", "startup order", "port map"], "relations": {"relates_to": ["fast-lane-voice-router", "ingress-operator-ui"]}, "provenance": {"method": "agent-authored", "source": "repo:homeops_ai/run.sh"}}, "html": "<p><code>run.sh<\/code> is PID 1 (with <code>set -euo pipefail<\/code>). It reads user options from\n<code>/data/options.json<\/code> (validating anything injected into shell/nginx/hermes\nconfig), maps them to Hermes configuration, then starts services in order,\nkilling stale listeners on each port first so restarts are idempotent:<\/p>\n<ol>\n<li><strong>Hermes gateway<\/strong> — the full agent, loopback <code>:8642<\/code>\n(<code>GATEWAY_INTERNAL_PORT<\/code>), API-server platform enabled.<\/li>\n<li><strong>Voice router<\/strong> — loopback <code>:8643<\/code>, only when <code>agent_mode: router<\/code>;\nsee <a href=\"#/fast-lane-voice-router\">Fast-Lane Voice Router<\/a>.<\/li>\n<li><strong>Dashboard API<\/strong> — loopback <code>:48110<\/code>, read-mostly operator data for\nthe ingress page.<\/li>\n<li><strong>Hermes dashboard UI<\/strong> — loopback <code>:9119<\/code>, proxied under ingress\n<code>/dashboard/<\/code>.<\/li>\n<li><strong>Hermes Workspace<\/strong> — <code>:3000<\/code> (configurable), opened in a new tab\nrather than embedded.<\/li>\n<li><strong>nginx<\/strong> — ingress entrypoint <code>:48109<\/code>, routing <code>/<\/code>, <code>/terminal/<\/code>,\n<code>/dashboard/<\/code>, <code>/super/api/<\/code>, <code>/router/<\/code>.<\/li>\n<li><strong>ttyd web terminal<\/strong> — <code>:7682<\/code> (configurable), optional.<\/li>\n<\/ol>\n<p>Persistent state lives under <code>/config<\/code> (<code>/config/.hermes<\/code>,\n<code>/config/homeops<\/code>) and is never wiped by restarts. All template\nplaceholders in <code>nginx.conf.tpl<\/code>/<code>landing.html.tpl<\/code> — the\n<a href=\"#/ingress-operator-ui\">ingress operator UI<\/a> — are substituted by\n<code>render_nginx.py<\/code>, which must be updated in the same change as any new\nplaceholder.<\/p>\n", "text": "  run.sh  is PID 1 (with  set -euo pipefail ). It reads user options from\n /data/options.json  (validating anything injected into shell/nginx/hermes\nconfig), maps them to Hermes configuration, then starts services in order,\nkilling stale listeners on each port first so restarts are idempotent: \n \n  Hermes gateway  — the full agent, loopback  :8642 \n( GATEWAY_INTERNAL_PORT ), API-server platform enabled. \n  Voice router  — loopback  :8643 , only when  agent_mode: router ;\nsee  Fast-Lane Voice Router . \n  Dashboard API  — loopback  :48110 , read-mostly operator data for\nthe ingress page. \n  Hermes dashboard UI  — loopback  :9119 , proxied under ingress\n /dashboard/ . \n  Hermes Workspace  —  :3000  (configurable), opened in a new tab\nrather than embedded. \n  nginx  — ingress entrypoint  :48109 , routing  / ,  /terminal/ ,\n /dashboard/ ,  /super/api/ ,  /router/ . \n  ttyd web terminal  —  :7682  (configurable), optional. \n \n Persistent state lives under  /config  ( /config/.hermes ,\n /config/homeops ) and is never wiped by restarts. All template\nplaceholders in  nginx.conf.tpl / landing.html.tpl  — the\n ingress operator UI  — are substituted by\n render_nginx.py , which must be updated in the same change as any new\nplaceholder. \n"}, {"id": "dogfood-and-validation-workflow", "title": "Dogfood and Validation Workflow", "type": "Runbook", "description": "The test gauntlet every HomeOps AI change passes before push, and how to probe a live install read-only.", "resource": "https://github.com/GitDakky/homeops-ai/blob/main/scripts/dogfood_router.py", "tags": ["testing", "dogfood", "ci", "runbook"], "timestamp": "2026-07-05", "aokf": {"verification": "agent-checked", "confidence": "high", "aliases": ["testing workflow", "validate_local", "router e2e"], "relations": {"relates_to": ["fast-lane-voice-router", "release-and-versioning-rules"]}, "provenance": {"method": "agent-authored", "source": "repo:scripts/dogfood_router.py"}}, "html": "<p>Run from the repo root before every push (also enforced in CI):<\/p>\n<pre><code class=\"language-sh\">bash scripts/validate_local.sh\n<\/code><\/pre>\n<p>That single gate runs: release metadata check, option/schema/translation\ncoupling check, legacy-terminology guard, bash syntax, Python compile,\nlegacy unittest suites, router pytest suite, the offline router dogfood,\nand SVG parsing.<\/p>\n<p>The dogfood harness (<code>scripts/dogfood_router.py<\/code>) is the end-to-end proof:\nit boots the REAL <a href=\"#/fast-lane-voice-router\">router<\/a> against fake\nLLM/gateway/HA upstreams (stdlib HTTP servers, no network) and asserts 18\nchecks across four scenarios — fast-lane context dieting, tool round-trips\nfor out-of-context devices, escalation fidelity (original prompt reaches\nthe gateway verbatim), and stats hygiene (no secrets).<\/p>\n<p>Against a running add-on, dogfood read-only:<\/p>\n<pre><code class=\"language-sh\">python3 scripts/dogfood_router.py --live http://&lt;ha-host&gt;:8643\n<\/code><\/pre>\n<p>Live mode probes <code>/router/health<\/code>, <code>/router/stats<\/code>, and one harmless state\nquery; it never calls services. The same stats surface in the add-on UI's\nVoice tab. This gauntlet is a hard prerequisite of the\n<a href=\"#/release-and-versioning-rules\">release and versioning rules<\/a>.<\/p>\n", "text": " Run from the repo root before every push (also enforced in CI): \n  bash scripts/validate_local.sh\n  \n That single gate runs: release metadata check, option/schema/translation\ncoupling check, legacy-terminology guard, bash syntax, Python compile,\nlegacy unittest suites, router pytest suite, the offline router dogfood,\nand SVG parsing. \n The dogfood harness ( scripts/dogfood_router.py ) is the end-to-end proof:\nit boots the REAL  router  against fake\nLLM/gateway/HA upstreams (stdlib HTTP servers, no network) and asserts 18\nchecks across four scenarios — fast-lane context dieting, tool round-trips\nfor out-of-context devices, escalation fidelity (original prompt reaches\nthe gateway verbatim), and stats hygiene (no secrets). \n Against a running add-on, dogfood read-only: \n  python3 scripts/dogfood_router.py --live http://&lt;ha-host&gt;:8643\n  \n Live mode probes  /router/health ,  /router/stats , and one harmless state\nquery; it never calls services. The same stats surface in the add-on UI's\nVoice tab. This gauntlet is a hard prerequisite of the\n release and versioning rules . \n"}, {"id": "entity-context-bloat-problem", "title": "Entity Context Bloat Problem", "type": "Decision", "description": "Home Assistant serialises every exposed entity into the LLM prompt each turn, making voice slow and expensive on large installs.", "resource": null, "tags": ["latency", "context", "home-assistant", "voice"], "timestamp": "2026-07-05", "aokf": {"verification": "agent-checked", "confidence": "high", "aliases": ["slow voice assistant", "exposed entities latency", "prompt bloat"], "relations": {"relates_to": ["ha-llm-api-lazy-loading-hook"]}, "provenance": {"method": "agent-authored", "source": "live HA diagnosis 2026-07-05 + HA developer docs"}}, "html": "<p>Home Assistant's built-in Assist LLM integration serialises every <em>exposed<\/em>\nentity (name, state, aliases) into the system prompt on every utterance.\nOn a large install this was measured at thousands of exposed entities —\ntens of thousands of tokens per voice turn — producing multi-second\nlatency and high per-turn cost, mostly describing devices irrelevant to\nthe request.<\/p>\n<p>The critical architectural constraint: with the stock built-in agent,\n&quot;Assist can only control entities exposed to it&quot; — exposure is\nsimultaneously the context-loader AND the access-gate. You cannot get\nsmall-context plus full-control from the built-in agent; curating exposure\nshrinks both together.<\/p>\n<p>This is the problem the <a href=\"#/fast-lane-voice-router\">fast-lane voice router<\/a>\nexists to solve: a custom conversation endpoint holding its own Home\nAssistant API access is not bound by the exposure gate (see the\n<a href=\"#/ha-llm-api-lazy-loading-hook\">HA LLM API lazy-loading hook<\/a>), so it\ncan send a tiny candidate set to the model while reaching the full entity\ngraph through <a href=\"#/on-demand-entity-tools\">on-demand tools<\/a>.<\/p>\n", "text": " Home Assistant's built-in Assist LLM integration serialises every  exposed \nentity (name, state, aliases) into the system prompt on every utterance.\nOn a large install this was measured at thousands of exposed entities —\ntens of thousands of tokens per voice turn — producing multi-second\nlatency and high per-turn cost, mostly describing devices irrelevant to\nthe request. \n The critical architectural constraint: with the stock built-in agent,\n&quot;Assist can only control entities exposed to it&quot; — exposure is\nsimultaneously the context-loader AND the access-gate. You cannot get\nsmall-context plus full-control from the built-in agent; curating exposure\nshrinks both together. \n This is the problem the  fast-lane voice router \nexists to solve: a custom conversation endpoint holding its own Home\nAssistant API access is not bound by the exposure gate (see the\n HA LLM API lazy-loading hook ), so it\ncan send a tiny candidate set to the model while reaching the full entity\ngraph through  on-demand tools . \n"}, {"id": "fast-lane-voice-router", "title": "Fast-Lane Voice Router", "type": "Architecture", "description": "Loopback OpenAI-compatible proxy that diets the entity context and lazy-loads the rest, fixing voice latency on large Home Assistant installs.", "resource": "https://github.com/GitDakky/homeops-ai/blob/main/homeops_ai/homeops_router.py", "tags": ["router", "voice", "latency", "architecture"], "timestamp": "2026-07-05", "aokf": {"verification": "agent-checked", "confidence": "high", "aliases": ["voice router", "fast lane", "context diet", "homeops router"], "relations": {"depends_on": ["entity-context-bloat-problem"], "relates_to": ["routing-lane-classification", "on-demand-entity-tools"]}, "provenance": {"method": "agent-authored", "source": "repo:homeops_ai/homeops_router.py"}}, "html": "<p>The HomeOps router (<code>homeops_ai/homeops_router.py<\/code>) is a stdlib-only Python\nHTTP proxy listening on loopback port 8643 that speaks the OpenAI\n<code>/v1/chat/completions<\/code> protocol. Home Assistant conversation integrations\npoint at the router instead of the raw Hermes gateway when <code>agent_mode<\/code> is\n<code>router<\/code>.<\/p>\n<p>Per request it: (1) extracts the entity table Home Assistant embedded in the\nsystem prompt, (2) scores every entity against the user's utterance using\ntoken overlap, domain keywords, and exact-name bonuses, (3) rebuilds a slim\nsystem prompt containing at most <code>max_fast_entities<\/code> candidates (default 20),\n(4) sends that to the configured fast model with three\n<a href=\"#/on-demand-entity-tools\">on-demand entity tools<\/a> attached, and\n(5) escalates complex or streaming requests verbatim to the full Hermes\ngateway — see <a href=\"#/routing-lane-classification\">lane classification<\/a>.<\/p>\n<p>The router is fail-open: any internal error escalates the original request\nrather than dropping it, addressing the\n<a href=\"#/entity-context-bloat-problem\">entity context bloat problem<\/a> without\never reducing capability. Read-only observability lives at <code>/router/health<\/code>\nand <code>/router/stats<\/code> (no secrets ever appear in stats), surfaced in the\nadd-on's Voice tab.<\/p>\n", "text": " The HomeOps router ( homeops_ai/homeops_router.py ) is a stdlib-only Python\nHTTP proxy listening on loopback port 8643 that speaks the OpenAI\n /v1/chat/completions  protocol. Home Assistant conversation integrations\npoint at the router instead of the raw Hermes gateway when  agent_mode  is\n router . \n Per request it: (1) extracts the entity table Home Assistant embedded in the\nsystem prompt, (2) scores every entity against the user's utterance using\ntoken overlap, domain keywords, and exact-name bonuses, (3) rebuilds a slim\nsystem prompt containing at most  max_fast_entities  candidates (default 20),\n(4) sends that to the configured fast model with three\n on-demand entity tools  attached, and\n(5) escalates complex or streaming requests verbatim to the full Hermes\ngateway — see  lane classification . \n The router is fail-open: any internal error escalates the original request\nrather than dropping it, addressing the\n entity context bloat problem  without\never reducing capability. Read-only observability lives at  /router/health \nand  /router/stats  (no secrets ever appear in stats), surfaced in the\nadd-on's Voice tab. \n"}, {"id": "ha-llm-api-lazy-loading-hook", "title": "HA LLM API Lazy-Loading Hook", "type": "Architecture", "description": "Home Assistant's async_get_tools is evaluated per request and can vary its tool set, enabling custom agents to lazy-load context.", "resource": "https://developers.home-assistant.io/docs/core/llm/", "tags": ["home-assistant", "llm-api", "lazy-loading"], "timestamp": "2026-07-05", "aokf": {"verification": "agent-checked", "confidence": "high", "aliases": ["async_get_tools", "custom llm api", "per-request tools"], "relations": {"relates_to": ["entity-context-bloat-problem"]}, "provenance": {"method": "agent-authored", "source": "https://developers.home-assistant.io/docs/core/llm/"}}, "html": "<p>Home Assistant's LLM developer API provides the architectural escape hatch\nfrom the <a href=\"#/entity-context-bloat-problem\">context bloat problem<\/a>: a\ncustom integration's tools platform is &quot;imported lazily and queried only\nwhen an LLM request needs its tools&quot;, and its <code>async_get_tools(hass, llm_context)<\/code> callback is &quot;evaluated for each request… can return a\ndifferent set of tools depending on the context&quot;.<\/p>\n<p>Three consequences shape HomeOps AI's design:<\/p>\n<ol>\n<li>A custom conversation agent is not obliged to carry the full entity\ntable — it can vary what the model sees per request.<\/li>\n<li>An agent holding its own Home Assistant API access (add-on Supervisor\ntoken or a long-lived token) bypasses the exposed-entities gate\nentirely via REST/WebSocket, decoupling context size from control\nreach.<\/li>\n<li>HA's <code>mcp_server<\/code> integration is NOT a fix by itself: its access is\nstill gated by the exposed-entities page, so it only changes the\ntransport, not the trade-off.<\/li>\n<\/ol>\n<p>HomeOps AI implements the pattern outside HA core — in the\n<a href=\"#/fast-lane-voice-router\">router<\/a> — because a loopback OpenAI-compatible\nproxy works with any conversation integration without requiring a custom\nHA component install.<\/p>\n", "text": " Home Assistant's LLM developer API provides the architectural escape hatch\nfrom the  context bloat problem : a\ncustom integration's tools platform is &quot;imported lazily and queried only\nwhen an LLM request needs its tools&quot;, and its  async_get_tools(hass, llm_context)  callback is &quot;evaluated for each request… can return a\ndifferent set of tools depending on the context&quot;. \n Three consequences shape HomeOps AI's design: \n \n A custom conversation agent is not obliged to carry the full entity\ntable — it can vary what the model sees per request. \n An agent holding its own Home Assistant API access (add-on Supervisor\ntoken or a long-lived token) bypasses the exposed-entities gate\nentirely via REST/WebSocket, decoupling context size from control\nreach. \n HA's  mcp_server  integration is NOT a fix by itself: its access is\nstill gated by the exposed-entities page, so it only changes the\ntransport, not the trade-off. \n \n HomeOps AI implements the pattern outside HA core — in the\n router  — because a loopback OpenAI-compatible\nproxy works with any conversation integration without requiring a custom\nHA component install. \n"}, {"id": "ingress-operator-ui", "title": "Ingress Operator UI", "type": "Architecture", "description": "The tabbed operator console served under Home Assistant Ingress, including the Voice tab's live router stats.", "resource": "https://github.com/GitDakky/homeops-ai/blob/main/homeops_ai/landing.html.tpl", "tags": ["ui", "ingress", "operator", "voice"], "timestamp": "2026-07-05", "aokf": {"verification": "agent-checked", "confidence": "high", "aliases": ["landing page", "voice tab", "operator console"], "relations": {"relates_to": ["addon-runtime-lifecycle", "fast-lane-voice-router"]}, "provenance": {"method": "agent-authored", "source": "repo:homeops_ai/landing.html.tpl"}}, "html": "<p>The add-on page inside Home Assistant is a single templated HTML console\n(<code>landing.html.tpl<\/code>, rendered by <code>render_nginx.py<\/code> as part of the\n<a href=\"#/addon-runtime-lifecycle\">add-on runtime lifecycle<\/a>, served by nginx\non the ingress port) with tabs: Overview, Help, Workspace, Runtime,\n<strong>Voice<\/strong>, Insights, Integrations, Memory.<\/p>\n<p>The Voice tab is the cockpit for the\n<a href=\"#/fast-lane-voice-router\">fast-lane voice router<\/a>: it polls\n<code>./router/stats<\/code>\n(read-only, proxied by nginx to the loopback router) and shows fast-lane\nvs escalated turn counts, the entity diet (entities seen in the last\nprompt vs entities actually sent to the model), p50/p95 latency, the\nactive fast model, and whether service calls are enabled. A copy button\nprovides the offline dogfood command.<\/p>\n<p>Hard-won UI rules encoded here: all ingress links must be relative\n(<code>./terminal/<\/code>, <code>./dashboard/<\/code>, <code>./router/stats<\/code>) or derived from\n<code>window.location.pathname<\/code> — absolute paths break under HA Ingress\npath-prefixing. The Workspace button gets a concrete <code>http(s)://host:port<\/code>\nURL, never <code>href=&quot;#&quot;<\/code>. Any new <code>__PLACEHOLDER__<\/code> in a template requires a\nmatching substitution in <code>render_nginx.py<\/code> in the same change.<\/p>\n", "text": " The add-on page inside Home Assistant is a single templated HTML console\n( landing.html.tpl , rendered by  render_nginx.py  as part of the\n add-on runtime lifecycle , served by nginx\non the ingress port) with tabs: Overview, Help, Workspace, Runtime,\n Voice , Insights, Integrations, Memory. \n The Voice tab is the cockpit for the\n fast-lane voice router : it polls\n ./router/stats \n(read-only, proxied by nginx to the loopback router) and shows fast-lane\nvs escalated turn counts, the entity diet (entities seen in the last\nprompt vs entities actually sent to the model), p50/p95 latency, the\nactive fast model, and whether service calls are enabled. A copy button\nprovides the offline dogfood command. \n Hard-won UI rules encoded here: all ingress links must be relative\n( ./terminal/ ,  ./dashboard/ ,  ./router/stats ) or derived from\n window.location.pathname  — absolute paths break under HA Ingress\npath-prefixing. The Workspace button gets a concrete  http(s)://host:port \nURL, never  href=&quot;#&quot; . Any new  __PLACEHOLDER__  in a template requires a\nmatching substitution in  render_nginx.py  in the same change. \n"}, {"id": "model-lanes", "title": "Model Lanes", "type": "Glossary", "description": "The four configurable model lanes (fast, complex, deep, local) and what each is for.", "resource": null, "tags": ["configuration", "models", "lanes"], "timestamp": "2026-07-05", "aokf": {"verification": "agent-checked", "confidence": "high", "aliases": ["fast lane model", "agent_mode", "routed lanes"], "relations": {"relates_to": ["fast-lane-voice-router", "routing-lane-classification"]}, "provenance": {"method": "agent-authored", "source": "repo:homeops_ai/config.yaml"}}, "html": "<p>HomeOps AI options define four model lanes, each with a provider + model\npair, persisted under Hermes <code>homeops.*<\/code> config keys at startup:<\/p>\n<ul>\n<li><strong>Fast<\/strong> (<code>fast_llm_*<\/code>, default <code>google/gemini-3.1-flash-lite<\/code>) — the\nvoice lane the <a href=\"#/fast-lane-voice-router\">router<\/a> calls with the\ndieted context. Needs a genuinely fast, tool-capable model; Groq-hosted\nor local OpenAI-compatible servers are good fits.<\/li>\n<li><strong>Complex<\/strong> (<code>complex_llm_*<\/code>, default <code>openai/gpt-5.5<\/code>) — normal Hermes\ndiagnostics and multi-step reasoning.<\/li>\n<li><strong>Deep<\/strong> (<code>deep_llm_*<\/code>) — audits, repairs, long/overnight operations.<\/li>\n<li><strong>Local<\/strong> (<code>local_llm_*<\/code> + <code>local_llm_base_url<\/code>) — ultra-fast local\nexperiments via any OpenAI-compatible endpoint.<\/li>\n<\/ul>\n<p><code>agent_mode<\/code> selects the architecture: <code>router<\/code> (recommended) starts the\nfast-lane router in front of the gateway; <code>fast<\/code>, <code>complex<\/code>, or <code>deep<\/code>\nskip the router and let Home Assistant call the gateway directly. Which\nrequests actually use the fast lane is decided by\n<a href=\"#/routing-lane-classification\">lane classification<\/a>.\n<code>max_fast_entities<\/code> (1–100, default 20) caps the per-turn candidate set —\nthe context-diet knob. Only enable device <em>control<\/em> on the fast lane after\nthe model passes tool-calling tests\n(<a href=\"#/dogfood-and-validation-workflow\">dogfood workflow<\/a>).<\/p>\n", "text": " HomeOps AI options define four model lanes, each with a provider + model\npair, persisted under Hermes  homeops.*  config keys at startup: \n \n  Fast  ( fast_llm_* , default  google/gemini-3.1-flash-lite ) — the\nvoice lane the  router  calls with the\ndieted context. Needs a genuinely fast, tool-capable model; Groq-hosted\nor local OpenAI-compatible servers are good fits. \n  Complex  ( complex_llm_* , default  openai/gpt-5.5 ) — normal Hermes\ndiagnostics and multi-step reasoning. \n  Deep  ( deep_llm_* ) — audits, repairs, long/overnight operations. \n  Local  ( local_llm_*  +  local_llm_base_url ) — ultra-fast local\nexperiments via any OpenAI-compatible endpoint. \n \n  agent_mode  selects the architecture:  router  (recommended) starts the\nfast-lane router in front of the gateway;  fast ,  complex , or  deep \nskip the router and let Home Assistant call the gateway directly. Which\nrequests actually use the fast lane is decided by\n lane classification .\n max_fast_entities  (1–100, default 20) caps the per-turn candidate set —\nthe context-diet knob. Only enable device  control  on the fast lane after\nthe model passes tool-calling tests\n( dogfood workflow ). \n"}, {"id": "on-demand-entity-tools", "title": "On-Demand Entity Tools", "type": "Pattern", "description": "Three router tools that let the fast model reach the full Home Assistant entity graph lazily instead of carrying it in context.", "resource": null, "tags": ["tools", "lazy-loading", "router"], "timestamp": "2026-07-05", "aokf": {"verification": "agent-checked", "confidence": "high", "aliases": ["search_entities", "get_state", "call_service", "lazy entity tools"], "relations": {"relates_to": ["fast-lane-voice-router"]}, "provenance": {"method": "agent-authored", "source": "repo:homeops_ai/homeops_router.py"}}, "html": "<p>The fast lane carries only a small candidate entity set, so the model needs\nan escape hatch when the target device is not in context. The\n<a href=\"#/fast-lane-voice-router\">router<\/a> attaches three OpenAI function tools:<\/p>\n<ul>\n<li><code>search_entities(query, domain?, limit?)<\/code> — scores the parsed entity\ntable first; if empty, falls back to a live <code>GET /states<\/code> against the\nHome Assistant REST API, reaching the <strong>full<\/strong> entity graph, not just\nexposed entities.<\/li>\n<li><code>get_state(entity_id)<\/code> — live state plus a slimmed attribute whitelist\n(brightness, temperature, position, media title, etc.) to keep tool\nresults small.<\/li>\n<li><code>call_service(domain, service, entity_id?, data?)<\/code> — performs the\naction. Disabled unless the add-on option <code>enable_ha_service_calls<\/code> is\non, and every domain/service/entity string must match strict regexes\nbefore any API call, preventing injection through model output.<\/li>\n<\/ul>\n<p>The tool loop is capped (default 5 rounds); exhaustion returns a graceful\nspoken apology rather than hanging the voice pipeline. The fast system\nprompt explicitly instructs the model to call <code>search_entities<\/code> before\nclaiming a device does not exist.<\/p>\n", "text": " The fast lane carries only a small candidate entity set, so the model needs\nan escape hatch when the target device is not in context. The\n router  attaches three OpenAI function tools: \n \n  search_entities(query, domain?, limit?)  — scores the parsed entity\ntable first; if empty, falls back to a live  GET /states  against the\nHome Assistant REST API, reaching the  full  entity graph, not just\nexposed entities. \n  get_state(entity_id)  — live state plus a slimmed attribute whitelist\n(brightness, temperature, position, media title, etc.) to keep tool\nresults small. \n  call_service(domain, service, entity_id?, data?)  — performs the\naction. Disabled unless the add-on option  enable_ha_service_calls  is\non, and every domain/service/entity string must match strict regexes\nbefore any API call, preventing injection through model output. \n \n The tool loop is capped (default 5 rounds); exhaustion returns a graceful\nspoken apology rather than hanging the voice pipeline. The fast system\nprompt explicitly instructs the model to call  search_entities  before\nclaiming a device does not exist. \n"}, {"id": "release-and-versioning-rules", "title": "Release and Versioning Rules", "type": "Policy", "description": "Every Home-Assistant-visible change must bump the add-on version and changelog together, then be verified on GHCR before announcing.", "resource": "https://github.com/GitDakky/homeops-ai/blob/main/homeops_ai/config.yaml", "tags": ["release", "versioning", "policy"], "timestamp": "2026-07-05", "aokf": {"verification": "agent-checked", "confidence": "high", "aliases": ["version bump", "changelog rule", "release checklist"], "relations": {"relates_to": ["dogfood-and-validation-workflow", "addon-runtime-lifecycle"]}, "provenance": {"method": "agent-authored", "source": "repo:homeops_ai/CHANGELOG.md"}}, "html": "<p>Home Assistant only offers an add-on update when <code>homeops_ai/config.yaml<\/code>\ncarries a higher plain SemVer version than the installed one. Therefore\nevery change users must see follows one atomic recipe:<\/p>\n<ol>\n<li>Bump <code>version:<\/code> in <code>homeops_ai/config.yaml<\/code>.<\/li>\n<li>Add a matching top entry in <code>homeops_ai/CHANGELOG.md<\/code> (user-facing,\naction-oriented wording).<\/li>\n<li>Commit both together with the functional change; push to <code>main<\/code> so\nGitHub Actions builds and publishes the multi-arch image to GHCR.<\/li>\n<li>Verify before announcing: raw <code>config.yaml<\/code> on GitHub shows the new\nversion, the build workflow succeeded, and the GHCR manifest exists.<\/li>\n<li>The user then refreshes the add-on repository in Home Assistant and\nupdates. If HA does not show the version, run <code>ha store reload<\/code> on the\nHAOS host.<\/li>\n<\/ol>\n<p>Companion rules: the repo is public, so no secrets/tokens/IPs/household\ndata in any commit; option changes must update schema + all six\ntranslations + DOCS.md in the same change; and the\n<a href=\"#/dogfood-and-validation-workflow\">validation gauntlet<\/a> must pass\nbefore every push. Version bumps matter because the\n<a href=\"#/addon-runtime-lifecycle\">add-on runtime lifecycle<\/a> only changes when\nHome Assistant pulls a new image. The Home Assistant builder workflow is\nthe authoritative image build path — do not add duplicate hand-written\nDocker smoke builds.<\/p>\n", "text": " Home Assistant only offers an add-on update when  homeops_ai/config.yaml \ncarries a higher plain SemVer version than the installed one. Therefore\nevery change users must see follows one atomic recipe: \n \n Bump  version:  in  homeops_ai/config.yaml . \n Add a matching top entry in  homeops_ai/CHANGELOG.md  (user-facing,\naction-oriented wording). \n Commit both together with the functional change; push to  main  so\nGitHub Actions builds and publishes the multi-arch image to GHCR. \n Verify before announcing: raw  config.yaml  on GitHub shows the new\nversion, the build workflow succeeded, and the GHCR manifest exists. \n The user then refreshes the add-on repository in Home Assistant and\nupdates. If HA does not show the version, run  ha store reload  on the\nHAOS host. \n \n Companion rules: the repo is public, so no secrets/tokens/IPs/household\ndata in any commit; option changes must update schema + all six\ntranslations + DOCS.md in the same change; and the\n validation gauntlet  must pass\nbefore every push. Version bumps matter because the\n add-on runtime lifecycle  only changes when\nHome Assistant pulls a new image. The Home Assistant builder workflow is\nthe authoritative image build path — do not add duplicate hand-written\nDocker smoke builds. \n"}, {"id": "routing-lane-classification", "title": "Routing Lane Classification", "type": "Pattern", "description": "How the router decides between the fast lane and escalation to the full Hermes agent for each utterance.", "resource": null, "tags": ["routing", "classification", "router"], "timestamp": "2026-07-05", "aokf": {"verification": "agent-checked", "confidence": "high", "aliases": ["fast vs escalate", "lane choice", "escalation rules"], "relations": {"relates_to": ["fast-lane-voice-router"]}, "provenance": {"method": "agent-authored", "source": "repo:homeops_ai/homeops_router.py"}}, "html": "<p>Classification is deliberately conservative — when in doubt, escalate,\nbecause the full agent can always answer a simple question while the fast\nlane cannot handle a complex one.<\/p>\n<p>An utterance escalates to the full Hermes gateway when any of these hold:<\/p>\n<ul>\n<li>it is empty, or longer than ~280 characters;<\/li>\n<li>it matches complexity patterns: automation/script/scene editing,\ndiagnostics (&quot;why&quot;, &quot;debug&quot;, &quot;error&quot;, &quot;logs&quot;), configuration, install/\nupdate/backup, scheduling/reminders, research/explain/compare/summarise;<\/li>\n<li>the request asks for streaming (only the escalation path streams);<\/li>\n<li>there is no entity table to diet AND the utterance has no device-domain\nkeywords (lights, heating, blinds, locks, media, etc.).<\/li>\n<\/ul>\n<p>Everything else — short device commands and state questions — runs the\nfast lane with the dieted context from the\n<a href=\"#/fast-lane-voice-router\">router<\/a>.<\/p>\n<p>Escalated requests are forwarded <strong>verbatim<\/strong> (original body, original fat\nprompt) so the full agent loses nothing. Escalation is also the error path:\nany fast-lane exception falls through to the gateway (fail-open), which the\ndogfood harness asserts explicitly.<\/p>\n", "text": " Classification is deliberately conservative — when in doubt, escalate,\nbecause the full agent can always answer a simple question while the fast\nlane cannot handle a complex one. \n An utterance escalates to the full Hermes gateway when any of these hold: \n \n it is empty, or longer than ~280 characters; \n it matches complexity patterns: automation/script/scene editing,\ndiagnostics (&quot;why&quot;, &quot;debug&quot;, &quot;error&quot;, &quot;logs&quot;), configuration, install/\nupdate/backup, scheduling/reminders, research/explain/compare/summarise; \n the request asks for streaming (only the escalation path streams); \n there is no entity table to diet AND the utterance has no device-domain\nkeywords (lights, heating, blinds, locks, media, etc.). \n \n Everything else — short device commands and state questions — runs the\nfast lane with the dieted context from the\n router . \n Escalated requests are forwarded  verbatim  (original body, original fat\nprompt) so the full agent loses nothing. Escalation is also the error path:\nany fast-lane exception falls through to the gateway (fail-open), which the\ndogfood harness asserts explicitly. \n"}], "tags": {"architecture": ["addon-runtime-lifecycle", "fast-lane-voice-router"], "ci": ["dogfood-and-validation-workflow"], "classification": ["routing-lane-classification"], "configuration": ["model-lanes"], "context": ["entity-context-bloat-problem"], "dogfood": ["dogfood-and-validation-workflow"], "home-assistant": ["entity-context-bloat-problem", "ha-llm-api-lazy-loading-hook"], "ingress": ["ingress-operator-ui"], "lanes": ["model-lanes"], "latency": ["entity-context-bloat-problem", "fast-lane-voice-router"], "lazy-loading": ["ha-llm-api-lazy-loading-hook", "on-demand-entity-tools"], "lifecycle": ["addon-runtime-lifecycle"], "llm-api": ["ha-llm-api-lazy-loading-hook"], "models": ["model-lanes"], "operator": ["ingress-operator-ui"], "policy": ["release-and-versioning-rules"], "ports": ["addon-runtime-lifecycle"], "release": ["release-and-versioning-rules"], "router": ["fast-lane-voice-router", "on-demand-entity-tools", "routing-lane-classification"], "routing": ["routing-lane-classification"], "runbook": ["dogfood-and-validation-workflow"], "runtime": ["addon-runtime-lifecycle"], "testing": ["dogfood-and-validation-workflow"], "tools": ["on-demand-entity-tools"], "ui": ["ingress-operator-ui"], "versioning": ["release-and-versioning-rules"], "voice": ["entity-context-bloat-problem", "fast-lane-voice-router", "ingress-operator-ui"]}, "graph": {"out": {"addon-runtime-lifecycle": ["fast-lane-voice-router", "ingress-operator-ui"], "dogfood-and-validation-workflow": ["fast-lane-voice-router", "release-and-versioning-rules"], "entity-context-bloat-problem": ["fast-lane-voice-router", "ha-llm-api-lazy-loading-hook", "on-demand-entity-tools"], "fast-lane-voice-router": ["on-demand-entity-tools", "routing-lane-classification", "entity-context-bloat-problem"], "ha-llm-api-lazy-loading-hook": ["entity-context-bloat-problem", "fast-lane-voice-router"], "ingress-operator-ui": ["addon-runtime-lifecycle", "fast-lane-voice-router"], "model-lanes": ["fast-lane-voice-router", "routing-lane-classification", "dogfood-and-validation-workflow"], "on-demand-entity-tools": ["fast-lane-voice-router"], "release-and-versioning-rules": ["dogfood-and-validation-workflow", "addon-runtime-lifecycle"], "routing-lane-classification": ["fast-lane-voice-router"]}, "in": {"addon-runtime-lifecycle": ["ingress-operator-ui", "release-and-versioning-rules"], "dogfood-and-validation-workflow": ["model-lanes", "release-and-versioning-rules"], "entity-context-bloat-problem": ["fast-lane-voice-router", "ha-llm-api-lazy-loading-hook"], "fast-lane-voice-router": ["addon-runtime-lifecycle", "dogfood-and-validation-workflow", "entity-context-bloat-problem", "ha-llm-api-lazy-loading-hook", "ingress-operator-ui", "model-lanes", "on-demand-entity-tools", "routing-lane-classification"], "ha-llm-api-lazy-loading-hook": ["entity-context-bloat-problem"], "ingress-operator-ui": ["addon-runtime-lifecycle"], "on-demand-entity-tools": ["entity-context-bloat-problem", "fast-lane-voice-router"], "release-and-versioning-rules": ["dogfood-and-validation-workflow"], "routing-lane-classification": ["fast-lane-voice-router", "model-lanes"]}, "kinds": {"addon-runtime-lifecycle": {"fast-lane-voice-router": ["relates_to"], "ingress-operator-ui": ["relates_to"]}, "dogfood-and-validation-workflow": {"fast-lane-voice-router": ["relates_to"], "release-and-versioning-rules": ["relates_to"]}, "entity-context-bloat-problem": {"ha-llm-api-lazy-loading-hook": ["relates_to"]}, "fast-lane-voice-router": {"entity-context-bloat-problem": ["depends_on"], "routing-lane-classification": ["relates_to"], "on-demand-entity-tools": ["relates_to"]}, "ha-llm-api-lazy-loading-hook": {"entity-context-bloat-problem": ["relates_to"]}, "ingress-operator-ui": {"addon-runtime-lifecycle": ["relates_to"], "fast-lane-voice-router": ["relates_to"]}, "model-lanes": {"fast-lane-voice-router": ["relates_to"], "routing-lane-classification": ["relates_to"]}, "on-demand-entity-tools": {"fast-lane-voice-router": ["relates_to"]}, "release-and-versioning-rules": {"dogfood-and-validation-workflow": ["relates_to"], "addon-runtime-lifecycle": ["relates_to"]}, "routing-lane-classification": {"fast-lane-voice-router": ["relates_to"]}}, "orphans": [], "edge_count": 21}, "lint": {"profile": "aokf", "concept_count": 10, "error_count": 0, "warning_count": 0, "findings": []}, "log_html": null}</script>
+<script>
+'use strict';
+const DATA = JSON.parse(document.getElementById('okf-data').textContent);
+const byId = {}; DATA.concepts.forEach(c => byId[c.id] = c);
+const $ = s => document.querySelector(s);
+const esc = s => String(s == null ? '' : s)
+  .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+/* ---------- theme ---------- */
+const root = document.documentElement;
+function applyTheme(t){ root.setAttribute('data-theme', t); localStorage.setItem('okf-theme', t); }
+applyTheme(localStorage.getItem('okf-theme') ||
+  (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+$('#theme-toggle').onclick = () =>
+  applyTheme(root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+
+/* ---------- sidebar ---------- */
+function buildTree(){
+  const tree = {dirs:{}, items:[]};
+  for (const c of DATA.concepts){
+    const parts = c.id.split('/');
+    let node = tree;
+    for (let i = 0; i < parts.length - 1; i++)
+      node = node.dirs[parts[i]] ||= {dirs:{}, items:[]};
+    node.items.push(c);
+  }
+  return tree;
+}
+function renderTreeNode(node, depth){
+  let h = '';
+  for (const name of Object.keys(node.dirs).sort())
+    h += `<details open><summary>${esc(name)}</summary>` +
+         renderTreeNode(node.dirs[name], depth + 1) + '</details>';
+  for (const c of node.items.sort((a,b) => (a.title||a.id).localeCompare(b.title||b.id)))
+    h += `<a href="#/${esc(c.id)}" data-id="${esc(c.id)}">${esc(c.title || c.id)}</a>`;
+  return h;
+}
+$('#sidebar').innerHTML = renderTreeNode(buildTree(), 0);
+$('#nav-toggle').onclick = () => $('#sidebar').classList.toggle('open');
+
+/* ---------- badges & bits ---------- */
+function badges(c){
+  const a = c.aokf || {};
+  let h = `<span class="badge type">${esc(c.type)}</span>`;
+  if (a.verification) h += `<span class="badge v-${esc(a.verification)}">${esc(a.verification)}</span>`;
+  if (a.confidence) h += `<span class="badge">confidence: ${esc(a.confidence)}</span>`;
+  if (a.owner) h += `<span class="badge">owner: ${esc(a.owner)}</span>`;
+  if (c.timestamp){
+    const days = Math.floor((Date.parse(DATA.meta.generated_at) - Date.parse(c.timestamp)) / 864e5);
+    if (!isNaN(days)) h += `<span class="badge">${days <= 0 ? 'today' : days + 'd old'}</span>`;
+  }
+  (c.tags || []).forEach(t => h += `<a class="badge" href="#/t/${encodeURIComponent(t)}">#${esc(t)}</a>`);
+  return `<div class="badges">${h}</div>`;
+}
+function conceptLink(id){
+  const c = byId[id];
+  return c ? `<a href="#/${esc(id)}">${esc(c.title || id)}</a>` : `<span>${esc(id)}</span>`;
+}
+
+/* ---------- local graph (SVG) ---------- */
+function localGraph(c){
+  const out = (DATA.graph.out[c.id] || []).filter(t => byId[t]);
+  const inn = (DATA.graph.in[c.id] || []).filter(t => byId[t]);
+  const nodes = [...new Set([...out, ...inn])].slice(0, 14);
+  if (!nodes.length) return '';
+  const W = 760, H = Math.max(190, 66 + nodes.length * 14), cx = W/2, cy = H/2;
+  const R = Math.min(cx - 150, cy - 26);
+  let h = `<svg class="graph" viewBox="0 0 ${W} ${H}">`;
+  nodes.forEach((id, i) => {
+    const ang = (2 * Math.PI * i) / nodes.length - Math.PI/2;
+    const x = cx + R * Math.cos(ang), y = cy + R * Math.sin(ang);
+    const kinds = (DATA.graph.kinds[c.id] || {})[id] || (DATA.graph.kinds[id] || {})[c.id] || [];
+    h += `<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}"></line>`;
+    if (kinds.length)
+      h += `<text class="kind" x="${(cx+x)/2}" y="${(cy+y)/2 - 3}" text-anchor="middle">${esc(kinds.join(','))}</text>`;
+    const anchor = x < cx - 4 ? 'end' : (x > cx + 4 ? 'start' : 'middle');
+    const tx = x + (anchor === 'end' ? -9 : anchor === 'start' ? 9 : 0);
+    h += `<a href="#/${esc(id)}"><circle cx="${x}" cy="${y}" r="5"></circle>` +
+         `<text x="${tx}" y="${y + 4}" text-anchor="${anchor}">${esc(byId[id].title || id)}</text></a>`;
+  });
+  h += `<circle cx="${cx}" cy="${cy}" r="7"></circle>` +
+       `<text x="${cx}" y="${cy - 13}" text-anchor="middle" font-weight="700">${esc(c.title || c.id)}</text></svg>`;
+  return `<div class="section-label">Local graph</div>` + h;
+}
+
+/* ---------- views ---------- */
+function viewConcept(c){
+  const a = c.aokf || {};
+  const dir = c.id.includes('/') ? c.id.slice(0, c.id.lastIndexOf('/')) : '';
+  let h = `<div class="crumbs"><a href="#/">${esc(DATA.meta.name)}</a>` +
+          (dir ? ` / ${esc(dir)}` : '') + `</div><h1>${esc(c.title || c.id)}</h1>` + badges(c);
+  if (c.description) h += `<p class="desc">${esc(c.description)}</p>`;
+  h += `<article>${c.html}</article>`;
+  const rel = a.relations || {};
+  if (Object.keys(rel).length){
+    h += `<div class="section-label">Typed relations</div><div>`;
+    for (const [kind, targets] of Object.entries(rel))
+      targets.forEach(t => h += `<a class="rel-chip" href="#/${esc(t)}"><b>${esc(kind)}</b>${esc((byId[t]||{}).title || t)}</a>`);
+    h += `</div>`;
+  }
+  const back = (DATA.graph.in[c.id] || []).filter(t => byId[t]);
+  if (back.length)
+    h += `<div class="section-label">Referenced by</div><ul>` +
+         back.map(b => `<li>${conceptLink(b)}</li>`).join('') + `</ul>`;
+  h += localGraph(c);
+  const p = a.provenance || {};
+  h += `<div class="provenance">`;
+  if (c.resource) h += `resource: <a href="${esc(c.resource)}" target="_blank" rel="noopener">${esc(c.resource)}</a><br>`;
+  h += `provenance: ${esc(p.method || 'unknown')}` +
+       (p.agent ? ` · ${esc(p.agent)}` : '') +
+       (p.source ? ` · <a href="${esc(p.source)}" target="_blank" rel="noopener">source</a>` : '') +
+       (c.timestamp ? ` · ${esc(c.timestamp)}` : '') + `</div>`;
+  return h;
+}
+function viewHome(){
+  const m = DATA.meta;
+  const byType = {}, byVer = {};
+  DATA.concepts.forEach(c => {
+    byType[c.type] = (byType[c.type] || 0) + 1;
+    const v = (c.aokf || {}).verification || 'unset';
+    byVer[v] = (byVer[v] || 0) + 1;
+  });
+  let h = `<h1>${esc(m.name)}</h1><p class="desc">${esc(m.description || '')}</p>
+    <div class="cards">
+      <div class="card"><div class="n">${DATA.concepts.length}</div><div class="l">concepts</div></div>
+      <div class="card"><div class="n">${DATA.graph.edge_count}</div><div class="l">links</div></div>
+      <div class="card"><div class="n">${Object.keys(DATA.tags).length}</div><div class="l">tags</div></div>
+      <div class="card"><div class="n">${byVer['reviewed'] || 0}</div><div class="l">reviewed</div></div>
+    </div>
+    <div class="section-label">By type</div><div>` +
+    Object.entries(byType).sort((x,y) => y[1]-x[1])
+      .map(([t,n]) => `<span class="rel-chip"><b>${esc(t)}</b>${n}</span>`).join('') +
+    `</div><div class="section-label">By verification</div><div>` +
+    Object.entries(byVer).map(([v,n]) => `<span class="badge v-${esc(v)}">${esc(v)}: ${n}</span> `).join('') +
+    `</div><div class="section-label">Start here</div><ul>` +
+    DATA.concepts.slice().sort((a,b) => a.id.localeCompare(b.id)).slice(0, 8)
+      .map(c => `<li>${conceptLink(c.id)} — <span style="color:var(--fg2)">${esc(c.description || '')}</span></li>`).join('') +
+    `</ul><p style="color:var(--fg2);font-size:13px">Generated ${esc(m.generated_at)} · single-file OKF pack · press / to search</p>`;
+  return h;
+}
+function viewTag(tag){
+  const ids = DATA.tags[tag] || [];
+  return `<h1>#${esc(tag)}</h1><ul>` +
+    ids.map(id => `<li>${conceptLink(id)} — <span style="color:var(--fg2)">${esc((byId[id]||{}).description || '')}</span></li>`).join('') +
+    `</ul>`;
+}
+function viewLog(){
+  return `<h1>Changelog</h1><article>${DATA.log_html || '<p>No log yet.</p>'}</article>`;
+}
+function viewDash(){
+  const f = DATA.lint.findings;
+  const orphans = DATA.graph.orphans;
+  let h = `<h1>Dashboard</h1>
+    <div class="cards">
+      <div class="card"><div class="n">${DATA.lint.error_count}</div><div class="l">lint errors</div></div>
+      <div class="card"><div class="n">${DATA.lint.warning_count}</div><div class="l">warnings</div></div>
+      <div class="card"><div class="n">${f.length - DATA.lint.error_count - DATA.lint.warning_count}</div><div class="l">info</div></div>
+      <div class="card"><div class="n">${orphans.length}</div><div class="l">orphans</div></div>
+    </div>`;
+  if (f.length){
+    h += `<div class="section-label">Findings (profile: ${esc(DATA.lint.profile)})</div>`;
+    f.forEach(x => h += `<div class="finding"><span class="sev ${esc(x.severity)}">${esc(x.severity)}</span>` +
+      `${conceptLink(x.concept_id)} <code>${esc(x.rule)}</code> ${esc(x.message)}</div>`);
+  } else h += `<p>No findings — clean bundle. 🎉</p>`;
+  if (orphans.length)
+    h += `<div class="section-label">Orphans</div><ul>` +
+         orphans.map(o => `<li>${conceptLink(o)}</li>`).join('') + `</ul>`;
+  return h;
+}
+
+/* ---------- router ---------- */
+function route(){
+  const hash = decodeURIComponent(location.hash.replace(/^#\/?/, ''));
+  let html;
+  if (!hash) html = viewHome();
+  else if (hash === 'dash') html = viewDash();
+  else if (hash === 'log') html = viewLog();
+  else if (hash.startsWith('t/')) html = viewTag(hash.slice(2));
+  else if (byId[hash]) html = viewConcept(byId[hash]);
+  else html = `<h1>Not found</h1><p>No concept <code>${esc(hash)}</code>.</p>`;
+  $('#content').innerHTML = `<div class="inner">${html}</div>`;
+  $('#content').scrollTop = 0;
+  document.querySelectorAll('#sidebar a').forEach(a =>
+    a.classList.toggle('active', a.dataset.id === hash));
+  $('#sidebar').classList.remove('open');
+  hideResults();
+}
+addEventListener('hashchange', route);
+
+/* ---------- search ---------- */
+const box = $('#search'), panel = $('#search-results');
+let sel = -1;
+function score(c, tokens){
+  let s = 0;
+  const T = (c.title || '').toLowerCase(), D = (c.description || '').toLowerCase(),
+        B = c.text.toLowerCase(), A = ((c.aokf || {}).aliases || []).join(' ').toLowerCase(),
+        G = (c.tags || []).join(' ').toLowerCase();
+  for (const t of tokens){
+    let hit = 0;
+    if (T.includes(t)) hit += 4;
+    if (A.includes(t)) hit += 3;
+    if (G.includes(t)) hit += 2;
+    if (D.includes(t)) hit += 2;
+    if (B.includes(t)) hit += 1;
+    if (!hit) return 0;
+    s += hit;
+  }
+  return s;
+}
+function runSearch(){
+  const q = box.value.trim().toLowerCase();
+  sel = -1;
+  if (!q){ hideResults(); return; }
+  const tokens = q.split(/\s+/);
+  const hits = DATA.concepts.map(c => [score(c, tokens), c])
+    .filter(x => x[0] > 0).sort((a,b) => b[0]-a[0]).slice(0, 12);
+  panel.innerHTML = hits.length
+    ? hits.map(([_, c]) =>
+        `<a href="#/${esc(c.id)}"><div class="t">${esc(c.title || c.id)}</div>` +
+        `<div class="d">${esc(c.description || c.id)}</div></a>`).join('')
+    : `<div class="empty">No matches.</div>`;
+  panel.hidden = false;
+}
+function hideResults(){ panel.hidden = true; }
+box.addEventListener('input', runSearch);
+box.addEventListener('keydown', e => {
+  const links = [...panel.querySelectorAll('a')];
+  if (e.key === 'ArrowDown' || e.key === 'ArrowUp'){
+    e.preventDefault();
+    sel = Math.max(0, Math.min(links.length - 1, sel + (e.key === 'ArrowDown' ? 1 : -1)));
+    links.forEach((a,i) => a.classList.toggle('sel', i === sel));
+  } else if (e.key === 'Enter' && links[sel >= 0 ? sel : 0]){
+    location.hash = links[sel >= 0 ? sel : 0].getAttribute('href');
+    box.value = ''; hideResults(); box.blur();
+  } else if (e.key === 'Escape'){ box.value = ''; hideResults(); box.blur(); }
+});
+addEventListener('keydown', e => {
+  if (e.key === '/' && document.activeElement !== box){ e.preventDefault(); box.focus(); }
+});
+addEventListener('click', e => { if (!panel.contains(e.target) && e.target !== box) hideResults(); });
+
+route();
+</script>
+</body>
+</html>
