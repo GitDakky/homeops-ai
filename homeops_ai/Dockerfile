@@ -130,6 +130,18 @@ RUN curl -fsSL https://raw.githubusercontent.com/NousResearch/hermes-agent/${HER
     && install -d /usr/local/share \
     && hermes --version | tee /usr/local/share/hermes-bundled-version
 
+# Hermes <= v0.18.0 rejects X-Forwarded-Prefix values longer than 64 chars
+# (hermes_cli/dashboard_auth/prefix.py), but HA Supervisor ingress prefixes
+# plus our /dashboard suffix are 73 chars — the prefix gets silently dropped,
+# the SPA emits root-relative asset URLs, and the dashboard renders as a
+# blank white page behind Ingress. Patch the cap to 200 at build time and
+# verify with a realistic HA ingress prefix; the script exits non-zero
+# (failing this image build) if upstream changes the code or verification
+# fails. Drop this once upstream ships a fix.
+COPY patch_hermes_prefix.py /tmp/patch_hermes_prefix.py
+RUN python3 /tmp/patch_hermes_prefix.py /usr/local/lib/hermes-agent \
+    && rm -f /tmp/patch_hermes_prefix.py
+
 # Pre-build the Hermes dashboard web UI at image build time. The repo ships
 # no prebuilt dist (hermes_cli/web_dist is gitignored), so without this the
 # dashboard must run a full npm install + Vite build at container boot —

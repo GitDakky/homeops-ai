@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.3.1]
+
+### Fixed
+- **Hermes dashboard blank white page behind Home Assistant Ingress** — Hermes ≤ v0.18.0 silently rejects any `X-Forwarded-Prefix` longer than 64 characters (`hermes_cli/dashboard_auth/prefix.py`). HA Supervisor ingress prefixes plus our `/dashboard` suffix are 73 characters (`/api/hassio_ingress/<43-char-token>/dashboard`), so the dashboard dropped the prefix, emitted root-relative asset URLs (`/assets/…`), the browser fetched them from HA core, and the SPA never booted. The add-on image now patches the cap to 200 at build time via `patch_hermes_prefix.py`, with a hard verification gate: the image build fails if upstream changes the code or a realistic 73-char HA ingress prefix doesn't survive normalisation, and hostile prefixes (`..`, `//`, control chars, over-long) are re-checked to confirm they are still rejected. Reported upstream to NousResearch/hermes-agent; this build-time patch will be dropped once a fixed Hermes release ships.
+
 ## [0.3.0]
 
 ### Added
