@@ -1,5 +1,5 @@
 name: HomeOps AI
-version: "0.3.1"
+version: "0.3.2"
 slug: homeops_ai
 description: Hermes-powered AI operations agent for Home Assistant.
 url: https://github.com/GitDakky/homeops-ai

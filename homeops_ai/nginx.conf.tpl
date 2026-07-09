@@ -81,6 +81,16 @@ http {
       # — NOT $host, which carries the HA ingress hostname and gets a
       # 400 "Invalid Host header".
       proxy_set_header Host 127.0.0.1:__HERMES_DASHBOARD_PORT__;
+      # Hermes' WebSocket upgrade guard applies the same DNS-rebinding
+      # defence to the browser Origin header: when Origin is present it
+      # must match the bound (loopback) host, but the browser sends the
+      # HA/ingress origin, so /api/ws, /api/events, /api/pty and
+      # /api/pub all get a 403 close — the chat tab shows "events feed
+      # disconnected — tool calls may not appear" and messages can't be
+      # sent. nginx is the trust boundary here (same rationale as the
+      # Host rewrite above): strip Origin so upstream sees a non-web
+      # client and relies on its token/ticket auth instead.
+      proxy_set_header Origin "";
       # Let the dashboard reconstruct prefixed URLs under HA Ingress
       # (assets, redirects). HA supplies the ingress prefix in
       # X-Ingress-Path (normalised above to strip trailing slashes);

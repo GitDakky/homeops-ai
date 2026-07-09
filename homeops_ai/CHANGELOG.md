@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.3.2]
+
+### Fixed
+- **Hermes dashboard chat tab could not connect behind Home Assistant Ingress** — Hermes' WebSocket upgrade guard applies its DNS-rebinding defence to the browser `Origin` header: when `Origin` is present it must match the loopback host the dashboard is bound to, but browsers send the HA/ingress origin, so `/api/ws`, `/api/events`, `/api/pty` and `/api/pub` were all rejected with a 403 close. The chat tab showed "events feed disconnected — tool calls may not appear" and messages could not be sent. nginx (already the trust boundary for the Host rewrite) now strips the `Origin` header on the `/dashboard/` proxy so the upstream relies on its token/ticket auth instead. Verified live: browser-style Origins now connect and receive `gateway.ready`.
+- **Voice/router escalations to the Hermes gateway returned "Invalid API key" after every add-on restart** — the gateway's OpenAI-compatible API server requires bearer auth (`api_server.key` in the Hermes config), but `run.sh` never passed that key to the HomeOps router, so every escalated request 401'd. The router start block now reads the key from `/config/.hermes/config.yaml` and exports it as `GATEWAY_API_KEY` (which `homeops_router.py` already honours), with a startup warning if no key is found. Previously this was fixed live in process-env only and silently regressed on restart.
+
 ## [0.3.1]
 
 ### Fixed
