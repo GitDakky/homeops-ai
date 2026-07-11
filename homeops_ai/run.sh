@@ -1191,7 +1191,18 @@ else
   hermes config set api_server.port "$GATEWAY_INTERNAL_PORT" >/dev/null 2>&1 || true
 
   # Enable the native Hermes Home Assistant tool path where possible.
-  if [ -n "${SUPERVISOR_TOKEN:-}" ]; then
+  # Prefer the user-supplied long-lived token (homeassistant_token option):
+  # it authenticates against the core API at http://homeassistant:8123 and
+  # survives Supervisor token rotation. SUPERVISOR_TOKEN (when present) only
+  # works against the http://supervisor/core proxy. Without this fallback,
+  # installs where SUPERVISOR_TOKEN is absent from the runtime env exported
+  # an EMPTY HASS_TOKEN, which silently disabled the entire ha_* toolset and the
+  # homeassistant platform adapter ("requirements not met" at boot; the
+  # agent then tells the user it has no access to devices).
+  if [ -n "$HA_TOKEN" ]; then
+    export HASS_TOKEN="$HA_TOKEN"
+    export HASS_URL="http://homeassistant:8123"
+  elif [ -n "${SUPERVISOR_TOKEN:-}" ]; then
     export HASS_TOKEN="$SUPERVISOR_TOKEN"
   fi
 

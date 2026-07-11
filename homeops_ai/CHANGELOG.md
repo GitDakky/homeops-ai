@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.3.3]
+
+### Fixed
+- **Voice assistant said it had "no access to devices" — the entire `ha_*` toolset and the Home Assistant platform adapter were silently disabled** — `run.sh` only exported `HASS_TOKEN` from `SUPERVISOR_TOKEN`, but on affected installs `SUPERVISOR_TOKEN` was absent from the gateway's runtime environment, so the gateway booted with an *empty* `HASS_TOKEN`. Hermes gates the built-in HA tools (`ha_list_entities`, `ha_get_state`, `ha_list_services`, `ha_call_service`) and the homeassistant platform adapter on that variable being non-empty, so every session lost device access and the boot log showed `Platform 'Home Assistant' requirements not met (pip install aiohttp)` — a misleading hint; aiohttp was installed, the token was the missing requirement. The user's long-lived token (`homeassistant_token` option) was already persisted to `/config/secrets/homeassistant.token` but never wired into the gateway env. `run.sh` now prefers the long-lived token (with `HASS_URL=http://homeassistant:8123`, which that token authenticates against — it gets 401 from the `http://supervisor/core` proxy) and falls back to `SUPERVISOR_TOKEN` only when no long-lived token is configured. Verified live: gateway logs `✓ homeassistant connected` and voice queries can enumerate and control devices again.
+
 ## [0.3.2]
 
 ### Fixed
