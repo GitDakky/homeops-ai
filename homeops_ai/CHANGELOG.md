@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.3.5]
+
+### Fixed
+- **"Turn on the lamps in the family room" targeted the wrong entity and claimed "already on"** — two compounding faults found by live dogfooding:
+  1. *Entity scoring*: a room group entity (Hue room "Family Room") outranked the actual "Lamps" circuit because room-name overlap scored higher than the fixture noun. New fixture-word scoring boost (lamps, downlights, pendant, spots, strip, chandelier, sconce...) makes named fixtures beat room groups.
+  2. *Stale group state*: Hue room groups report last-known state even when every member bulb is unreachable, so the assistant said "already on" about powered-off lamps. `get_state` now reports each group member's live availability with an explicit staleness warning, and the fast-lane prompt instructs the model to treat `unavailable`/`unknown` as unreachable (suggest checking power) and to verify `changed=[]` service results with `get_state` before claiming success.
+- **Self-heal for blank `homeassistant_token` option** — if the option is empty but a token from a previous configuration is persisted at `/config/secrets/homeassistant.token`, run.sh now reuses it (with a boot log line) instead of booting the gateway and router blind. Seen live: an add-on update wiped saved options, silently killing HA access until hand-patched.
+
+### Tests
+- 6 new offline unit tests: fixture-word ranking (lamps/downlights vs room group), group-member staleness warnings (full and partial), non-group passthrough, and prompt-contract assertions. Suite: 19 router tests.
+
 ## [0.3.4]
 
 ### Fixed

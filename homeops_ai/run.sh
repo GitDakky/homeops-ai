@@ -1202,6 +1202,14 @@ else
   if [ -n "$HA_TOKEN" ]; then
     export HASS_TOKEN="$HA_TOKEN"
     export HASS_URL="http://homeassistant:8123"
+  elif [ -s /config/secrets/homeassistant.token ]; then
+    # Self-heal: the option was cleared/blank but a token from a previous
+    # configuration is persisted on disk. Reuse it rather than booting the
+    # agent blind (seen live: options wiped during an update left the
+    # gateway + router with no HA access until hand-patched).
+    export HASS_TOKEN="$(cat /config/secrets/homeassistant.token)"
+    export HASS_URL="http://homeassistant:8123"
+    echo "INFO: homeassistant_token option empty; reusing persisted token from /config/secrets/homeassistant.token"
   elif [ -n "${SUPERVISOR_TOKEN:-}" ]; then
     export HASS_TOKEN="$SUPERVISOR_TOKEN"
   fi

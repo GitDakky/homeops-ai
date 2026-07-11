@@ -142,3 +142,90 @@ def test_call_service_validates_input(monkeypatch):
 def test_get_state_validates_entity_id():
     out = router.tool_get_state({"entity_id": "DROP TABLE"})
     assert "error" in out
+
+
+def test_fixture_word_beats_room_group():
+    """'the lamps in the family room' must target the Lamps circuit, not the
+    room group entity that merely matches the room name (live bug: Hue group
+    'Family Room' swallowed the request while the Lutron 'Lamps' was off)."""
+    entities = [
+        {"entity_id": "light.family_room", "name": "Family Room", "state": "on", "aliases": ""},
+        {"entity_id": "light.lamps_2", "name": "Lamps", "state": "off", "aliases": ""},
+        {"entity_id": "light.downlights_28", "name": "Downlights", "state": "off", "aliases": ""},
+    ]
+    scored = router.score_entities(entities, "turn on the lamps in the family room")
+    assert scored[0][1]["entity_id"] == "light.lamps_2"
+
+
+def test_fixture_word_downlights():
+    entities = [
+        {"entity_id": "light.family_room", "name": "Family Room", "state": "on", "aliases": ""},
+        {"entity_id": "light.downlights_28", "name": "Downlights", "state": "off", "aliases": ""},
+    ]
+    scored = router.score_entities(entities, "family room downlights on please")
+    assert scored[0][1]["entity_id"] == "light.downlights_28"
+
+
+def test_preamble_covers_unavailable_and_fixtures():
+    p = router.FAST_SYSTEM_PREAMBLE
+    assert "unavailable" in p
+    assert "unreachable" in p.lower()
+    assert "lamps" in p.lower()
+    assert "changed=[]" in p
+
+
+def test_get_state_group_member_warning(monkeypatch):
+    """Group entity whose members are all unavailable must carry a warning."""
+    calls = {}
+
+    def fake_ha_request(path, method="GET", body=None, timeout=10.0):
+        calls[path] = True
+        if path == "/states/light.family_room":
+            return {
+                "entity_id": "light.family_room",
+                "state": "on",
+                "last_changed": "2026-07-11T19:47:28+00:00",
+                "attributes": {
+                    "friendly_name": "Family Room",
+                    "entity_id": ["light.hue_iris_1", "light.table_lamp"],
+                },
+            }
+        return {"entity_id": path.split("/")[-1], "state": "unavailable", "attributes": {}}
+
+    monkeypatch.setattr(router, "ha_request", fake_ha_request)
+    out = router.tool_get_state({"entity_id": "light.family_room"})
+    assert out["state"] == "on"
+    assert "warning" in out
+    assert "stale" in out["warning"]
+    assert len(out["group_members"]) == 2
+
+
+def test_get_state_group_partial_warning(monkeypatch):
+    def fake_ha_request(path, method="GET", body=None, timeout=10.0):
+        if path == "/states/light.family_room":
+            return {
+                "entity_id": "light.family_room",
+                "state": "on",
+                "last_changed": "x",
+                "attributes": {
+                    "friendly_name": "Family Room",
+                    "entity_id": ["light.a", "light.b"],
+                },
+            }
+        state = "on" if path.endswith("light.a") else "unavailable"
+        return {"entity_id": path.split("/")[-1], "state": state, "attributes": {}}
+
+    monkeypatch.setattr(router, "ha_request", fake_ha_request)
+    out = router.tool_get_state({"entity_id": "light.family_room"})
+    assert "1 of 2" in out.get("warning", "")
+
+
+def test_get_state_non_group_no_warning(monkeypatch):
+    def fake_ha_request(path, method="GET", body=None, timeout=10.0):
+        return {"entity_id": "light.solo", "state": "off", "last_changed": "x",
+                "attributes": {"friendly_name": "Solo"}}
+
+    monkeypatch.setattr(router, "ha_request", fake_ha_request)
+    out = router.tool_get_state({"entity_id": "light.solo"})
+    assert "warning" not in out
+    assert "group_members" not in out

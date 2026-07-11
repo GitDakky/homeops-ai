@@ -233,6 +233,20 @@ DOMAIN_KEYWORDS = {
     "alarm_control_panel": {"alarm", "arm", "disarm"},
 }
 
+# Specific fixture nouns. When the user names one of these, they mean a
+# particular fixture ("the lamps", "the downlights"), NOT the room's group
+# entity. Entities whose *name* contains the fixture word get a strong
+# boost so they outrank same-room group entities (e.g. a Hue room group
+# called "Family Room" must not swallow "turn on the lamps in the family
+# room"). Seen live at Longueville: the group was on, the Lamps circuit was
+# off, and the assistant wrongly said "already on".
+FIXTURE_WORDS = {
+    "lamp", "lamps", "downlight", "downlights", "pendant", "pendants",
+    "spot", "spots", "spotlight", "spotlights", "strip", "strips",
+    "chandelier", "sconce", "sconces", "uplighter", "uplighters",
+    "feature", "wallwash", "task", "reading",
+}
+
 
 def score_entities(
     entities: list[dict[str, str]], utterance: str
@@ -245,6 +259,7 @@ def score_entities(
             wanted_domains.add(domain)
 
     scored: list[tuple[float, dict[str, str]]] = []
+    fixture_asked = tokens & FIXTURE_WORDS
     for ent in entities:
         eid = ent["entity_id"]
         domain = eid.split(".")[0]
@@ -260,6 +275,10 @@ def score_entities(
         name_norm = _normalise(ent.get("name", ""))
         if name_norm and name_norm.strip() and name_norm.strip() in _normalise(utterance):
             score += 4.0
+        # Fixture-word bonus: "the lamps" must rank the Lamps circuit above
+        # a room group that merely matches the room name.
+        if fixture_asked and (fixture_asked & hay_tokens):
+            score += 6.0
         if score > 0:
             scored.append((score, ent))
     scored.sort(key=lambda item: item[0], reverse=True)
@@ -375,12 +394,42 @@ def tool_get_state(args: dict) -> dict:
             "unit_of_measurement", "device_class",
         }
     }
-    return {
+    out = {
         "entity_id": entity_id,
         "state": state.get("state"),
         "attributes": slim_attrs,
         "last_changed": state.get("last_changed"),
     }
+    # Group entities (Hue rooms, HA light groups) report the group's
+    # last-known state even when every member is unreachable. Surface the
+    # members' live availability so the model can catch stale group state
+    # instead of telling the user "it's already on" about dead bulbs.
+    members = attrs.get("entity_id")
+    if isinstance(members, list) and members:
+        member_states = []
+        unreachable = 0
+        for mid in members[:10]:
+            try:
+                ms = ha_request(f"/states/{mid}")
+                mstate = ms.get("state")
+            except Exception:  # noqa: BLE001
+                mstate = "unknown"
+            if mstate in ("unavailable", "unknown"):
+                unreachable += 1
+            member_states.append({"entity_id": mid, "state": mstate})
+        out["group_members"] = member_states
+        if unreachable == len(member_states):
+            out["warning"] = (
+                "ALL member devices of this group are unreachable; the "
+                "group state shown is stale. Tell the user the lights look "
+                "powered off or offline."
+            )
+        elif unreachable:
+            out["warning"] = (
+                f"{unreachable} of {len(member_states)} member devices are "
+                "unreachable; group state may be partly stale."
+            )
+    return out
 
 
 def tool_call_service(args: dict) -> dict:
@@ -496,6 +545,17 @@ Rules:
   It is NOT the whole home. If the device you need is not listed, call
   search_entities before saying it does not exist.
 - Use get_state for live values and call_service to act.
+- A state of 'unavailable' or 'unknown' means the device is UNREACHABLE
+  (powered off, offline, or its integration is down). Never treat a stale
+  or unavailable state as the current truth. Say the device looks
+  unreachable and suggest checking its power — do not claim it is
+  already on/off.
+- If the user names a specific fixture (lamps, downlights, pendant,
+  spots, strip...), target the entity whose NAME matches that fixture —
+  not a room group entity that merely matches the room name.
+- After call_service, if the result includes changed=[] (no entities
+  changed), the action likely failed or the device was already in that
+  state — verify with get_state before claiming success.
 - If the request is ambiguous, pick the most likely device and say what \
 you did."""
 
