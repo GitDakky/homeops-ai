@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.3.4]
+
+### Fixed
+- **Fast-lane router was dead on arrival — every voice command escalated to the full agent (15–25 s instead of ~2–3 s)** — two separate empty-credential bugs in `run.sh`:
+  1. `FAST_LLM_API_KEY` was only sourced from the `openrouter_api_key` add-on option; installs that configured OpenRouter via Hermes setup (key in `/config/.hermes/.env`) passed an empty key, so every fast-lane completion failed and fail-open escalated to the slow full agent. The router start block now falls back to the persisted Hermes env key.
+  2. The router's HA API access assumed `SUPERVISOR_TOKEN` + `http://supervisor/core/api`; when `SUPERVISOR_TOKEN` is absent the live entity search and `call_service` tools were dead. The router now falls back to the user's long-lived token against `http://homeassistant:8123/api` (the base URL that token actually authenticates against), mirroring the gateway fix from 0.3.3.
+- Both failures were silent; the router now logs explicit boot warnings when either credential is missing.
+
+### Performance (measured on Longueville install, 221-light estate)
+- Device query: 7.6 s → **2.0 s**
+- Light on/off: 15–25 s → **~2.6 s** (with `enable_ha_service_calls: true`)
+
 ## [0.3.3]
 
 ### Fixed

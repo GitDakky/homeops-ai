@@ -1269,11 +1269,40 @@ else
     if [ -z "$GATEWAY_KEY_VALUE" ]; then
       echo "WARN: no api_server key found in Hermes config; router escalations to the gateway may 401"
     fi
+    # Fast-lane LLM key: the add-on option is preferred, but fall back to the
+    # OPENROUTER_API_KEY persisted in Hermes' .env (written during setup).
+    # Without this fallback the router boots with an empty key and every
+    # fast-lane completion fails -> everything escalates to the full agent
+    # (15-25s per command instead of ~2-3s).
+    FAST_KEY_VALUE="${OPENROUTER_API_KEY_OPTION:-}"
+    if [ -z "$FAST_KEY_VALUE" ] && [ -f /config/.hermes/.env ]; then
+      FAST_KEY_VALUE=$(awk -F= '$1=="OPENROUTER_API_KEY"{print $2; exit}' /config/.hermes/.env 2>/dev/null || true)
+    fi
+    if [ -z "$FAST_KEY_VALUE" ]; then
+      echo "WARN: no OpenRouter key available to the router fast lane; all requests will escalate to the full agent"
+    fi
+    # Router HA API access: SUPERVISOR_TOKEN works against the
+    # http://supervisor/core proxy; the user's long-lived token only works
+    # against the core API directly. Match the token to the right base URL,
+    # mirroring the gateway logic above. Without a working pair the router's
+    # live entity search and call_service tools fail -> slow/escalated
+    # responses and no fast-lane device control.
+    ROUTER_HA_BASE="$HA_REST_BASE_URL"
+    ROUTER_HA_TOKEN="${SUPERVISOR_TOKEN:-}"
+    if [ -z "$ROUTER_HA_TOKEN" ] && [ -n "$HA_TOKEN" ]; then
+      ROUTER_HA_TOKEN="$HA_TOKEN"
+      ROUTER_HA_BASE="http://homeassistant:8123/api"
+    fi
+    if [ -z "$ROUTER_HA_TOKEN" ]; then
+      echo "WARN: router has no HA API token (no SUPERVISOR_TOKEN, no homeassistant_token option); fast-lane entity tools disabled"
+    fi
     ROUTER_PORT="$ROUTER_PORT" \
     GATEWAY_URL="http://127.0.0.1:${GATEWAY_INTERNAL_PORT}" \
     GATEWAY_API_KEY="$GATEWAY_KEY_VALUE" \
     FAST_LLM_MODEL="$FAST_LLM_MODEL" \
-    FAST_LLM_API_KEY="${OPENROUTER_API_KEY_OPTION:-}" \
+    FAST_LLM_API_KEY="$FAST_KEY_VALUE" \
+    HA_REST_BASE_URL="$ROUTER_HA_BASE" \
+    HA_TOKEN="$ROUTER_HA_TOKEN" \
     MAX_FAST_ENTITIES="$MAX_FAST_ENTITIES" \
     ENABLE_HA_SERVICE_CALLS="$ENABLE_HA_SERVICE_CALLS" \
     python3 /homeops_router.py >>"$RUNTIME_WRAPPER_LOG_DIR/homeops-router.log" 2>&1 &
