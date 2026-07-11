@@ -252,7 +252,13 @@ def score_entities(
     entities: list[dict[str, str]], utterance: str
 ) -> list[tuple[float, dict[str, str]]]:
     """Score entities against the utterance; higher = more relevant."""
+
+    def _deplural(tok: str) -> str:
+        # cheap singular/plural folding: lamps==lamp, downlights==downlight
+        return tok[:-1] if len(tok) > 3 and tok.endswith("s") else tok
+
     tokens = {t for t in _normalise(utterance).split() if t and t not in STOPWORDS}
+    tokens_folded = {_deplural(t) for t in tokens}
     wanted_domains: set[str] = set()
     for domain, keywords in DOMAIN_KEYWORDS.items():
         if tokens & keywords:
@@ -267,7 +273,8 @@ def score_entities(
             " ".join((eid.replace(".", " ").replace("_", " "),
                       ent.get("name", ""), ent.get("aliases", "")))
         ).split())
-        overlap = tokens & hay_tokens
+        hay_folded = {_deplural(t) for t in hay_tokens}
+        overlap = tokens_folded & hay_folded
         score = 3.0 * len(overlap)
         if domain in wanted_domains:
             score += 1.5
@@ -276,9 +283,19 @@ def score_entities(
         if name_norm and name_norm.strip() and name_norm.strip() in _normalise(utterance):
             score += 4.0
         # Fixture-word bonus: "the lamps" must rank the Lamps circuit above
-        # a room group that merely matches the room name.
-        if fixture_asked and (fixture_asked & hay_tokens):
-            score += 6.0
+        # a room group that merely matches the room name. Weight must beat
+        # the room-name exact-phrase bonus (+4) plus its token overlap —
+        # live case: "Family Room" group scored 11.5 vs Lamps 10.5 with a
+        # 6.0 bonus, so the group still won. 9.0 makes fixtures decisive.
+        fixture_folded = {_deplural(t) for t in fixture_asked}
+        if fixture_asked:
+            if fixture_folded & hay_folded:
+                score += 9.0
+            else:
+                # The user asked for a specific fixture and this entity is
+                # not it — cancel the room-phrase advantage of group/room
+                # entities so they cannot swallow fixture requests.
+                score -= 3.0
         # Availability tiebreaker: many estates carry dead duplicates of the
         # same fixture name (old integrations, unplugged bridges). Prefer a
         # live entity over an unavailable one with the same name.
