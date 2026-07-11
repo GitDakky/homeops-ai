@@ -229,3 +229,40 @@ def test_get_state_non_group_no_warning(monkeypatch):
     out = router.tool_get_state({"entity_id": "light.solo"})
     assert "warning" not in out
     assert "group_members" not in out
+
+
+def test_unavailable_duplicate_loses_to_live_entity():
+    """Dead duplicates (old integrations) must rank below live same-name entities."""
+    entities = [
+        {"entity_id": "light.lamps", "name": "Lamps", "state": "unavailable", "aliases": ""},
+        {"entity_id": "light.lamps_2", "name": "Lamps", "state": "off", "aliases": ""},
+    ]
+    scored = router.score_entities(entities, "turn on the lamps")
+    assert scored[0][1]["entity_id"] == "light.lamps_2"
+
+
+def test_search_entities_area_enrichment(monkeypatch):
+    def fake_ha_request(path, method="GET", body=None, timeout=10.0):
+        if path == "/template":
+            return '["Family Room", "Kitchen"]'
+        raise AssertionError(f"unexpected path {path}")
+
+    monkeypatch.setattr(router, "ha_request", fake_ha_request)
+    table = [
+        {"entity_id": "light.lamps_2", "name": "Lamps", "state": "off", "aliases": ""},
+        {"entity_id": "light.lamps_3", "name": "Lamps", "state": "off", "aliases": ""},
+    ]
+    out = router.tool_search_entities({"query": "lamps"}, table)
+    assert out["count"] == 2
+    assert out["results"][0].get("area") in ("Family Room", "Kitchen")
+
+
+def test_search_entities_area_enrichment_failure_is_soft(monkeypatch):
+    def fake_ha_request(path, method="GET", body=None, timeout=10.0):
+        raise RuntimeError("template api down")
+
+    monkeypatch.setattr(router, "ha_request", fake_ha_request)
+    table = [{"entity_id": "light.lamps_2", "name": "Lamps", "state": "off", "aliases": ""}]
+    out = router.tool_search_entities({"query": "lamps"}, table)
+    assert out["count"] == 1
+    assert "area" not in out["results"][0]

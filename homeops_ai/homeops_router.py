@@ -279,6 +279,11 @@ def score_entities(
         # a room group that merely matches the room name.
         if fixture_asked and (fixture_asked & hay_tokens):
             score += 6.0
+        # Availability tiebreaker: many estates carry dead duplicates of the
+        # same fixture name (old integrations, unplugged bridges). Prefer a
+        # live entity over an unavailable one with the same name.
+        if ent.get("state") in ("unavailable", "unknown", ""):
+            score -= 1.0
         if score > 0:
             scored.append((score, ent))
     scored.sort(key=lambda item: item[0], reverse=True)
@@ -371,6 +376,25 @@ def tool_search_entities(args: dict, table: list[dict[str, str]]) -> dict:
         )
         if len(results) >= limit:
             break
+
+    # Enrich with area names so same-named fixtures in different rooms are
+    # distinguishable ("Lamps" exists in several rooms at Longueville; the
+    # utterance says WHICH room, the entity name alone does not). One
+    # template render resolves all results in a single HA round trip.
+    if results:
+        try:
+            tpl = ("{% set ids = [" +
+                   ",".join(f"'{r['entity_id']}'" for r in results) +
+                   "] %}{{ ids | map('area_name') | list | to_json }}")
+            rendered = ha_request("/template", "POST", {"template": tpl})
+            areas = json.loads(rendered) if isinstance(rendered, str) else rendered
+            if isinstance(areas, list) and len(areas) == len(results):
+                for r, area in zip(results, areas):
+                    if area:
+                        r["area"] = area
+        except Exception:  # noqa: BLE001
+            pass  # area enrichment is best-effort
+
     return {"results": results, "count": len(results)}
 
 
@@ -552,7 +576,10 @@ Rules:
   already on/off.
 - If the user names a specific fixture (lamps, downlights, pendant,
   spots, strip...), target the entity whose NAME matches that fixture —
-  not a room group entity that merely matches the room name.
+  not a room group entity that merely matches the room name. The same
+  fixture name can exist in several rooms: match the `area` field from
+  search_entities against the room the user said. Prefer entities whose
+  state is not 'unavailable' when duplicates exist.
 - After call_service, if the result includes changed=[] (no entities
   changed), the action likely failed or the device was already in that
   state — verify with get_state before claiming success.
