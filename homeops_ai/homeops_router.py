@@ -409,6 +409,18 @@ def tool_search_entities(args: dict, table: list[dict[str, str]]) -> dict:
                 for r, area in zip(results, areas):
                     if area:
                         r["area"] = area
+                # Re-rank: results whose area matches the query outrank the
+                # rest ("lamps in the family room" → Family Room's Lamps
+                # first, Cinema's Lamps second). Stable sort preserves the
+                # existing name-relevance order within each tier, and live
+                # entities outrank unavailable ones in the same tier.
+                q_tokens = set(_normalise(query).split())
+                def _rank(r: dict) -> tuple[int, int]:
+                    area_tokens = set(_normalise(r.get("area", "")).split())
+                    area_hit = 1 if area_tokens and area_tokens <= q_tokens else 0
+                    alive = 0 if r.get("state") in ("unavailable", "unknown") else 1
+                    return (area_hit, alive)
+                results.sort(key=_rank, reverse=True)
         except Exception:  # noqa: BLE001
             pass  # area enrichment is best-effort
 
