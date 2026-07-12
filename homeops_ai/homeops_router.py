@@ -260,6 +260,12 @@ FIXTURE_SYNONYMS = {
     "downlighters": "downlight",
 }
 
+# A fixture word in the utterance implies the light domain ("turn on the
+# chandelier" carries no literal "light"/"lamp" token, but is a light
+# request) — keeps domain ordering and fast-lane classification working
+# for fixture-only phrasings.
+DOMAIN_KEYWORDS["light"] |= FIXTURE_WORDS
+
 
 def score_entities(
     entities: list[dict[str, str]], utterance: str
@@ -752,6 +758,10 @@ Rules:
   fixture name can exist in several rooms: match the `area` field from
   search_entities against the room the user said. Prefer entities whose
   state is not 'unavailable' when duplicates exist.
+- Fixture synonyms: a "chandelier" is usually the entity named "Pendant"
+  in that room; "spotlights" may be "Spots"; "downlighters" are
+  "Downlights". Prefer the room's closest fixture over asking the user,
+  and say what you chose.
 - After call_service, if the result includes changed=[] (no entities
   changed), the action likely failed or the device was already in that
   state — verify with get_state before claiming success.
