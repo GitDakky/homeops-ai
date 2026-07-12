@@ -419,6 +419,18 @@ def tool_search_entities(args: dict, table: list[dict[str, str]]) -> dict:
             rendered = ha_request("/template", "POST", {"template": tpl})
             area_ents = json.loads(rendered) if isinstance(rendered, str) else rendered
             if isinstance(area_ents, list) and area_ents:
+                # Order injected entities by the domain the query implies
+                # ("lights in the family room" → light.* first) so an
+                # area's switches/selects/trackers can't crowd the
+                # relevant fixtures out of the limit window.
+                q_tokens = set(q_norm)
+                wanted = {
+                    d for d, kws in DOMAIN_KEYWORDS.items() if q_tokens & kws
+                }
+                def _inj_rank(ent: dict) -> int:
+                    dom = str(ent.get("entity_id", "")).split(".")[0]
+                    return 0 if (not wanted or dom in wanted) else 1
+                area_ents = sorted(area_ents, key=_inj_rank)
                 seen = {r["entity_id"] for r in results}
                 injected = []
                 for ent in area_ents:
