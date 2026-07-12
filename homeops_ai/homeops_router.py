@@ -394,6 +394,51 @@ def tool_search_entities(args: dict, table: list[dict[str, str]]) -> dict:
         if len(results) >= limit:
             break
 
+    # Area-first injection: fixtures are usually named for WHAT they are
+    # ("Lamps", "Downlights", "Pendant"), not WHERE they are, so a room
+    # query like "lights in the family room" matches nothing by name.
+    # Resolve any area whose full name (token-subset, not substring — so
+    # "Hall" must not fire on "hallway") appears in the query and inject
+    # its entities at the top. One template render, best-effort.
+    if query:
+        try:
+            q_norm = _normalise(query).split()
+            tpl = (
+                "{% set qt = " + json.dumps(q_norm) + " %}"
+                "{% set ns = namespace(ids=[]) %}"
+                "{% for a in areas() %}"
+                "{% set nm = (area_name(a) or '') | lower %}"
+                "{% if nm and nm.split() | reject('in', qt) | list | length == 0 %}"
+                "{% set ns.ids = ns.ids + area_entities(a) %}"
+                "{% endif %}{% endfor %}"
+                "[{% for i in ns.ids %}"
+                "{\"entity_id\": {{ i | to_json }}, \"state\": {{ states(i) | to_json }},"
+                " \"name\": {{ (state_attr(i, 'friendly_name') or '') | to_json }}}"
+                "{{ \",\" if not loop.last }}{% endfor %}]"
+            )
+            rendered = ha_request("/template", "POST", {"template": tpl})
+            area_ents = json.loads(rendered) if isinstance(rendered, str) else rendered
+            if isinstance(area_ents, list) and area_ents:
+                seen = {r["entity_id"] for r in results}
+                injected = []
+                for ent in area_ents:
+                    eid = ent.get("entity_id", "")
+                    if not eid or eid in seen:
+                        continue
+                    if domain and not eid.startswith(domain + "."):
+                        continue
+                    if ent.get("state") in ("unavailable", "unknown"):
+                        continue
+                    injected.append(
+                        {"entity_id": eid, "name": ent.get("name", ""),
+                         "state": ent.get("state", "")}
+                    )
+                    seen.add(eid)
+                if injected:
+                    results = (injected + results)[:limit]
+        except Exception:  # noqa: BLE001
+            pass  # area injection is best-effort
+
     # Enrich with area names so same-named fixtures in different rooms are
     # distinguishable ("Lamps" exists in several rooms at Longueville; the
     # utterance says WHICH room, the entity name alone does not). One

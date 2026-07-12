@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.3.6]
+
+- Router: area-first entity injection in `tool_search_entities` — room-scoped queries
+  ("state of the lights in the family room") now resolve the area's own entities via one
+  `/api/template` render (full area-name token match, availability-filtered) and rank them
+  ahead of name-scored results. Fixes "couldn't find any lights in the family room" when
+  the room's fixtures are named for what they are (Lamps, Downlights, Pendant) rather
+  than where they are.
+
 ## [0.3.5]
 
 ### Fixed
