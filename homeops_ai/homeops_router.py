@@ -247,6 +247,19 @@ FIXTURE_WORDS = {
     "feature", "wallwash", "task", "reading",
 }
 
+# Different words people use for the same physical fixture. Folded on both
+# the utterance and entity-name sides before matching, so "turn on the
+# chandelier" finds an entity named "Pendant" (Longueville: the Orangery
+# chandelier is the Lutron zone named "Pendant").
+FIXTURE_SYNONYMS = {
+    "chandelier": "pendant",
+    "chandeliers": "pendant",
+    "spotlight": "spot",
+    "spotlights": "spot",
+    "downlighter": "downlight",
+    "downlighters": "downlight",
+}
+
 
 def score_entities(
     entities: list[dict[str, str]], utterance: str
@@ -255,6 +268,7 @@ def score_entities(
 
     def _deplural(tok: str) -> str:
         # cheap singular/plural folding: lamps==lamp, downlights==downlight
+        tok = FIXTURE_SYNONYMS.get(tok, tok)
         return tok[:-1] if len(tok) > 3 and tok.endswith("s") else tok
 
     tokens = {t for t in _normalise(utterance).split() if t and t not in STOPWORDS}
@@ -359,6 +373,68 @@ def ha_request(path: str, method: str = "GET", body: dict | None = None,
         return json.loads(resp.read().decode() or "null")
 
 
+def _edit_distance(a: str, b: str, cap: int = 2) -> int:
+    """Levenshtein distance with early-exit cap."""
+    if abs(len(a) - len(b)) > cap:
+        return cap + 1
+    prev = list(range(len(b) + 1))
+    for i, ca in enumerate(a, 1):
+        cur = [i]
+        best = cur[0]
+        for j, cb in enumerate(b, 1):
+            cur.append(min(prev[j] + 1, cur[j - 1] + 1,
+                           prev[j - 1] + (ca != cb)))
+            best = min(best, cur[j])
+        if best > cap:
+            return cap + 1
+        prev = cur
+    return prev[-1]
+
+
+def _fuzzy_token(query_tok: str, area_tok: str) -> bool:
+    """Does a query token plausibly refer to an area-name token?
+
+    Exact match; prefix match when the shared prefix is >=5 chars
+    ("orange" -> "orangery", but "hall" (4) cannot fire on "hallway");
+    or edit-distance <=2 for tokens >=6 chars ("orangary" -> "orangery").
+    """
+    if query_tok == area_tok:
+        return True
+    if len(query_tok) >= 5 and area_tok.startswith(query_tok):
+        return True
+    if len(area_tok) >= 5 and query_tok.startswith(area_tok):
+        return True
+    if len(query_tok) >= 6 and len(area_tok) >= 6:
+        return _edit_distance(query_tok, area_tok) <= 2
+    return False
+
+
+_AREAS_CACHE: dict[str, Any] = {"at": 0.0, "areas": []}
+_AREAS_TTL = 300.0
+
+
+def _all_areas() -> list[dict[str, Any]]:
+    """Area registry as [{id, tokens}] — name + alias token sets, cached."""
+    now = time.time()
+    if now - _AREAS_CACHE["at"] < _AREAS_TTL and _AREAS_CACHE["areas"]:
+        return _AREAS_CACHE["areas"]
+    tpl = (
+        "[{% for a in areas() %}"
+        "{\"id\": {{ a | to_json }}, \"name\": {{ (area_name(a) or '') | to_json }}}"
+        "{{ \",\" if not loop.last }}{% endfor %}]"
+    )
+    rendered = ha_request("/template", "POST", {"template": tpl})
+    raw = json.loads(rendered) if isinstance(rendered, str) else rendered
+    areas = []
+    for a in raw or []:
+        tokens = [t for t in _normalise(a.get("name", "")).split()
+                  if t and t not in STOPWORDS]
+        areas.append({"id": a["id"], "tokens": tokens})
+    _AREAS_CACHE["at"] = now
+    _AREAS_CACHE["areas"] = areas
+    return areas
+
+
 def tool_search_entities(args: dict, table: list[dict[str, str]]) -> dict:
     query = str(args.get("query", "")).strip()
     domain = str(args.get("domain", "")).strip().lower()
@@ -397,35 +473,45 @@ def tool_search_entities(args: dict, table: list[dict[str, str]]) -> dict:
     # Area-first injection: fixtures are usually named for WHAT they are
     # ("Lamps", "Downlights", "Pendant"), not WHERE they are, so a room
     # query like "lights in the family room" matches nothing by name.
-    # Resolve any area whose full name (token-subset, not substring — so
-    # "Hall" must not fire on "hallway") appears in the query and inject
-    # its entities at the top. One template render, best-effort.
+    # Resolve any area whose name appears in the query — with fuzzy token
+    # matching, because voice STT mangles room names ("Orangery" arrives
+    # as "orange room" / "orange tree" / "orangary") — and inject its
+    # entities at the top. Matching is per-area-token: every token of the
+    # area name must fuzzy-match a query token (exact, prefix ≥5 chars,
+    # or edit-distance ≤2 for tokens ≥6 chars). "Hall" (4 chars) cannot
+    # prefix-fire on "hallway"; "orange" (6) prefix-matches "orangery".
     if query:
         try:
-            q_norm = _normalise(query).split()
-            tpl = (
-                "{% set qt = " + json.dumps(q_norm) + " %}"
-                "{% set ns = namespace(ids=[]) %}"
-                "{% for a in areas() %}"
-                "{% set nm = (area_name(a) or '') | lower %}"
-                "{% if nm and nm.split() | reject('in', qt) | list | length == 0 %}"
-                "{% set ns.ids = ns.ids + area_entities(a) %}"
-                "{% endif %}{% endfor %}"
-                "[{% for i in ns.ids %}"
-                "{\"entity_id\": {{ i | to_json }}, \"state\": {{ states(i) | to_json }},"
-                " \"name\": {{ (state_attr(i, 'friendly_name') or '') | to_json }}}"
-                "{{ \",\" if not loop.last }}{% endfor %}]"
-            )
-            rendered = ha_request("/template", "POST", {"template": tpl})
-            area_ents = json.loads(rendered) if isinstance(rendered, str) else rendered
+            q_tokens = [t for t in _normalise(query).split() if t]
+            matched_areas = [
+                a["id"] for a in _all_areas()
+                if a["tokens"] and all(
+                    any(_fuzzy_token(q, at) for q in q_tokens)
+                    for at in a["tokens"]
+                )
+            ]
+            area_ents: list = []
+            if matched_areas:
+                tpl = (
+                    "{% set ns = namespace(ids=[]) %}"
+                    "{% for a in " + json.dumps(matched_areas) + " %}"
+                    "{% set ns.ids = ns.ids + area_entities(a) %}"
+                    "{% endfor %}"
+                    "[{% for i in ns.ids %}"
+                    "{\"entity_id\": {{ i | to_json }}, \"state\": {{ states(i) | to_json }},"
+                    " \"name\": {{ (state_attr(i, 'friendly_name') or '') | to_json }}}"
+                    "{{ \",\" if not loop.last }}{% endfor %}]"
+                )
+                rendered = ha_request("/template", "POST", {"template": tpl})
+                area_ents = json.loads(rendered) if isinstance(rendered, str) else rendered
             if isinstance(area_ents, list) and area_ents:
                 # Order injected entities by the domain the query implies
                 # ("lights in the family room" → light.* first) so an
                 # area's switches/selects/trackers can't crowd the
                 # relevant fixtures out of the limit window.
-                q_tokens = set(q_norm)
+                q_set = set(q_tokens)
                 wanted = {
-                    d for d, kws in DOMAIN_KEYWORDS.items() if q_tokens & kws
+                    d for d, kws in DOMAIN_KEYWORDS.items() if q_set & kws
                 }
                 def _inj_rank(ent: dict) -> int:
                     dom = str(ent.get("entity_id", "")).split(".")[0]
