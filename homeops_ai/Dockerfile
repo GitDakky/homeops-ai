@@ -1,7 +1,7 @@
 ARG BUILD_ARCH=amd64
 FROM ghcr.io/home-assistant/${BUILD_ARCH}-base-debian:bookworm
 ARG BUILD_ARCH
-ARG HERMES_VERSION=v2026.7.1
+ARG HERMES_VERSION=v2026.7.20
 ARG HERMES_WORKSPACE_REPO=https://github.com/outsourc-e/hermes-workspace.git
 ARG HERMES_WORKSPACE_REF=main
 ARG HERMES_PAPERCLIP_ADAPTER_VERSION=0.3.0
