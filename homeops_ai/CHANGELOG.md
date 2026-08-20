@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.3.7]
+
+### Changed
+- Bundled Hermes Agent updated from `v2026.7.1` to `v2026.8.18` ([release notes](https://github.com/NousResearch/hermes-agent/releases/tag/v2026.8.18)).
+
 ## [0.3.6]
 
 - Router: area-first entity injection in `tool_search_entities` — room-scoped queries
