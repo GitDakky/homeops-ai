@@ -6,7 +6,7 @@ This add-on also ships the [Hermes Paperclip Adapter](https://github.com/NousRes
 
 The live Home Assistant configuration root is mounted at `/ha-config` for inspection and recovery. HomeOps/Hermes state persists under `/config/.hermes` and `/config/homeops`.
 
-**Bundled Hermes Agent release:** `v2026.7.1`
+**Bundled Hermes Agent release:** `v2026.8.27`
 
 **Published app image:** `ghcr.io/gitdakky/homeops-ai`
 
